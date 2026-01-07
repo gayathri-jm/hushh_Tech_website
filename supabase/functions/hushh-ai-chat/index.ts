@@ -327,7 +327,7 @@ serve(async (req: Request) => {
       // Extract organizer email from userId - MUST be @hushh.ai domain
       // Service Account with Domain-Wide Delegation can ONLY impersonate @hushh.ai users
       // Gmail/other domain users cannot be impersonated, so we fallback to default
-      const organizerEmail = userId?.endsWith('@hushh.ai') ? userId : 'ankit@hushh.ai';
+      const organizerEmail = userId?.endsWith('@hushh.ai') ? userId : 'kairo@hushh.ai';
       
       console.log('Calendar intent detected! Message:', message);
       console.log('User ID:', userId);
