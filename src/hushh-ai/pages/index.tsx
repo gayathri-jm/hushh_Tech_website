@@ -56,7 +56,7 @@ const markAsVisited = () => sessionStorage.setItem(STORAGE_KEYS.HAS_VISITED, 'tr
 export default function HushhAIPage() {
   const navigate = useNavigate();
   const toast = useToast();
-  
+
   // State - Smart loading: only show on first visit, not cached auth
   const [isAuthenticated, setIsAuthenticated] = useState(getIsCachedAuth());
   const [isLoading, setIsLoading] = useState(!getIsCachedAuth() && isFirstVisit());
@@ -97,7 +97,7 @@ export default function HushhAIPage() {
     }
     onOpenDeleteModalOriginal();
   };
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -112,16 +112,16 @@ export default function HushhAIPage() {
     const checkAuth = async () => {
       // Fast path: if we have cached auth, skip loading and verify in background
       const hasCachedAuth = getIsCachedAuth();
-      
+
       if (hasCachedAuth) {
         // Already authenticated from cache, load data in background
         setIsAuthenticated(true);
         setIsLoading(false);
         markAsVisited();
-        
+
         // Load data and verify auth in background
         loadInitialData().catch(console.error);
-        
+
         // Verify auth is still valid (non-blocking)
         service.isAuthenticated().then((stillValid) => {
           if (!stillValid) {
@@ -133,25 +133,25 @@ export default function HushhAIPage() {
         });
         return;
       }
-      
+
       // Slow path: first visit, need to authenticate
       const authenticated = await service.isAuthenticated();
       if (!authenticated) {
         navigate('/hushh-ai/login');
         return;
       }
-      
+
       // Cache successful auth for future navigations
       setIsCachedAuth(true);
       markAsVisited();
-      
+
       setIsAuthenticated(true);
       await loadInitialData();
       setIsLoading(false);
     };
-    
+
     checkAuth();
-    
+
     // Subscribe to auth changes
     const unsubscribe = service.onAuthChange((loggedIn) => {
       if (!loggedIn) {
@@ -161,7 +161,7 @@ export default function HushhAIPage() {
         navigate('/hushh-ai/login');
       }
     });
-    
+
     return unsubscribe;
   }, [navigate]);
 
@@ -176,7 +176,7 @@ export default function HushhAIPage() {
 
   const loadInitialData = async () => {
     setIsDataLoading(true);
-    
+
     try {
       // Load ALL critical data in parallel for maximum speed
       const [user, chatList, limits] = await Promise.all([
@@ -184,7 +184,7 @@ export default function HushhAIPage() {
         service.getChats(),
         service.getMediaLimits(),
       ]);
-      
+
       if (user) {
         setUserId(user.id);
         // Track product usage for analytics (non-blocking)
@@ -307,7 +307,7 @@ export default function HushhAIPage() {
     if (chatState.isSending) return;
 
     let chatId = currentChat?.id;
-    
+
     // Create new chat if none selected
     if (!chatId) {
       const newChat = await service.createChat(inputValue.slice(0, 50));
@@ -339,13 +339,13 @@ export default function HushhAIPage() {
 
       // Call AI
       setChatState((prev) => ({ ...prev, isStreaming: true, streamingContent: '' }));
-      
+
       await streamAIResponse(chatId, userInput, mediaUrls, userId);
 
     } catch (error) {
       console.error('Error sending message:', error);
-      setChatState((prev) => ({ 
-        ...prev, 
+      setChatState((prev) => ({
+        ...prev,
         error: BRANDING.messages.error,
         isSending: false,
         isStreaming: false,
@@ -383,37 +383,41 @@ export default function HushhAIPage() {
       }
 
       // Check for calendar event metadata in response headers
-
       // Capture metadata in closure to prevent race conditions
       const capturedMetadata: MessageMetadata | undefined = (() => {
-          try {
-            // Validate header size (prevent truncated JSON)
-              throw new Error('Invalid calendar event header size');
-            }
+        try {
+          const eventHeader = response.headers.get('x-calendar-event');
+          if (!eventHeader) return undefined;
 
-
-            // Validate required fields
-            if (!eventData.id || !eventData.summary || !eventData.startTime || !eventData.endTime) {
-              throw new Error('Missing required calendar event fields');
-            }
-
-            // Validate date formats
-            if (isNaN(Date.parse(eventData.startTime)) || isNaN(Date.parse(eventData.endTime))) {
-              throw new Error('Invalid date format in calendar event');
-            }
-
-          } catch (e) {
-            console.error('Failed to parse calendar event data:', e);
-            toast({
-              description: 'Please check your Google Calendar directly',
-              status: 'warning',
-              duration: 5000,
-              isClosable: true,
-            });
-            return undefined;
+          // Validate header size (prevent truncated JSON)
+          if (eventHeader.length > 8192) {
+            throw new Error('Invalid calendar event header size');
           }
+
+          const eventData = JSON.parse(eventHeader);
+
+          // Validate required fields
+          if (!eventData.id || !eventData.summary || !eventData.startTime || !eventData.endTime) {
+            throw new Error('Missing required calendar event fields');
+          }
+
+          // Validate date formats
+          if (isNaN(Date.parse(eventData.startTime)) || isNaN(Date.parse(eventData.endTime))) {
+            throw new Error('Invalid date format in calendar event');
+          }
+
+          return { calendarEvent: eventData };
+
+        } catch (e) {
+          console.error('Failed to parse calendar event data:', e);
+          toast({
+            description: 'Please check your Google Calendar directly',
+            status: 'warning',
+            duration: 5000,
+            isClosable: true,
+          });
+          return undefined;
         }
-        return undefined;
       })();
 
       const reader = response.body?.getReader();
@@ -423,7 +427,7 @@ export default function HushhAIPage() {
       while (reader) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         const chunk = decoder.decode(value, { stream: true });
         fullContent += chunk;
         setChatState((prev) => ({ ...prev, streamingContent: fullContent }));
@@ -435,11 +439,11 @@ export default function HushhAIPage() {
         setMessages((prev) => [...prev, assistantMessage]);
       }
 
-      setChatState((prev) => ({ 
-        ...prev, 
-        isSending: false, 
-        isStreaming: false, 
-        streamingContent: '' 
+      setChatState((prev) => ({
+        ...prev,
+        isSending: false,
+        isStreaming: false,
+        streamingContent: ''
       }));
 
       // Refresh media limits
@@ -557,10 +561,10 @@ export default function HushhAIPage() {
 
   if (isLoading) {
     return (
-      <Flex 
-        h="100vh" 
-        bg={THEME.colors.background} 
-        align="center" 
+      <Flex
+        h="100vh"
+        bg={THEME.colors.background}
+        align="center"
         justify="center"
       >
         <VStack spacing={4}>
@@ -588,8 +592,8 @@ export default function HushhAIPage() {
             <VStack h="full" p={4} spacing={4} align="stretch">
               {/* Header */}
               <HStack justify="space-between">
-                <Text 
-                  fontSize={THEME.fontSizes.lg} 
+                <Text
+                  fontSize={THEME.fontSizes.lg}
                   fontWeight={THEME.fontWeights.semibold}
                   color={THEME.colors.textPrimary}
                 >
@@ -623,10 +627,10 @@ export default function HushhAIPage() {
               </Box>
 
               {/* Chat List */}
-              <VStack 
-                flex={1} 
-                spacing={1} 
-                align="stretch" 
+              <VStack
+                flex={1}
+                spacing={1}
+                align="stretch"
                 overflowY="auto"
                 css={{
                   '&::-webkit-scrollbar': { width: '4px' },
@@ -661,8 +665,8 @@ export default function HushhAIPage() {
                       onClick={() => handleSelectChat(chat)}
                       justify="space-between"
                     >
-                      <Text 
-                        fontSize={THEME.fontSizes.sm} 
+                      <Text
+                        fontSize={THEME.fontSizes.sm}
                         noOfLines={1}
                         color={THEME.colors.textPrimary}
                       >
@@ -693,15 +697,15 @@ export default function HushhAIPage() {
                   <Text fontSize={THEME.fontSizes.xs} color={THEME.colors.textSecondary}>
                     Media uploads today: {mediaLimits.dailyUploads}/{mediaLimits.maxDailyUploads}
                   </Text>
-                  <Box 
-                    mt={2} 
-                    h="4px" 
-                    bg={THEME.colors.border} 
+                  <Box
+                    mt={2}
+                    h="4px"
+                    bg={THEME.colors.border}
                     borderRadius="full"
                     overflow="hidden"
                   >
-                    <Box 
-                      h="full" 
+                    <Box
+                      h="full"
                       w={`${(mediaLimits.dailyUploads / mediaLimits.maxDailyUploads) * 100}%`}
                       bg={THEME.colors.accent}
                       transition={THEME.transitions.normal}
@@ -831,10 +835,10 @@ export default function HushhAIPage() {
         </HStack>
 
         {/* Messages */}
-        <VStack 
-          flex={1} 
-          p={6} 
-          spacing={6} 
+        <VStack
+          flex={1}
+          p={6}
+          spacing={6}
           overflowY="auto"
           align="stretch"
           css={{
@@ -844,10 +848,10 @@ export default function HushhAIPage() {
         >
           {messages.length === 0 && !currentChat && (
             <VStack flex={1} justify="center" spacing={4}>
-              <Box 
-                w={16} 
-                h={16} 
-                borderRadius="full" 
+              <Box
+                w={16}
+                h={16}
+                borderRadius="full"
                 bg={THEME.colors.accent}
                 display="flex"
                 alignItems="center"
@@ -855,8 +859,8 @@ export default function HushhAIPage() {
               >
                 <Text fontSize="2xl" color="white">H</Text>
               </Box>
-              <Text 
-                fontSize={THEME.fontSizes.xl} 
+              <Text
+                fontSize={THEME.fontSizes.xl}
                 fontWeight={THEME.fontWeights.semibold}
                 color={THEME.colors.textPrimary}
               >
@@ -871,7 +875,7 @@ export default function HushhAIPage() {
 
           {/* Streaming Response */}
           {chatState.isStreaming && chatState.streamingContent && (
-            <MessageBubble 
+            <MessageBubble
               message={{
                 id: 'streaming',
                 chatId: currentChat?.id || '',
@@ -903,7 +907,7 @@ export default function HushhAIPage() {
           {selectedFiles.length > 0 && (
             <HStack mb={3} spacing={2} flexWrap="wrap">
               {selectedFiles.map((file, index) => (
-                <HStack 
+                <HStack
                   key={index}
                   p={2}
                   bg={THEME.colors.backgroundSecondary}
@@ -926,7 +930,7 @@ export default function HushhAIPage() {
           )}
 
           {/* Input Bar */}
-          <HStack 
+          <HStack
             p={3}
             bg={THEME.colors.background}
             borderRadius={THEME.borderRadius.lg}
@@ -986,9 +990,6 @@ export default function HushhAIPage() {
         onClose={onCloseDeleteModal}
         onAccountDeleted={handleAccountDeleted}
       />
-
-        userEmail={userProfile?.email || ''}
-      />
     </Flex>
   );
 }
@@ -1034,8 +1035,8 @@ function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
         )}
 
         {/* Content */}
-        <Text 
-          fontSize={THEME.fontSizes.md} 
+        <Text
+          fontSize={THEME.fontSizes.md}
           color={THEME.colors.textPrimary}
           whiteSpace="pre-wrap"
         >
@@ -1047,9 +1048,8 @@ function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
       </Box>
 
       {/* Calendar Event Card */}
-        <Box mt={2} maxW="70%">
-        </Box>
-      )}
+      <Box mt={2} maxW="70%">
+      </Box>
     </Flex>
   );
 }

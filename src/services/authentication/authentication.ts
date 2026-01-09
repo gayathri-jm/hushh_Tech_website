@@ -7,6 +7,7 @@ import getFullName from "./getFullName";
 import getSession from "./getSession";
 import emailLogin from "./emailLogin";
 import appleSignIn from "./appleSignIn";
+import mfaService from "./mfaService";
 
 const authentication = {
   googleSignIn: googleSignIn,
@@ -18,5 +19,6 @@ const authentication = {
   getFullName: getFullName,
   getSession: getSession,
   emailLogin: emailLogin,
+  mfa: mfaService,
 };
 export default authentication;

@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import config from '../resources/config/config';
+import authentication from '../services/authentication/authentication';
+import MFAVerificationModal from './auth/MFAVerificationModal';
+import { useDisclosure, Box, Text, VStack } from '@chakra-ui/react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children
 }) => {
   const navigate = useNavigate();
@@ -14,99 +17,119 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
-  useEffect(() => {
-    const checkAuthAndOnboarding = async () => {
-      let timeout: ReturnType<typeof setTimeout> | null = null;
-      let subscription: { unsubscribe: () => void } | null = null;
-      try {
-        if (!config.supabaseClient) {
-          console.error("Supabase client is not initialized");
-          console.info("[Hushh][ProtectedRoute] Missing Supabase client, cannot verify session");
-          navigate("/login", { replace: true });
-          return;
-        }
+  // MFA State
+  const [isMfaRequired, setIsMfaRequired] = useState(false);
+  const [mfaFactorId, setMfaFactorId] = useState<string>('');
+  const { isOpen: isMfaOpen, onOpen: onMfaOpen, onClose: onMfaClose } = useDisclosure();
 
-        const supabase = config.supabaseClient;
-
-        // First try to read the current session
-        let { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) {
-          console.error("[Hushh][ProtectedRoute] getSession error", sessionError);
-        }
-
-        // If no session/user yet (common on iOS Safari right after redirect), wait briefly for auth state change
-        if (!session?.user) {
-          console.info("[Hushh][ProtectedRoute] No session on initial check, waiting for restore...");
-          await new Promise<void>((resolve) => {
-            const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
-              if (newSession?.user) {
-                session = newSession;
-                resolve();
-              }
-            });
-            subscription = data.subscription;
-            timeout = setTimeout(() => resolve(), 1500);
-          });
-          if (timeout) {
-            clearTimeout(timeout);
-            timeout = null;
-          }
-          subscription?.unsubscribe();
-          subscription = null;
-
-          if (!session?.user) {
-            console.error("[Hushh][ProtectedRoute] Session still missing after wait");
-            navigate("/login", { replace: true });
-            return;
-          }
-        }
-
-        const user = session?.user;
-        if (!user) {
-          // User is not authenticated, redirect to login
-          console.info("[Hushh][ProtectedRoute] No user found after auth check");
-          navigate("/login", { replace: true });
-          return;
-        }
-
-        // Check if user has completed onboarding
-        const { data: onboardingData } = await supabase
-          .from('onboarding_data')
-          .select('is_completed, current_step')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        console.info("[Hushh][ProtectedRoute] Session ok", { userId: user.id, email: user.email || "(empty from Apple)", onboardingFound: !!onboardingData });
-
-        // If user hasn't completed onboarding and is NOT on an onboarding page, redirect to onboarding
-        const isOnOnboardingPage = location.pathname.startsWith('/onboarding/');
-        
-        if (!onboardingData || !onboardingData.is_completed) {
-          // User must complete onboarding first
-          if (!isOnOnboardingPage) {
-            console.log('Redirecting to onboarding - not completed yet');
-            // Use replace: true to prevent infinite back button loop
-            // This replaces the current history entry instead of adding a new one
-            navigate('/onboarding/step-1', { replace: true });
-            return;
-          }
-        }
-
-        // User is authenticated and has completed onboarding (or is on onboarding page)
-        setIsAuthorized(true);
-      } catch (error) {
-        console.error("Error checking auth and onboarding:", error);
+  const checkAuthAndOnboarding = async () => {
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    let subscription: { unsubscribe: () => void } | null = null;
+    try {
+      if (!config.supabaseClient) {
+        console.error("Supabase client is not initialized");
         navigate("/login", { replace: true });
-      } finally {
-        setIsLoading(false);
-        if (timeout) {
-          clearTimeout(timeout);
-        }
-        subscription?.unsubscribe();
+        return;
       }
-    };
 
+      const supabase = config.supabaseClient;
+
+      // 1. Session Check
+      let { data: { session } } = await supabase.auth.getSession();
+
+      // Wait for session logic (same as before)
+      if (!session?.user) {
+        await new Promise<void>((resolve) => {
+          const { data } = supabase.auth.onAuthStateChange((_, newSession) => {
+            if (newSession?.user) { session = newSession; resolve(); }
+          });
+          subscription = data.subscription;
+          timeout = setTimeout(() => resolve(), 1500);
+        });
+        if (timeout) clearTimeout(timeout);
+        if (subscription) subscription.unsubscribe();
+
+        if (!session?.user) {
+          navigate("/login", { replace: true });
+          return;
+        }
+      }
+
+      const user = session?.user;
+      if (!user) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      // 2. Onboarding Check
+      const { data: onboardingData } = await supabase
+        .from('onboarding_data')
+        .select('is_completed, current_step')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const isOnOnboardingPage = location.pathname.startsWith('/onboarding/');
+
+      if (!onboardingData || !onboardingData.is_completed) {
+        if (!isOnOnboardingPage) {
+          navigate('/onboarding/step-1', { replace: true });
+          return;
+        }
+      }
+
+      // 3. Global MFA Check
+      // Only enforce if NOT on onboarding (to avoid locking users out during setup)
+      // AND not already authorized
+      if (onboardingData?.is_completed) {
+        console.log('[ProtectedRoute] Checking MFA status...');
+        const mfaEnrolled = await authentication.mfa.hasMFAEnrolled();
+        console.log('[ProtectedRoute] MFA Enrolled:', mfaEnrolled);
+
+        if (mfaEnrolled) {
+          const assurance = await authentication.mfa.getAssuranceLevel();
+          console.log('[ProtectedRoute] Assurance Level:', assurance.data);
+
+          // If current level is AAL1 (password only) but AAL2 is possible/required
+          if (assurance.data?.currentLevel === 'aal1') {
+            const { data: factors } = await authentication.mfa.getVerifiedMFAFactors();
+            console.log('[ProtectedRoute] MFA Factors:', factors);
+
+            if (factors && factors.length > 0) {
+              console.info('[ProtectedRoute] MFA Required - AAL1 session found for 2FA user');
+              setMfaFactorId(factors[0].id);
+              setIsMfaRequired(true);
+              onMfaOpen();
+              setIsLoading(false); // Stop loading spinner to show modal
+              return; // Stop here, wait for modal
+            } else {
+              console.warn('[ProtectedRoute] MFA is enrolled but no verified factors returned?');
+            }
+          } else {
+            console.log('[ProtectedRoute] Already at AAL2 or higher');
+          }
+        } else {
+          console.log('[ProtectedRoute] User is NOT enrolled in MFA');
+        }
+      }
+
+      setIsAuthorized(true);
+    } catch (error) {
+      console.error("Error checking auth:", error);
+      navigate("/login", { replace: true });
+    } finally {
+      if (!isMfaRequired) setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     checkAuthAndOnboarding();
   }, [navigate, location.pathname]);
+
+  const handleMfaSuccess = () => {
+    setIsMfaRequired(false);
+    setIsAuthorized(true);
+    onMfaClose();
+  };
 
   if (isLoading) {
     return (
@@ -119,8 +142,30 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
+  // If MFA Is Required, Show Modal AND Block Content
+  if (isMfaRequired) {
+    return (
+      <Box minH="100vh" bg="gray.50" display="flex" alignItems="center" justifyContent="center">
+        <VStack spacing={4}>
+          <Text fontSize="lg" fontWeight="bold">Security Check Required</Text>
+          <Text color="gray.600">Please complete the 2FA verification to continue.</Text>
+        </VStack>
+        <MFAVerificationModal
+          isOpen={isMfaOpen}
+          onClose={() => {
+            // If closed without verifying, redirect to login
+            onMfaClose();
+            navigate('/login');
+          }}
+          factorId={mfaFactorId}
+          onSuccess={handleMfaSuccess}
+        />
+      </Box>
+    );
+  }
+
   if (!isAuthorized) {
-    return null; // Will redirect, so return nothing
+    return null;
   }
 
   return <>{children}</>;

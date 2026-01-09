@@ -12,14 +12,15 @@ export default async function appleSignIn() {
     // Preserve redirect parameter from current URL (for Hushh AI and other modules)
     const currentParams = new URLSearchParams(window.location.search);
     const redirectPath = currentParams.get('redirect');
-    
-    let redirectTo = resources.config.redirect_url || `${window.location.origin}/auth/callback`;
-    
+
+    // Force redirect to /auth/callback to ensure we handle MFA/Onboarding checks
+    let redirectTo = `${window.location.origin}/auth/callback`;
+
     // If there's a redirect param, append it to the callback URL
     if (redirectPath) {
-      redirectTo = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectPath)}`;
+      redirectTo = `${redirectTo}?redirect=${encodeURIComponent(redirectPath)}`;
     }
-    
+
     console.info("[Hushh][AppleSignIn] Starting Apple OAuth", { redirectTo });
 
     const { data, error } = await supabase.auth.signInWithOAuth({

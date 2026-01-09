@@ -41,9 +41,16 @@ export type MessageRole = 'user' | 'assistant';
 
 
 export interface MessageMetadata {
-  // Future metadata types can be added here as specific fields
-  // fileAttachment?: FileMetadata;
-  // voiceNote?: VoiceMetadata;
+  calendarEvent?: {
+    id: string;
+    summary: string;
+    description?: string;
+    startTime: string;
+    endTime: string;
+    location?: string;
+    [key: string]: any;
+  };
+  [key: string]: any;
 }
 
 
