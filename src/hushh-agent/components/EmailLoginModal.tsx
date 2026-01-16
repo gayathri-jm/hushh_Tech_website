@@ -118,28 +118,26 @@ export const EmailLoginModal: React.FC<EmailLoginModalProps> = ({
 
     const success = await verifyOTP(email, otpValue);
     if (success) {
-      // Show success screen instead of immediately closing
+      // Show success screen briefly, then force page reload
+      // This is the nuclear fix for React state sync issues
       setStep('success');
     }
   };
 
-  // Handle success screen - notify parent IMMEDIATELY to force state refresh
-  // Then show visual feedback before closing
+  // Handle success screen - force page reload to ensure proper state sync
+  // React's state batching was causing the modal to stay stuck
   useEffect(() => {
     if (step === 'success') {
-      // Immediately notify parent that login succeeded
-      // This triggers refreshSession in App.tsx to sync the auth state
-      console.log('[EmailLoginModal] Success! Notifying parent immediately...');
-      onLoginSuccess?.();
+      console.log('[EmailLoginModal] Success! Reloading page to ensure proper state sync...');
       
-      // Small delay for visual feedback, then close
+      // Show success animation briefly, then reload
       const timer = setTimeout(() => {
-        onClose();
-      }, 1500);
+        window.location.reload();
+      }, 1200);
       
       return () => clearTimeout(timer);
     }
-  }, [step, onLoginSuccess, onClose]);
+  }, [step]);
 
   // Handle OTP change
   const handleOtpChange = (value: string) => {
