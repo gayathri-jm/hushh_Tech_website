@@ -48,6 +48,9 @@ import {
 const MotionBox = motion(Box);
 const MotionFlex = motion(Flex);
 
+// Storage key for chat persistence
+const CHAT_STORAGE_KEY = 'hushh_chatnode_messages';
+
 // Welcome message from Hushh Intelligence
 const WELCOME_MESSAGE: ChatMessage = {
   id: 'welcome',
@@ -67,6 +70,35 @@ Feel free to upload images or files - I can analyze them for you!
   timestamp: new Date(),
 };
 
+// Helper to load messages from localStorage
+const loadMessagesFromStorage = (): ChatMessage[] => {
+  try {
+    const stored = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Convert timestamp strings back to Date objects
+      return parsed.map((msg: any) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp),
+      }));
+    }
+  } catch (e) {
+    console.warn('Failed to load chat history:', e);
+  }
+  return [WELCOME_MESSAGE];
+};
+
+// Helper to save messages to localStorage
+const saveMessagesToStorage = (messages: ChatMessage[]) => {
+  try {
+    // Only save last 100 messages to avoid storage limits
+    const toSave = messages.slice(-100);
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(toSave));
+  } catch (e) {
+    console.warn('Failed to save chat history:', e);
+  }
+};
+
 interface ChatNodeProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -79,8 +111,13 @@ export const ChatNode: React.FC<ChatNodeProps> = ({ isOpen = true, onClose }) =>
   const imageInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // State
-  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
+  // State - Load from localStorage on init
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadMessagesFromStorage());
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    saveMessagesToStorage(messages);
+  }, [messages]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);

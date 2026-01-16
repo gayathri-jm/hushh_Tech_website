@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Coach } from './types';
 import { COACHES } from './constants';
 import CoachCard from './components/CoachCard';
@@ -9,10 +9,50 @@ import { useEmailAuth } from './hooks/useEmailAuth';
 
 type FilterType = 'all' | 'biological' | 'automation' | 'dating' | 'career' | 'chatnode';
 
+// Storage keys for persistence
+const STORAGE_KEYS = {
+  ACTIVE_FILTER: 'hushh_agent_active_filter',
+  SELECTED_COACH: 'hushh_agent_selected_coach',
+};
+
 const App: React.FC = () => {
-  const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  // Load initial state from localStorage
+  const [selectedCoach, setSelectedCoach] = useState<Coach | null>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_COACH);
+      if (stored) {
+        const coachId = JSON.parse(stored);
+        return COACHES.find(c => c.id === coachId) || null;
+      }
+    } catch { /* ignore */ }
+    return null;
+  });
+  
+  const [activeFilter, setActiveFilter] = useState<FilterType>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.ACTIVE_FILTER);
+      if (stored) {
+        return JSON.parse(stored) as FilterType;
+      }
+    } catch { /* ignore */ }
+    return 'all';
+  });
+  
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Persist activeFilter to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_FILTER, JSON.stringify(activeFilter));
+  }, [activeFilter]);
+
+  // Persist selectedCoach to localStorage
+  useEffect(() => {
+    if (selectedCoach) {
+      localStorage.setItem(STORAGE_KEYS.SELECTED_COACH, JSON.stringify(selectedCoach.id));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.SELECTED_COACH);
+    }
+  }, [selectedCoach]);
   
   // Email Auth Hook
   const { isAuthenticated, isLoading, user, signOut } = useEmailAuth();
