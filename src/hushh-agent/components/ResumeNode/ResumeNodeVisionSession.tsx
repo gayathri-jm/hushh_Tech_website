@@ -58,12 +58,15 @@ const LANGUAGES: LanguageOption[] = [
 ];
 
 const getLanguageInstruction = (lang: LanguageOption): string => {
+  // CRITICAL: The Gemini Live API does NOT have a language parameter.
+  // Language is controlled ONLY via System Instructions.
+  // The instruction must be emphatic and at the START of the prompt.
   const instructions: Record<SessionLanguage, string> = {
-    en: 'Speak and respond in English. Be natural, warm, and engaging.',
-    ar: 'تحدث وارد باللغة العربية. كن طبيعياً ودافئاً وجذاباً. IMPORTANT: Respond in Arabic (العربية). All your speech MUST be in Arabic language.',
-    fr: 'Parlez et répondez en français. Soyez naturel, chaleureux et engageant. IMPORTANT: Respond in French (Français). All your speech MUST be in French language.',
-    zh: '用中文说话和回应。自然、温暖、有吸引力。IMPORTANT: Respond in Chinese (中文). All your speech MUST be in Mandarin Chinese.',
-    hi: 'हिंदी में बोलें और जवाब दें। स्वाभाविक, गर्म और आकर्षक रहें। IMPORTANT: Respond in Hindi (हिन्दी). All your speech MUST be in Hindi language.',
+    en: 'You must always speak in English. Be natural, warm, and engaging.',
+    ar: 'You must always speak in Arabic (العربية). Even if the user speaks English, you MUST translate your response and reply ONLY in Arabic. تحدث باللغة العربية فقط. Never respond in English.',
+    fr: 'You must always speak in French (Français). Even if the user speaks English, you MUST translate your response and reply ONLY in French. Parlez uniquement en français. Never respond in English.',
+    zh: 'You must always speak in Chinese (中文). Even if the user speaks English, you MUST translate your response and reply ONLY in Mandarin Chinese. 只用中文说话。Never respond in English.',
+    hi: 'You must always speak in Hindi (हिन्दी). Even if the user speaks English, you MUST translate your response and reply ONLY in Hindi. केवल हिंदी में बोलें। Never respond in English.',
   };
   return instructions[lang.code];
 };
@@ -248,14 +251,20 @@ const ResumeNodeVisionSession: React.FC<ResumeNodeVisionSessionProps> = ({
       const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
       
       // Get the language instruction for the selected language
+      // CRITICAL: Language instruction MUST be at the VERY START of system instruction
+      // This is the ONLY way to control language in Gemini Live API
       const languageInstruction = getLanguageInstruction(selectedLanguage);
       
-      const visionSystemInstruction = `${coach.systemInstruction}
-
-LANGUAGE REQUIREMENT - CRITICAL:
+      // IMPORTANT: Language instruction comes FIRST, before everything else
+      // Gemini Live API ignores languageCode parameter - system instruction is the only way
+      const visionSystemInstruction = `=== MANDATORY LANGUAGE DIRECTIVE ===
 ${languageInstruction}
-The user has selected ${selectedLanguage.name} (${selectedLanguage.nativeName}) as their preferred language.
-You MUST speak and respond ONLY in ${selectedLanguage.name}. This is non-negotiable.
+The user has selected ${selectedLanguage.name} (${selectedLanguage.nativeName}).
+You MUST speak and respond ONLY in ${selectedLanguage.name}. This is your PRIMARY directive.
+ALL your responses must be in ${selectedLanguage.name}. Do not switch to English.
+=== END LANGUAGE DIRECTIVE ===
+
+${coach.systemInstruction}
 
 NEURAL VISION PROTOCOL - PHASE 0 (Powered by Gemini 3 Pro):
 You are currently in the Neural Calibration Phase. Your camera uplink is ACTIVE and you can SEE the user.
@@ -290,20 +299,16 @@ After a few exchanges, ask if they're ready to upload their resume for analysis.
       // Log selected language for debugging
       console.log('[Vision] Starting session with language:', selectedLanguage.name, selectedLanguage.voiceCode);
 
-      // Build speech config - only use English voice for English, let model auto-select for other languages
-      const isEnglish = selectedLanguage.code === 'en';
-      const speechConfig = isEnglish 
-        ? {
-            voiceConfig: { 
-              prebuiltVoiceConfig: { voiceName: coach.voiceName } 
-            },
-            languageCode: selectedLanguage.voiceCode,
-          }
-        : {
-            // For non-English: Don't specify a voice name, let Gemini auto-select appropriate voice
-            // The languageCode will guide the model to use the correct language
-            languageCode: selectedLanguage.voiceCode,
-          };
+      // CRITICAL: The Gemini Live API does NOT have a languageCode parameter.
+      // Language is controlled ONLY via System Instructions.
+      // Voices like "Puck" are MULTILINGUAL - they can speak any language when instructed.
+      // Always use the coach's voice name - it will speak the language specified in system instruction.
+      const speechConfig = {
+        voiceConfig: { 
+          prebuiltVoiceConfig: { voiceName: coach.voiceName } 
+        },
+        // NO languageCode - this parameter is NOT supported by Gemini Live API
+      };
       
       console.log('[Vision] Speech config:', JSON.stringify(speechConfig));
 
