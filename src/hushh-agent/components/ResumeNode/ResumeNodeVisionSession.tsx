@@ -16,21 +16,23 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { GoogleGenAI, Modality, LiveServerMessage, ThinkingLevel } from '@google/genai';
+import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { Coach } from '../../types';
 import { COACHES, AUDIO_SAMPLE_RATE_INPUT, AUDIO_SAMPLE_RATE_OUTPUT } from '../../constants';
 import { EmotionalState } from '../../types/resumeNode';
 import { useEmotionDetection } from '../../hooks/useEmotionDetection';
 import { FaceAnalysis } from '../../services/mediapipeService';
 import EmotionalStateHUD from './EmotionalStateHUD';
+import ResumeUploadDialog from './ResumeUploadDialog';
 import { decode, decodeAudioData, createPcmBlob } from '../../services/audioUtils';
+import { uploadAndCacheResume, CachedContent, UploadedFile } from '../../services/geminiFileService';
 
 interface ResumeNodeVisionSessionProps {
   onClose: () => void;
   onProceedToLiveSession: (coach: Coach) => void;
 }
 
-type SessionPhase = 'coach-select' | 'calibrating' | 'vision-active' | 'ready';
+type SessionPhase = 'coach-select' | 'welcome' | 'calibrating' | 'neural-greeting' | 'resume-upload' | 'vision-active';
 
 const CALIBRATION_STEPS = [
   { id: 'init', label: 'INITIALIZING HUSHH NEURAL CORE', duration: 1200 },
@@ -100,6 +102,13 @@ const ResumeNodeVisionSession: React.FC<ResumeNodeVisionSessionProps> = ({
   const [agentTranscript, setAgentTranscript] = useState('');
   const [neuralReadout, setNeuralReadout] = useState('');
   const [readinessScore, setReadinessScore] = useState(0);
+  
+  // Resume upload state
+  const [showResumeUpload, setShowResumeUpload] = useState(false);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [resumeCache, setResumeCache] = useState<CachedContent | null>(null);
+  const [welcomeStep, setWelcomeStep] = useState(0);
 
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -233,15 +242,15 @@ IMPORTANT: You are having a LIVE conversation. Be natural, responsive, and human
 After a few exchanges, ask if they're ready to upload their resume for analysis.`;
 
       const sessionPromise = ai.live.connect({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-2.5-flash-native-audio-preview-12-2025',
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: coach.voiceName } } },
           systemInstruction: visionSystemInstruction,
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          // Gemini 3 Pro - Use high thinking level for best reasoning
-          thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
+          // Gemini 2.5 Flash Native Audio with thinking capabilities
+          thinkingConfig: { thinkingBudget: 2048 },
         },
         callbacks: {
           onopen: () => {
@@ -337,6 +346,59 @@ This is Phase 0 - Neural Calibration before resume analysis.`
     }
   };
 
+  // Handle resume upload
+  const handleResumeUpload = useCallback(async (file: File) => {
+    if (!selectedCoach) return;
+    
+    setIsUploadingResume(true);
+    setUploadProgress(0);
+    
+    try {
+      const result = await uploadAndCacheResume(
+        file,
+        selectedCoach.id as 'victor' | 'sophia',
+        (progress) => setUploadProgress(progress.percentage)
+      );
+      
+      setResumeCache(result.cache);
+      setShowResumeUpload(false);
+      
+      // Notify Gemini about the uploaded resume
+      if (sessionRef.current) {
+        sessionRef.current.sendRealtimeInput({
+          text: `[SYSTEM: Resume Uploaded Successfully]
+The user has uploaded their resume: ${file.name}
+Resume is now cached and available for analysis.
+Token count: ${result.cache.usageMetadata?.totalTokenCount || 'unknown'} tokens cached.
+
+Now provide a brief acknowledgment and ask what aspect of their resume they'd like to explore first.
+Be specific - mention that you can see their resume and are ready to analyze it.`
+        });
+      }
+      
+      console.log('[Vision] Resume cached:', result.cache.name);
+    } catch (error) {
+      console.error('[Vision] Resume upload failed:', error);
+    } finally {
+      setIsUploadingResume(false);
+    }
+  }, [selectedCoach]);
+
+  // Handle skip resume upload
+  const handleSkipUpload = useCallback(() => {
+    setShowResumeUpload(false);
+    
+    // Notify Gemini that user skipped upload
+    if (sessionRef.current) {
+      sessionRef.current.sendRealtimeInput({
+        text: `[SYSTEM: User Skipped Resume Upload]
+The user chose to continue without uploading a resume.
+Adapt your conversation - you can still provide career advice based on verbal discussion.
+Ask them about their current role and career goals instead.`
+      });
+    }
+  }, []);
+
   // Handle proceed to full session
   const handleProceed = useCallback(() => {
     if (selectedCoach) {
@@ -344,6 +406,11 @@ This is Phase 0 - Neural Calibration before resume analysis.`
       onProceedToLiveSession(selectedCoach);
     }
   }, [selectedCoach, onProceedToLiveSession]);
+
+  // Show resume upload dialog after greeting
+  const handleShowResumeUpload = useCallback(() => {
+    setShowResumeUpload(true);
+  }, []);
 
   // Stop session and cleanup
   const stopSession = useCallback(() => {
@@ -688,6 +755,27 @@ This is Phase 0 - Neural Calibration before resume analysis.`
 
           {/* Action Buttons */}
           <div className="space-y-3">
+            {/* Upload Resume Button */}
+            {!resumeCache && (
+              <button
+                onClick={handleShowResumeUpload}
+                className="w-full py-4 rounded-2xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 text-purple-300 text-[11px] font-black uppercase tracking-[0.3em] transition-all group"
+              >
+                <i className="fas fa-file-upload mr-3 group-hover:animate-bounce"></i>
+                Upload Resume
+              </button>
+            )}
+            
+            {/* Resume Uploaded Indicator */}
+            {resumeCache && (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-green-500/10 border border-green-500/30">
+                <i className="fas fa-check-circle text-green-400"></i>
+                <span className="text-green-300 text-[10px] uppercase tracking-[0.2em] font-bold">
+                  Resume Cached • {resumeCache.usageMetadata?.totalTokenCount || 'N/A'} Tokens
+                </span>
+              </div>
+            )}
+            
             {readinessScore >= 70 && (
               <button
                 onClick={handleProceed}
@@ -715,6 +803,18 @@ This is Phase 0 - Neural Calibration before resume analysis.`
           )}
         </div>
       </div>
+
+      {/* Resume Upload Dialog */}
+      {selectedCoach && (
+        <ResumeUploadDialog
+          isOpen={showResumeUpload}
+          coach={selectedCoach}
+          onUpload={handleResumeUpload}
+          onSkip={handleSkipUpload}
+          isUploading={isUploadingResume}
+          uploadProgress={uploadProgress}
+        />
+      )}
     </div>
   );
 };
