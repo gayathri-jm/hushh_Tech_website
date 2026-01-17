@@ -64,11 +64,28 @@ const ResumeUploadDialog: React.FC<ResumeUploadDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [uploadPhase, setUploadPhase] = useState<UploadPhase>('idle');
   const [currentMessage, setCurrentMessage] = useState('');
+  const [hasCompletedSuccessfully, setHasCompletedSuccessfully] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Determine upload phase based on progress
+  // Reset internal state when dialog opens fresh
   useEffect(() => {
+    if (isOpen && !isUploading && !isComplete && uploadProgress === 0) {
+      setHasCompletedSuccessfully(false);
+      setUploadPhase('idle');
+      setSelectedFile(null);
+    }
+  }, [isOpen, isUploading, isComplete, uploadProgress]);
+
+  // Determine upload phase based on progress
+  // Once we've completed successfully, don't go back to other states
+  useEffect(() => {
+    if (hasCompletedSuccessfully) {
+      setUploadPhase('success');
+      return;
+    }
+    
     if (isComplete) {
+      setHasCompletedSuccessfully(true);
       setUploadPhase('success');
     } else if (isUploading) {
       if (uploadProgress < 70) {
@@ -76,10 +93,10 @@ const ResumeUploadDialog: React.FC<ResumeUploadDialogProps> = ({
       } else if (uploadProgress < 100) {
         setUploadPhase('caching');
       }
-    } else {
+    } else if (!hasCompletedSuccessfully) {
       setUploadPhase('idle');
     }
-  }, [isUploading, uploadProgress, isComplete]);
+  }, [isUploading, uploadProgress, isComplete, hasCompletedSuccessfully]);
 
   // Cycle through upload messages
   useEffect(() => {
