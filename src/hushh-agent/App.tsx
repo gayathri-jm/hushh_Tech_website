@@ -7,6 +7,7 @@ import LiveSession from './components/LiveSession';
 import EmailLoginModal from './components/EmailLoginModal';
 import ChatNode from './components/ChatNode';
 import AgentHeader from './components/AgentHeader';
+import { ResumeNodeVisionSession } from './components/ResumeNode';
 import { useEmailAuth } from './hooks/useEmailAuth';
 
 // Chakra UI theme for agent module
@@ -141,6 +142,14 @@ const App: React.FC = () => {
             showHeader={false}
           />
         </ChakraProvider>
+      ) : activeFilter === 'career' && !selectedCoach ? (
+        // Resume Node - Phase 0: Neural Vision Session
+        <ResumeNodeVisionSession 
+          onClose={handleHomeClick}
+          onProceedToLiveSession={(coach) => {
+            setSelectedCoach(coach);
+          }}
+        />
       ) : !selectedCoach ? (
         <div className="relative z-10 max-w-[1600px] mx-auto px-6 py-16 md:py-32">
           {/* User Status Bar */}
