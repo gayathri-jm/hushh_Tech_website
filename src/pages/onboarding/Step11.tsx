@@ -169,16 +169,9 @@ function OnboardingStep11() {
             const confidenceText = result.data.confidence >= 70 ? '✅' : result.data.confidence >= 40 ? '🔶' : '🔍';
             setInferenceMessage(`${confidenceText} Found: ${result.data.dobDisplay} (${result.data.confidence}% confidence)`);
             
-            // Cache the inferred DOB in parallel (async)
-            config.supabaseClient
-              .from('onboarding_data')
-              .update({
-                ai_inferred_dob: result.data.dob,
-                ai_dob_confidence: result.data.confidence,
-                updated_at: new Date().toISOString(),
-              })
-              .eq('user_id', user.id)
-              .then(() => console.log('[Step11] DOB cached to DB'));
+            // Note: Caching to DB is optional - the main value is real-time pre-fill
+            // The user can edit the DOB before continuing anyway
+            console.log('[Step11] DOB pre-filled successfully (not cached - columns pending)');
             
             // Clear message after 3 seconds
             setTimeout(() => setInferenceMessage(null), 3000);
