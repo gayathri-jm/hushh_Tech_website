@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
+import { searchProfile, mapToOnboardingFields } from '../../services/profileSearch/profileSearchService';
+import { ParsedAddress } from '../../services/profileSearch/types';
 
 // Types for location data from our Edge Function
 interface Country {
@@ -148,7 +150,7 @@ function OnboardingStep10() {
     fetchCities();
   }, [country, state]);
 
-  // Load existing data
+  // Load existing data with AI pre-population from enriched profiles
   useEffect(() => {
     const loadData = async () => {
       if (!config.supabaseClient) return;
@@ -156,24 +158,129 @@ function OnboardingStep10() {
       const { data: { user } } = await config.supabaseClient.auth.getUser();
       if (!user) return;
 
-      const { data } = await config.supabaseClient
+      // 1. First, check existing onboarding data (user-entered takes priority)
+      const { data: onboardingData } = await config.supabaseClient
         .from('onboarding_data')
-        .select('address_line_1, address_line_2, address_country, state, city, zip_code')
+        .select('address_line_1, address_line_2, address_country, state, city, zip_code, legal_first_name, legal_last_name')
         .eq('user_id', user.id)
         .single();
 
-      if (data) {
-        setAddressLine1(data.address_line_1 || '');
-        setAddressLine2(data.address_line_2 || '');
-        setCountry(data.address_country || 'US');
-        setState(data.state || '');
-        setCity(data.city || '');
-        setZipCode(data.zip_code || '');
+      // If user already has address data, use it (they may have edited it)
+      if (onboardingData?.address_line_1) {
+        setAddressLine1(onboardingData.address_line_1 || '');
+        setAddressLine2(onboardingData.address_line_2 || '');
+        setCountry(onboardingData.address_country || 'US');
+        setState(onboardingData.state || '');
+        setCity(onboardingData.city || '');
+        setZipCode(onboardingData.zip_code || '');
+        return; // User has existing data, don't override
+      }
+
+      // 2. Check for cached enriched profile data
+      const { data: enrichedProfile } = await config.supabaseClient
+        .from('user_enriched_profiles')
+        .select('address')
+        .eq('user_id', user.id)
+        .single();
+
+      if (enrichedProfile?.address) {
+        const addr = enrichedProfile.address as ParsedAddress;
+        console.log('[Step10] Found cached enriched profile address:', addr);
+        
+        // Pre-fill from enriched profile
+        if (addr.line1) setAddressLine1(addr.line1);
+        if (addr.line2) setAddressLine2(addr.line2);
+        if (addr.country) {
+          // Map country name to ISO code if needed
+          const countryCode = mapCountryToIsoCode(addr.country);
+          setCountry(countryCode);
+        }
+        if (addr.state) setState(addr.state);
+        if (addr.city) setCity(addr.city);
+        if (addr.zipCode) setZipCode(addr.zipCode);
+        return;
+      }
+
+      // 3. No cached data - try to fetch from profile search API if we have name
+      if (onboardingData?.legal_first_name && onboardingData?.legal_last_name) {
+        console.log('[Step10] No cached profile, calling profile search API...');
+        
+        const fullName = `${onboardingData.legal_first_name} ${onboardingData.legal_last_name}`;
+        const userEmail = user.email || '';
+        
+        try {
+          const result = await searchProfile({
+            name: fullName,
+            email: userEmail,
+            country: 'United States', // Default, will be overridden by API result
+          });
+
+          if (result.success && result.data) {
+            console.log('[Step10] Profile search success:', result.data);
+            
+            // Cache the enriched profile for future use
+            await config.supabaseClient
+              .from('user_enriched_profiles')
+              .upsert({
+                user_id: user.id,
+                address: result.data.address,
+                nationality: result.data.nationality,
+                occupation: result.data.occupation,
+                preferences: result.data.preferences,
+                confidence: result.data.confidence,
+                search_query: fullName,
+                sources: result.data.sources,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              }, {
+                onConflict: 'user_id'
+              });
+
+            // Pre-fill address from API result
+            if (result.data.address) {
+              const addr = result.data.address;
+              if (addr.line1) setAddressLine1(addr.line1);
+              if (addr.line2) setAddressLine2(addr.line2);
+              if (addr.country) {
+                const countryCode = mapCountryToIsoCode(addr.country);
+                setCountry(countryCode);
+              }
+              if (addr.state) setState(addr.state);
+              if (addr.city) setCity(addr.city);
+              if (addr.zipCode) setZipCode(addr.zipCode);
+            }
+          }
+        } catch (err) {
+          console.error('[Step10] Profile search error:', err);
+          // Silently fail - user can enter manually
+        }
       }
     };
 
     loadData();
   }, []);
+
+  // Helper function to map country names to ISO codes
+  const mapCountryToIsoCode = (countryName: string): string => {
+    const countryMap: Record<string, string> = {
+      'United States': 'US',
+      'USA': 'US',
+      'US': 'US',
+      'India': 'IN',
+      'United Kingdom': 'GB',
+      'UK': 'GB',
+      'Canada': 'CA',
+      'Australia': 'AU',
+      'Germany': 'DE',
+      'France': 'FR',
+      'Japan': 'JP',
+      'China': 'CN',
+      'Singapore': 'SG',
+      'United Arab Emirates': 'AE',
+      'UAE': 'AE',
+    };
+    return countryMap[countryName] || countryName;
+  };
 
   // Validation functions
   const validateAddressLine1 = (value: string): string | undefined => {
