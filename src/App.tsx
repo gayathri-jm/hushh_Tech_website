@@ -83,6 +83,8 @@ import HushhAgentApp from './hushh-agent/pages';
 import KaiApp from './kai/pages';
 import KaiIndiaApp from './kai-india/pages';
 import HushhStudioApp from './hushh-studio/pages';
+import GlobalNDAGate from './components/GlobalNDAGate';
+import SignNDAPage from './pages/sign-nda';
 
 // Google Analytics configuration
 const GA_TRACKING_ID = 'G-R58S9WWPM0';
@@ -452,6 +454,8 @@ function App() {
             {/* Hushh Studio - FREE AI Video Generation */}
             {/* Powered by Google Veo 3.1 - No login required, free for Indian audience */}
             <Route path='/studio' element={<HushhStudioApp />} />
+            {/* Global NDA Signing Page */}
+            <Route path='/sign-nda' element={<SignNDAPage />} />
           </Routes>
         </ContentWrapper>
         {/* Footer - Only show for non-Hushh AI routes */}
@@ -466,7 +470,9 @@ function App() {
     <ChakraProvider theme={theme}>
       <Router>
         <ScrollToTop />
-        <AppLayout />
+        <GlobalNDAGate session={session}>
+          <AppLayout />
+        </GlobalNDAGate>
         
         {/* Dev Console Toggle Button - only shows when enabled but console is closed */}
         {devConsoleEnabled && !isDevConsoleOpen && (
