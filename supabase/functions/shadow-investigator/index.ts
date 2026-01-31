@@ -86,13 +86,11 @@ interface ProfileResult {
 // ============ OAuth Token Generation ============
 
 const getAccessToken = async (): Promise<string> => {
-  const accessToken = Deno.env.get("GCP_ACCESS_TOKEN") || Deno.env.get("GOOGLE_ACCESS_TOKEN");
-  if (accessToken && accessToken.length > 50) {
-    console.log("Using GCP_ACCESS_TOKEN from environment");
-    return accessToken;
-  }
-
-  const serviceAccountJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
+  // PRIORITY 1: Always try to generate fresh token from service account (never expires)
+  const serviceAccountJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON") || 
+                              Deno.env.get("GCP_SERVICE_ACCOUNT_KEY") || 
+                              Deno.env.get("GCP_SERVICE_ACCOUNT_JSON");
+  
   if (serviceAccountJson) {
     try {
       console.log("Generating access token from service account...");
