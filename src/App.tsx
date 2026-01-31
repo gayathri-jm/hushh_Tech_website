@@ -85,6 +85,7 @@ import KaiIndiaApp from './kai-india/pages';
 import HushhStudioApp from './hushh-studio/pages';
 import GlobalNDAGate from './components/GlobalNDAGate';
 import SignNDAPage from './pages/sign-nda';
+import NDAAdminPage from './pages/nda-admin';
 
 // Google Analytics configuration
 const GA_TRACKING_ID = 'G-R58S9WWPM0';
@@ -456,6 +457,8 @@ function App() {
             <Route path='/studio' element={<HushhStudioApp />} />
             {/* Global NDA Signing Page */}
             <Route path='/sign-nda' element={<SignNDAPage />} />
+            {/* NDA Admin Page - Password protected view of all NDA agreements */}
+            <Route path='/nda-admin' element={<NDAAdminPage />} />
           </Routes>
         </ContentWrapper>
         {/* Footer - Only show for non-Hushh AI routes */}

@@ -377,18 +377,20 @@ serve(async (req) => {
 
             <!-- Action Buttons -->
             <div style="text-align: center; margin-top: 32px;">
-              <a href="https://supabase.com/dashboard/project/ibsisfnjxeowvdtvgzff/editor/29410?schema=public" 
+              <a href="https://hushh.ai/nda-admin" 
                  style="display: inline-block; background-color: #0A0A0A; color: #ffffff; 
                         padding: 14px 32px; text-decoration: none; border-radius: 8px; 
                         font-weight: 600; font-size: 14px; margin-right: 12px;">
                 View All NDA Agreements
               </a>
-              <a href="https://hushh.ai/hushh-user-profile" 
+              ${userId ? `
+              <a href="https://hushh.ai/nda-admin?highlight=${userId}" 
                  style="display: inline-block; background-color: #ffffff; color: #0A0A0A; 
                         padding: 14px 32px; text-decoration: none; border-radius: 8px; 
                         font-weight: 600; font-size: 14px; border: 2px solid #0A0A0A;">
-                View User Profiles
+                View This User's NDA
               </a>
+              ` : ''}
             </div>
           </div>
 
