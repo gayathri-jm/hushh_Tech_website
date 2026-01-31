@@ -2,11 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
+import { Country as CSCCountry, State as CSCState, City as CSCCity } from 'country-state-city';
 
 // Edge Function URL for GPS geocoding (real-time location detection)
 const LOCATION_GEOCODE_API = `${config.SUPABASE_URL}/functions/v1/hushh-location-geocode`;
 
-// Types for location data from our Edge Function
+// Types for location data
 interface Country {
   isoCode: string;
   name: string;
@@ -20,9 +21,6 @@ interface State {
 interface City {
   name: string;
 }
-
-// Supabase Edge Function URL
-const LOCATIONS_API = 'https://ibsisfnjxeowvdtvgzff.supabase.co/functions/v1/get-locations';
 
 // Back arrow icon
 const BackIcon = () => (
@@ -98,78 +96,65 @@ function OnboardingStep10() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch countries on mount
+  // Load countries on mount (using npm package directly - no API call needed)
   useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        setLoadingCountries(true);
-        const response = await fetch(`${LOCATIONS_API}?type=countries`);
-        const result = await response.json();
-        if (result.data) {
-          setCountries(result.data);
-          setCountriesLoaded(true);
-          console.log('[Step10] Countries loaded:', result.data.length);
-        }
-      } catch (err) {
-        console.error('Error fetching countries:', err);
-      } finally {
-        setLoadingCountries(false);
-      }
-    };
-
-    fetchCountries();
+    try {
+      setLoadingCountries(true);
+      const allCountries = CSCCountry.getAllCountries().map(c => ({
+        isoCode: c.isoCode,
+        name: c.name,
+      }));
+      setCountries(allCountries);
+      setCountriesLoaded(true);
+      console.log('[Step10] Countries loaded:', allCountries.length);
+    } catch (err) {
+      console.error('Error loading countries:', err);
+    } finally {
+      setLoadingCountries(false);
+    }
   }, []);
 
-  // Fetch states when country changes
+  // Load states when country changes (using npm package directly)
   useEffect(() => {
     if (!country) {
       setStates([]);
       return;
     }
 
-    const fetchStates = async () => {
-      try {
-        setLoadingStates(true);
-        const response = await fetch(`${LOCATIONS_API}?type=states&country=${country}`);
-        const result = await response.json();
-        if (result.data) {
-          setStates(result.data);
-          console.log('[Step10] States loaded for', country, ':', result.data.length);
-        }
-      } catch (err) {
-        console.error('Error fetching states:', err);
-      } finally {
-        setLoadingStates(false);
-      }
-    };
-
-    fetchStates();
+    try {
+      setLoadingStates(true);
+      const countryStates = CSCState.getStatesOfCountry(country).map(s => ({
+        isoCode: s.isoCode,
+        name: s.name,
+      }));
+      setStates(countryStates);
+      console.log('[Step10] States loaded for', country, ':', countryStates.length);
+    } catch (err) {
+      console.error('Error loading states:', err);
+    } finally {
+      setLoadingStates(false);
+    }
   }, [country]);
 
-  // Fetch cities when state changes
+  // Load cities when state changes (using npm package directly)
   useEffect(() => {
     if (!country || !state) {
       setCities([]);
       return;
     }
 
-    const fetchCities = async () => {
-      try {
-        setLoadingCities(true);
-        const response = await fetch(`${LOCATIONS_API}?type=cities&country=${country}&state=${state}`);
-        const result = await response.json();
-        if (result.data) {
-          setCities(result.data);
-          console.log('[Step10] Cities loaded for', state, ':', result.data.length);
-        }
-      } catch (err) {
-        console.error('Error fetching cities:', err);
-      } finally {
-        setLoadingCities(false);
-      }
-    };
-
-    fetchCities();
+    try {
+      setLoadingCities(true);
+      const stateCities = CSCCity.getCitiesOfState(country, state).map(c => ({
+        name: c.name,
+      }));
+      setCities(stateCities);
+      console.log('[Step10] Cities loaded for', state, ':', stateCities.length);
+    } catch (err) {
+      console.error('Error loading cities:', err);
+    } finally {
+      setLoadingCities(false);
+    }
   }, [country, state]);
 
   // ============================================
