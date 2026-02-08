@@ -186,9 +186,7 @@ export default function Navbar() {
           {/* Left: Brand Lockup */}
           <Link to="/" className="flex items-center gap-3">
             {/* Hushh Logo Image in Circle with subtle gradient */}
-            <div 
-              className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-200/50 shadow-sm shrink-0 overflow-hidden"
-            >
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-200/50 shadow-sm shrink-0 overflow-hidden">
               <Image 
                 src={hushhLogo} 
                 alt="Hushh Logo" 

@@ -151,6 +151,7 @@ const initializeGoogleAnalytics = () => {
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
+
   // Initialize Google Analytics
   useEffect(() => {
     initializeGoogleAnalytics();
