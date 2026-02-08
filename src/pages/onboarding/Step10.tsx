@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
-import { Country as CSCCountry, State as CSCState, City as CSCCity } from 'country-state-city';
+import { getAllCountries, getStatesOfCountry, getCitiesOfState } from '../../data/locationData';
 
 // Edge Function URL for GPS geocoding (real-time location detection)
 const LOCATION_GEOCODE_API = `${config.SUPABASE_URL}/functions/v1/hushh-location-geocode`;
@@ -96,66 +96,71 @@ function OnboardingStep10() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Load countries on mount (using npm package directly - no API call needed)
+  // Load countries on mount (static list - no heavy processing)
   useEffect(() => {
-    try {
-      setLoadingCountries(true);
-      const allCountries = CSCCountry.getAllCountries().map(c => ({
-        isoCode: c.isoCode,
-        name: c.name,
-      }));
-      setCountries(allCountries);
-      setCountriesLoaded(true);
-      console.log('[Step10] Countries loaded:', allCountries.length);
-    } catch (err) {
-      console.error('Error loading countries:', err);
-    } finally {
-      setLoadingCountries(false);
-    }
+    setLoadingCountries(true);
+    const allCountries = getAllCountries();
+    setCountries(allCountries);
+    setCountriesLoaded(true);
+    setLoadingCountries(false);
+    console.log('[Step10] Countries loaded:', allCountries.length);
   }, []);
 
-  // Load states when country changes (using npm package directly)
+  // Load states when country changes (async API call)
   useEffect(() => {
     if (!country) {
       setStates([]);
       return;
     }
 
-    try {
+    let cancelled = false;
+    const loadStates = async () => {
       setLoadingStates(true);
-      const countryStates = CSCState.getStatesOfCountry(country).map(s => ({
-        isoCode: s.isoCode,
-        name: s.name,
-      }));
-      setStates(countryStates);
-      console.log('[Step10] States loaded for', country, ':', countryStates.length);
-    } catch (err) {
-      console.error('Error loading states:', err);
-    } finally {
-      setLoadingStates(false);
-    }
+      try {
+        // Find state name for the selected state (API needs country name)
+        const statesList = await getStatesOfCountry(country);
+        if (!cancelled) {
+          setStates(statesList);
+          console.log('[Step10] States loaded for', country, ':', statesList.length);
+        }
+      } catch (err) {
+        console.error('Error loading states:', err);
+      } finally {
+        if (!cancelled) setLoadingStates(false);
+      }
+    };
+    loadStates();
+    return () => { cancelled = true; };
   }, [country]);
 
-  // Load cities when state changes (using npm package directly)
+  // Load cities when state changes (async API call)
   useEffect(() => {
     if (!country || !state) {
       setCities([]);
       return;
     }
 
-    try {
+    let cancelled = false;
+    const loadCities = async () => {
       setLoadingCities(true);
-      const stateCities = CSCCity.getCitiesOfState(country, state).map(c => ({
-        name: c.name,
-      }));
-      setCities(stateCities);
-      console.log('[Step10] Cities loaded for', state, ':', stateCities.length);
-    } catch (err) {
-      console.error('Error loading cities:', err);
-    } finally {
-      setLoadingCities(false);
-    }
-  }, [country, state]);
+      try {
+        // Find state name from the states list (API needs state name, not code)
+        const stateObj = states.find(s => s.isoCode === state);
+        const stateName = stateObj?.name || state;
+        const citiesList = await getCitiesOfState(country, stateName);
+        if (!cancelled) {
+          setCities(citiesList);
+          console.log('[Step10] Cities loaded for', stateName, ':', citiesList.length);
+        }
+      } catch (err) {
+        console.error('Error loading cities:', err);
+      } finally {
+        if (!cancelled) setLoadingCities(false);
+      }
+    };
+    loadCities();
+    return () => { cancelled = true; };
+  }, [country, state, states]);
 
   // ============================================
   // FIX: Watch for dropdown data loading and apply pending GPS values
