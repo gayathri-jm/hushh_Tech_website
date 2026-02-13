@@ -25,6 +25,7 @@ import {
 import { keyframes } from '@emotion/react';
 import { usePlaidLinkHook } from '../../../services/plaid/usePlaidLink';
 import { formatCurrency, getHeaderTitle, type ProductFetchStatus } from '../../../services/plaid/plaidService';
+import type { FinancialVerificationResult } from '../../../types/kyc';
 
 // =====================================================
 // Props
@@ -35,8 +36,8 @@ export interface KycFinancialLinkScreenProps {
   userId: string;
   /** User email (optional, improves Plaid Link UX) */
   userEmail?: string;
-  /** Called when user clicks "Continue to KYC" */
-  onContinue: () => void;
+  /** Called with financial verification result when user clicks "Continue to KYC" */
+  onContinue: (result: FinancialVerificationResult) => void;
   /** Bank name to display */
   bankName?: string;
 }
@@ -299,7 +300,18 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
   // Handle button click
   const handleButtonClick = () => {
     if (plaid.step === 'done' && plaid.canProceed) {
-      onContinue();
+      // Build the financial verification result for the gate
+      const result: FinancialVerificationResult = {
+        verified: true,
+        productsAvailable: plaid.productsAvailable,
+        institutionName: plaid.institution?.name,
+        institutionId: plaid.institution?.id,
+        balanceAvailable: plaid.balanceStatus === 'success',
+        assetsAvailable: plaid.assetsStatus === 'success',
+        investmentsAvailable: plaid.investmentsStatus === 'success',
+        timestamp: new Date().toISOString(),
+      };
+      onContinue(result);
       return;
     }
     if (plaid.step === 'error' || (plaid.step === 'done' && !plaid.canProceed)) {

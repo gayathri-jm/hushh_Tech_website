@@ -29,6 +29,7 @@ import {
   KycCheckRequest,
   KycCheckResponse,
   FlowStep,
+  FinancialVerificationResult,
   generateSyntheticSteps,
 } from '../../../types/kyc';
 
@@ -78,6 +79,8 @@ const initialState: KycFlowState = {
   request: null,
   response: null,
   showDetailModal: false,
+  financialVerified: false,
+  financialData: null,
 };
 
 // =====================================================
@@ -241,25 +244,57 @@ export const KycFlowContainer: React.FC<KycFlowContainerProps> = ({
   
   /**
    * Handle FINANCIAL_LINK → INTRO transition
-   * Called after user successfully links bank and financial data is fetched
+   * GATE: Only proceeds if financial verification result is valid (≥1 product)
    */
-  const handleFinancialLinkComplete = useCallback(() => {
-    console.log('[KYC Flow] Financial verification complete, proceeding to KYC intro');
+  const handleFinancialLinkComplete = useCallback((result: FinancialVerificationResult) => {
+    // GATE CHECK: Must have at least 1 product verified
+    if (!result.verified || result.productsAvailable < 1) {
+      console.warn('[KYC Flow] Financial verification failed — blocking KYC');
+      setState(prev => ({
+        ...prev,
+        step: 'ERROR',
+        error: 'Financial verification is required before proceeding to KYC. Please link your bank account and verify at least one financial product (Balance, Assets, or Investments).',
+      }));
+      return;
+    }
+
+    console.log('[KYC Flow] Financial verification complete ✅', {
+      productsAvailable: result.productsAvailable,
+      institution: result.institutionName,
+      balance: result.balanceAvailable,
+      assets: result.assetsAvailable,
+      investments: result.investmentsAvailable,
+    });
+
     setState(prev => ({
       ...prev,
       step: 'INTRO',
+      financialVerified: true,
+      financialData: result,
     }));
   }, []);
   
   /**
    * Handle INTRO → DETAILS_CONSENT transition
+   * GATE: Only proceeds if financial verification is done
    */
   const handleIntroComplete = useCallback(() => {
+    // Double-check financial gate
+    if (!state.financialVerified) {
+      console.warn('[KYC Flow] Attempted to skip financial verification — blocking');
+      setState(prev => ({
+        ...prev,
+        step: 'FINANCIAL_LINK',
+        error: 'Please complete financial verification first.',
+      }));
+      return;
+    }
+    
     setState(prev => ({
       ...prev,
       step: 'DETAILS_CONSENT',
     }));
-  }, []);
+  }, [state.financialVerified]);
   
   /**
    * Handle DETAILS_CONSENT → AGENTS_COLLAB transition

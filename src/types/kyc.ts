@@ -124,6 +124,20 @@ export type FlowStep =
   | 'ERROR';
 
 /**
+ * Financial verification result stored in state
+ */
+export interface FinancialVerificationResult {
+  verified: boolean;
+  productsAvailable: number;
+  institutionName?: string;
+  institutionId?: string;
+  balanceAvailable: boolean;
+  assetsAvailable: boolean;
+  investmentsAvailable: boolean;
+  timestamp: string;
+}
+
+/**
  * Complete flow state for the KYC UI
  */
 export interface KycFlowState {
@@ -133,6 +147,10 @@ export interface KycFlowState {
   request?: KycCheckRequest | null;
   response?: KycCheckResponse | null;
   showDetailModal: boolean;
+  /** Gate: financial verification must be done before KYC */
+  financialVerified: boolean;
+  /** Financial verification result data */
+  financialData?: FinancialVerificationResult | null;
 }
 
 /**
@@ -225,7 +243,8 @@ export interface KycAgentDetailModalProps {
 export interface KycFinancialLinkScreenProps {
   userId: string;
   userEmail?: string;
-  onContinue: () => void;
+  /** Called with financial verification result when user clicks Continue */
+  onContinue: (result: FinancialVerificationResult) => void;
   bankName?: string;
 }
 
