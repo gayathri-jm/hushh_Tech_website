@@ -13,7 +13,7 @@ import { usePlaidLink as usePlaidLinkSDK, PlaidLinkOnSuccess, PlaidLinkOnExit } 
 import {
   createLinkToken,
   exchangeToken,
-  fetchFinancialData,
+  fetchAllFinancialData,
   checkAssetReport,
   getProductStatus,
   type FinancialDataResponse,
@@ -155,11 +155,10 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
 
       setState((prev) => ({ ...prev, step: 'fetching' }));
 
-      // Fetch all financial data in parallel
-      const financialResult = await fetchFinancialData(
+      // Fetch all financial data in parallel (Balance, Assets, Investments)
+      const financialResult = await fetchAllFinancialData(
         exchangeResult.access_token,
         userId,
-        exchangeResult.item_id,
       );
 
       // Determine individual statuses

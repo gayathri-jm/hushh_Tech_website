@@ -1,9 +1,9 @@
 /**
- * Plaid Service — Client-side API calls
+ * Plaid Service — Client-side API calls to Supabase Edge Functions
  * 
- * Handles communication with our serverless Plaid API routes.
- * All sensitive operations (access_token exchange, data fetching)
- * happen server-side. This service only sends requests.
+ * Calls production Supabase Edge Functions for Plaid operations.
+ * All sensitive operations happen server-side in Edge Functions.
+ * This service only sends requests with proper auth headers.
  */
 
 // =====================================================
@@ -18,13 +18,13 @@ export interface PlaidLinkTokenResponse {
 export interface PlaidExchangeResponse {
   access_token: string;
   item_id: string;
-  record_id: string | null;
+  record_id?: string | null;
 }
 
 /** Status of a single financial product fetch */
 export type ProductFetchStatus = 'idle' | 'loading' | 'success' | 'unavailable' | 'error' | 'pending';
 
-/** Result for a single product from the API */
+/** Result for a single product */
 export interface ProductResult {
   available: boolean;
   data: any | null;
@@ -32,7 +32,7 @@ export interface ProductResult {
   reason: 'not_supported' | 'error' | null;
 }
 
-/** Full financial data response from API */
+/** Full financial data response */
 export interface FinancialDataResponse {
   status: 'complete' | 'partial' | 'failed';
   balance: ProductResult;
@@ -53,10 +53,26 @@ export interface AssetReportPollResponse {
 }
 
 // =====================================================
-// API Base URL
+// Supabase Edge Function Base URL + Auth
 // =====================================================
 
-const API_BASE = '/api/plaid';
+const SUPABASE_URL = 'https://ibsisfnjxeowvdtvgzff.supabase.co/functions/v1';
+
+/** Get the Supabase anon key from env */
+const getAnonKey = (): string => {
+  try {
+    // @ts-ignore - Vite env
+    return import.meta.env?.VITE_SUPABASE_ANON_KEY || '';
+  } catch {
+    return '';
+  }
+};
+
+/** Standard headers for all Supabase Edge Function calls */
+const getHeaders = (): Record<string, string> => ({
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${getAnonKey()}`,
+});
 
 // =====================================================
 // Service Functions
@@ -64,19 +80,20 @@ const API_BASE = '/api/plaid';
 
 /**
  * Create a Plaid Link token for initializing Plaid Link
+ * Calls: Supabase Edge Function `create-link-token`
  */
 export const createLinkToken = async (
   userId: string,
   userEmail?: string,
 ): Promise<PlaidLinkTokenResponse> => {
-  const response = await fetch(`${API_BASE}/create-link-token`, {
+  const response = await fetch(`${SUPABASE_URL}/create-link-token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify({ userId, userEmail }),
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({ error: 'Failed to create link token' }));
     throw new Error(error.details || error.error || 'Failed to create link token');
   }
 
@@ -85,6 +102,7 @@ export const createLinkToken = async (
 
 /**
  * Exchange public_token for access_token after Plaid Link success
+ * Calls: Supabase Edge Function `exchange-public-token`
  */
 export const exchangeToken = async (
   publicToken: string,
@@ -92,9 +110,9 @@ export const exchangeToken = async (
   institutionName?: string,
   institutionId?: string,
 ): Promise<PlaidExchangeResponse> => {
-  const response = await fetch(`${API_BASE}/exchange-token`, {
+  const response = await fetch(`${SUPABASE_URL}/exchange-public-token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify({
       publicToken,
       userId,
@@ -104,7 +122,7 @@ export const exchangeToken = async (
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({ error: 'Failed to exchange token' }));
     throw new Error(error.details || error.error || 'Failed to exchange token');
   }
 
@@ -112,42 +130,161 @@ export const exchangeToken = async (
 };
 
 /**
- * Fetch all financial data (Balance, Assets, Investments) in parallel
+ * Fetch account balances
+ * Calls: Supabase Edge Function `get-balance`
  */
-export const fetchFinancialData = async (
+export const fetchBalance = async (
   accessToken: string,
   userId: string,
-  itemId?: string,
-): Promise<FinancialDataResponse> => {
-  const response = await fetch(`${API_BASE}/fetch-financial-data`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ accessToken, userId, itemId }),
-  });
+): Promise<ProductResult> => {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/get-balance`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ accessToken, userId }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.details || error.error || 'Failed to fetch financial data');
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      // Check if product not supported
+      if (err.error_code === 'PRODUCTS_NOT_SUPPORTED' || response.status === 400) {
+        return { available: false, data: null, error: null, reason: 'not_supported' };
+      }
+      return { available: false, data: null, error: err.error || 'Failed to fetch balance', reason: 'error' };
+    }
+
+    const data = await response.json();
+    return { available: true, data, error: null, reason: null };
+  } catch (err: any) {
+    return { available: false, data: null, error: err.message, reason: 'error' };
   }
-
-  return response.json();
 };
 
 /**
- * Poll asset report status (for async asset reports)
+ * Create an asset report
+ * Calls: Supabase Edge Function `asset-report-create`
+ */
+export const fetchAssets = async (
+  accessToken: string,
+  userId: string,
+): Promise<ProductResult> => {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/asset-report-create`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ accessToken, userId }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      if (err.error_code === 'PRODUCTS_NOT_SUPPORTED' || response.status === 400) {
+        return { available: false, data: null, error: null, reason: 'not_supported' };
+      }
+      return { available: false, data: null, error: err.error || 'Failed to fetch assets', reason: 'error' };
+    }
+
+    const data = await response.json();
+
+    // Asset reports can be async (pending)
+    if (data.status === 'pending') {
+      return { available: false, data, error: null, reason: null };
+    }
+
+    return { available: true, data, error: null, reason: null };
+  } catch (err: any) {
+    return { available: false, data: null, error: err.message, reason: 'error' };
+  }
+};
+
+/**
+ * Fetch investment holdings
+ * Calls: Supabase Edge Function `investments-holdings`
+ */
+export const fetchInvestments = async (
+  accessToken: string,
+  userId: string,
+): Promise<ProductResult> => {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/investments-holdings`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ accessToken, userId }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      if (err.error_code === 'PRODUCTS_NOT_SUPPORTED' || response.status === 400) {
+        return { available: false, data: null, error: null, reason: 'not_supported' };
+      }
+      return { available: false, data: null, error: err.error || 'Failed to fetch investments', reason: 'error' };
+    }
+
+    const data = await response.json();
+    return { available: true, data, error: null, reason: null };
+  } catch (err: any) {
+    return { available: false, data: null, error: err.message, reason: 'error' };
+  }
+};
+
+/**
+ * Fetch all 3 financial products in parallel
+ * Calls get-balance, asset-report-create, investments-holdings simultaneously
+ */
+export const fetchAllFinancialData = async (
+  accessToken: string,
+  userId: string,
+): Promise<FinancialDataResponse> => {
+  const [balanceResult, assetsResult, investmentsResult] = await Promise.allSettled([
+    fetchBalance(accessToken, userId),
+    fetchAssets(accessToken, userId),
+    fetchInvestments(accessToken, userId),
+  ]);
+
+  // Parse settled results
+  const balance: ProductResult = balanceResult.status === 'fulfilled'
+    ? balanceResult.value
+    : { available: false, data: null, error: 'Network error', reason: 'error' };
+
+  const assets: ProductResult = assetsResult.status === 'fulfilled'
+    ? assetsResult.value
+    : { available: false, data: null, error: 'Network error', reason: 'error' };
+
+  const investments: ProductResult = investmentsResult.status === 'fulfilled'
+    ? investmentsResult.value
+    : { available: false, data: null, error: 'Network error', reason: 'error' };
+
+  // Count available products
+  const productsAvailable = [balance, assets, investments].filter((r) => r.available).length;
+
+  return {
+    status: productsAvailable === 3 ? 'complete' : productsAvailable > 0 ? 'partial' : 'failed',
+    balance,
+    assets,
+    investments,
+    summary: {
+      products_available: productsAvailable,
+      products_total: 3,
+      can_proceed: productsAvailable >= 1,
+    },
+  };
+};
+
+/**
+ * Check asset report status (for async asset reports)
+ * Calls: Supabase Edge Function `asset-report-create` with report token
  */
 export const checkAssetReport = async (
   assetReportToken: string,
   userId: string,
 ): Promise<AssetReportPollResponse> => {
-  const response = await fetch(`${API_BASE}/check-asset-report`, {
+  const response = await fetch(`${SUPABASE_URL}/asset-report-create`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ assetReportToken, userId }),
+    headers: getHeaders(),
+    body: JSON.stringify({ assetReportToken, userId, action: 'get' }),
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({ error: 'Failed to check asset report' }));
     throw new Error(error.details || error.error || 'Failed to check asset report');
   }
 
@@ -176,12 +313,13 @@ export const formatCurrency = (amount: number | null | undefined, currency = 'US
  */
 export const getProductStatus = (product: ProductResult): ProductFetchStatus => {
   if (product.available) {
-    // Check if it's a pending asset report
     if (product.data?.status === 'pending') return 'pending';
     return 'success';
   }
   if (product.reason === 'not_supported') return 'unavailable';
   if (product.error) return 'error';
+  // Check if it's a pending asset report
+  if (product.data?.status === 'pending') return 'pending';
   return 'idle';
 };
 
