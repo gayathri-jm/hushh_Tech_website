@@ -66,6 +66,8 @@ export interface KycFinancialLinkScreenProps {
   userEmail?: string;
   /** Called with financial verification result */
   onContinue: (result: FinancialVerificationResult) => void;
+  /** Called when user skips financial verification */
+  onSkip?: () => void;
   /** Bank name to display */
   bankName?: string;
 }
@@ -110,17 +112,6 @@ const InvestmentsIcon = () => (
   </svg>
 );
 
-/** Bank card icon for hero */
-const HeroIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L3 7v2h18V7L12 2z" stroke="#8E8E93" strokeWidth="1.5" strokeLinejoin="round" />
-    <path d="M5 9v8" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M9 9v8" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M15 9v8" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M19 9v8" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M3 17h18v2H3v-2z" stroke="#8E8E93" strokeWidth="1.5" strokeLinejoin="round" />
-  </svg>
-);
 
 // =====================================================
 // Status check icon
@@ -292,6 +283,7 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
   userId,
   userEmail,
   onContinue,
+  onSkip,
   bankName = 'Hushh',
 }) => {
   const plaid = usePlaidLinkHook(userId, userEmail);
@@ -412,36 +404,26 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
     <Box
       minH="100vh"
       bg={COLORS.bg}
-      px={5}
-      py={8}
       display="flex"
       flexDirection="column"
+      position="relative"
     >
-      {/* Main Content */}
-      <VStack
+      {/* Scrollable Content */}
+      <Box
         flex="1"
-        spacing={0}
-        justify="center"
-        align="center"
-        maxW="390px"
-        mx="auto"
-        w="100%"
+        overflowY="auto"
+        px={5}
+        pt={10}
+        pb="200px"
       >
-        {/* Hero Icon */}
-        <Box
-          w="72px"
-          h="72px"
-          borderRadius="18px"
-          bg={COLORS.iconBg}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          mb={6}
+        <VStack
+          spacing={0}
+          align="center"
+          maxW="390px"
+          mx="auto"
+          w="100%"
         >
-          <HeroIcon />
-        </Box>
-
-        {/* Title */}
+        {/* Title — first element, nothing above */}
         <Heading
           as="h1"
           fontSize="28px"
@@ -553,16 +535,24 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
             Secured with 256-bit encryption · Powered by Plaid
           </Text>
         </Flex>
-      </VStack>
+        </VStack>
+      </Box>
 
-      {/* Bottom CTA area */}
+      {/* Sticky Bottom CTA — fixed to viewport bottom */}
       <Box
+        position="fixed"
+        bottom={0}
+        left={0}
+        right={0}
+        bg={COLORS.bg}
+        borderTop="1px solid"
+        borderColor={COLORS.borderLight}
+        px={5}
         pt={4}
-        pb={2}
-        maxW="390px"
-        mx="auto"
-        w="100%"
+        pb={6}
+        zIndex={10}
       >
+        <Box maxW="390px" mx="auto" w="100%">
         {/* Primary Button */}
         <Button
           w="100%"
@@ -630,10 +620,34 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
           textAlign="center"
           fontSize="12px"
           color={COLORS.textTertiary}
-          mt={3}
+          mt={2}
         >
           {bankName} × Hushh Financial Verification
         </Text>
+
+        {/* Skip for now */}
+        {onSkip && (
+          <Button
+            w="100%"
+            mt={1}
+            size="sm"
+            variant="ghost"
+            color={COLORS.textTertiary}
+            fontWeight="400"
+            fontSize="14px"
+            onClick={onSkip}
+            borderRadius="12px"
+            _hover={{
+              color: COLORS.textPrimary,
+              bg: COLORS.borderLight,
+            }}
+            tabIndex={0}
+            aria-label="Skip financial verification for now"
+          >
+            Skip for now →
+          </Button>
+        )}
+        </Box>
       </Box>
     </Box>
   );
