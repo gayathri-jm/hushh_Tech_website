@@ -16,6 +16,7 @@ import {
   fetchAllFinancialData,
   checkAssetReport,
   getProductStatus,
+  saveFinancialDataToSupabase,
   type FinancialDataResponse,
   type ProductFetchStatus,
 } from './plaidService';
@@ -176,6 +177,15 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
         canProceed: financialResult.summary.can_proceed,
         productsAvailable: financialResult.summary.products_available,
       }));
+
+      // Save financial data to Supabase (fire-and-forget, non-blocking)
+      saveFinancialDataToSupabase(
+        userId,
+        financialResult,
+        institutionInfo.name,
+        institutionInfo.id,
+        exchangeResult.item_id,
+      ).catch((err) => console.warn('[Plaid] Background save failed:', err));
 
       // If assets are pending, start polling
       if (assetsStatus === 'pending' && financialResult.assets.data?.asset_report_token) {

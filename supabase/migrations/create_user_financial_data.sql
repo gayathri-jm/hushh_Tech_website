@@ -32,6 +32,10 @@ CREATE TABLE IF NOT EXISTS public.user_financial_data (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Unique constraint on user_id for upsert support
+ALTER TABLE public.user_financial_data
+  ADD CONSTRAINT user_financial_data_user_id_unique UNIQUE (user_id);
+
 -- Index for fast lookup by user
 CREATE INDEX IF NOT EXISTS idx_user_financial_data_user_id
   ON public.user_financial_data (user_id);

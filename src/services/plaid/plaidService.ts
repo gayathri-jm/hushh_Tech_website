@@ -292,6 +292,106 @@ export const checkAssetReport = async (
 };
 
 // =====================================================
+// Save to Supabase
+// =====================================================
+
+/**
+ * Save financial data (Balance, Assets, Investments) to Supabase
+ * Upserts into `user_financial_data` table
+ */
+export const saveFinancialDataToSupabase = async (
+  userId: string,
+  data: FinancialDataResponse,
+  institutionName?: string,
+  institutionId?: string,
+  itemId?: string,
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    // Dynamic import to avoid circular deps
+    const config = (await import('../../resources/config/config')).default;
+    const supabase = config.supabaseClient;
+
+    if (!supabase) {
+      console.warn('[Plaid] Supabase client not available — skipping save');
+      return { success: false, error: 'Supabase client not initialized' };
+    }
+
+    const row = {
+      user_id: userId,
+      plaid_item_id: itemId || null,
+      institution_name: institutionName || null,
+      institution_id: institutionId || null,
+      balances: data.balance.available ? data.balance.data : null,
+      asset_report: data.assets.available ? data.assets.data : null,
+      asset_report_token: data.assets.data?.asset_report_token || null,
+      investments: data.investments.available ? data.investments.data : null,
+      available_products: {
+        balance: data.balance.available,
+        assets: data.assets.available,
+        investments: data.investments.available,
+      },
+      status: data.status,
+      fetch_errors: buildFetchErrors(data),
+      updated_at: new Date().toISOString(),
+    };
+
+    // Upsert — update if user already has a record, insert otherwise
+    const { error } = await supabase
+      .from('user_financial_data')
+      .upsert(row, { onConflict: 'user_id' })
+      .select()
+      .single();
+
+    if (error) {
+      // If upsert with onConflict fails (no unique constraint), try insert
+      if (error.code === '42P10' || error.message?.includes('unique')) {
+        const { error: insertError } = await supabase
+          .from('user_financial_data')
+          .insert(row);
+
+        if (insertError) {
+          console.error('[Plaid] Failed to save financial data:', insertError);
+          return { success: false, error: insertError.message };
+        }
+      } else {
+        console.error('[Plaid] Failed to save financial data:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    console.log('[Plaid] ✅ Financial data saved to Supabase', {
+      userId,
+      institution: institutionName,
+      balance: data.balance.available,
+      assets: data.assets.available,
+      investments: data.investments.available,
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[Plaid] Error saving financial data:', err);
+    return { success: false, error: err.message };
+  }
+};
+
+/**
+ * Build fetch_errors JSONB from product results
+ */
+const buildFetchErrors = (data: FinancialDataResponse): Record<string, string> | null => {
+  const errors: Record<string, string> = {};
+
+  if (data.balance.error) errors.balance = data.balance.error;
+  if (data.assets.error) errors.assets = data.assets.error;
+  if (data.investments.error) errors.investments = data.investments.error;
+
+  if (data.balance.reason === 'not_supported') errors.balance = 'Product not supported';
+  if (data.assets.reason === 'not_supported') errors.assets = 'Product not supported';
+  if (data.investments.reason === 'not_supported') errors.investments = 'Product not supported';
+
+  return Object.keys(errors).length > 0 ? errors : null;
+};
+
+// =====================================================
 // Utility Functions
 // =====================================================
 
