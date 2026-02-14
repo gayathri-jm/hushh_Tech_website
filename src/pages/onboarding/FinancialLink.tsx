@@ -1,11 +1,11 @@
 /**
  * FinancialLink — Pre-Onboarding Financial Verification
  * 
- * This is the FIRST step in the onboarding flow (before Step 1).
+ * Apple-inspired clean UI wrapper. White background theme.
+ * First step in the onboarding flow (before Step 1).
+ * 
  * Links user's bank via Plaid and fetches:
- * 1. Balance
- * 2. Assets
- * 3. Investments
+ * 1. Balance  2. Assets  3. Investments
  * 
  * On completion → navigates to /onboarding/step-1
  * Data is saved to Supabase `user_financial_data` table automatically.
@@ -23,6 +23,7 @@ export default function OnboardingFinancialLink() {
   const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
   const [isReady, setIsReady] = useState(false);
 
+  // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -74,14 +75,13 @@ export default function OnboardingFinancialLink() {
     navigate('/onboarding/step-1');
   };
 
+  // Loading state — clean white screen
   if (!isReady || !userId) {
-    return (
-      <Box minH="100vh" bg="linear-gradient(180deg, #0A0A0F 0%, #12121A 100%)" />
-    );
+    return <Box minH="100vh" bg="#FFFFFF" />;
   }
 
   return (
-    <Box position="relative">
+    <Box position="relative" bg="#FFFFFF">
       <KycFinancialLinkScreen
         userId={userId}
         userEmail={userEmail}
@@ -99,11 +99,17 @@ export default function OnboardingFinancialLink() {
       >
         <Button
           variant="ghost"
-          color="whiteAlpha.400"
-          fontSize="sm"
+          color="#8E8E93"
+          fontSize="14px"
           fontWeight="400"
           onClick={handleSkip}
-          _hover={{ color: 'whiteAlpha.700' }}
+          borderRadius="12px"
+          _hover={{
+            color: '#000000',
+            bg: '#F2F2F7',
+          }}
+          tabIndex={0}
+          aria-label="Skip financial verification for now"
         >
           Skip for now →
         </Button>
