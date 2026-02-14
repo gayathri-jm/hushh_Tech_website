@@ -131,6 +131,8 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
   // =====================================================
 
   const handlePlaidSuccess: PlaidLinkOnSuccess = useCallback(async (publicToken, metadata) => {
+    console.log('[Plaid] ✅ onSuccess called', { publicToken: publicToken?.substring(0, 20), metadata: metadata?.institution });
+
     const institutionInfo = {
       name: metadata.institution?.name || 'Unknown',
       id: metadata.institution?.institution_id || '',
@@ -147,22 +149,36 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
 
     try {
       // Exchange token
+      console.log('[Plaid] Exchanging token...');
       const exchangeResult = await exchangeToken(
         publicToken,
         userId,
         institutionInfo.name,
         institutionInfo.id,
       );
+      console.log('[Plaid] ✅ Exchange success:', { item_id: exchangeResult.item_id, hasAccessToken: !!exchangeResult.access_token });
 
       accessTokenRef.current = exchangeResult.access_token;
 
       setState((prev) => ({ ...prev, step: 'fetching' }));
 
       // Fetch all financial data in parallel (Balance, Assets, Investments)
+      console.log('[Plaid] Fetching financial data...');
       const financialResult = await fetchAllFinancialData(
         exchangeResult.access_token,
         userId,
       );
+      console.log('[Plaid] ✅ Financial data result:', {
+        status: financialResult.status,
+        balance: financialResult.balance.available,
+        assets: financialResult.assets.available,
+        investments: financialResult.investments.available,
+        errors: {
+          balance: financialResult.balance.error,
+          assets: financialResult.assets.error,
+          investments: financialResult.investments.error,
+        },
+      });
 
       // Determine individual statuses
       const balanceStatus = getProductStatus(financialResult.balance);
@@ -194,6 +210,7 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
         startAssetPolling(financialResult.assets.data.asset_report_token);
       }
     } catch (err: any) {
+      console.error('[Plaid] ❌ Error in handlePlaidSuccess:', err);
       setState((prev) => ({
         ...prev,
         step: 'error',
