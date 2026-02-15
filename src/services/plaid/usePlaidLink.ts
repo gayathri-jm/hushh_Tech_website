@@ -96,9 +96,9 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
   // =====================================================
   // OAuth Redirect Detection
   // When banks like Chase use OAuth, the browser redirects away and back.
-  // We detect this by checking for:
-  // 1. oauth_state_id in the URL (standard Plaid OAuth redirect)
-  // 2. plaid_oauth_pending flag in sessionStorage (set before OAuth opens)
+  // We ONLY treat it as an OAuth redirect if oauth_state_id is in the URL.
+  // The plaid_oauth_pending flag alone is NOT sufficient — without
+  // oauth_state_id, Plaid Link will reject with INVALID_FIELD error.
   // =====================================================
 
   const isOAuthRedirect = useRef(false);
@@ -111,15 +111,19 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
     const hasOAuthStateId = !!params.get('oauth_state_id');
     const hasOAuthPending = sessionStorage.getItem('plaid_oauth_pending') === 'true';
 
-    if (hasOAuthStateId || hasOAuthPending) {
+    if (hasOAuthStateId) {
+      // Valid OAuth redirect — oauth_state_id present in URL
       console.log('[Plaid] 🔄 OAuth redirect detected!', {
         oauth_state_id: params.get('oauth_state_id'),
-        oauth_pending_flag: hasOAuthPending,
       });
       isOAuthRedirect.current = true;
       receivedRedirectUri.current = window.location.href;
-      // Clear the flag
       sessionStorage.removeItem('plaid_oauth_pending');
+    } else if (hasOAuthPending) {
+      // Stale flag without oauth_state_id — clear it and start fresh
+      console.log('[Plaid] ⚠️ Stale OAuth pending flag found (no oauth_state_id). Clearing and starting fresh.');
+      sessionStorage.removeItem('plaid_oauth_pending');
+      // Do NOT set isOAuthRedirect — let normal flow proceed
     }
   }, []);
 
