@@ -96,9 +96,9 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
   // =====================================================
   // OAuth Redirect Detection
   // When banks like Chase use OAuth, the browser redirects away and back.
+  // We use localStorage (NOT sessionStorage) because OAuth banks may
+  // open in a NEW TAB — sessionStorage is per-tab and wouldn't persist.
   // We ONLY treat it as an OAuth redirect if oauth_state_id is in the URL.
-  // The plaid_oauth_pending flag alone is NOT sufficient — without
-  // oauth_state_id, Plaid Link will reject with INVALID_FIELD error.
   // =====================================================
 
   const isOAuthRedirect = useRef(false);
@@ -109,7 +109,7 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
 
     const params = new URLSearchParams(window.location.search);
     const hasOAuthStateId = !!params.get('oauth_state_id');
-    const oauthPendingTimestamp = sessionStorage.getItem('plaid_oauth_pending');
+    const oauthPendingTimestamp = localStorage.getItem('plaid_oauth_pending');
     const hasOAuthPending = !!oauthPendingTimestamp;
 
     if (hasOAuthStateId) {
@@ -119,7 +119,7 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
       });
       isOAuthRedirect.current = true;
       receivedRedirectUri.current = window.location.href;
-      sessionStorage.removeItem('plaid_oauth_pending');
+      localStorage.removeItem('plaid_oauth_pending');
     } else if (hasOAuthPending) {
       // Check if the flag is fresh (set within last 10 seconds) or stale
       const flagAge = Date.now() - Number(oauthPendingTimestamp);
@@ -132,8 +132,8 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
       } else {
         // Stale flag (>10s old) — user came back without completing OAuth
         console.log('[Plaid] ⚠️ Stale OAuth pending flag found (', Math.round(flagAge / 1000), 's old, no oauth_state_id). Clearing and starting fresh.');
-        sessionStorage.removeItem('plaid_oauth_pending');
-        sessionStorage.removeItem('plaid_link_token');
+        localStorage.removeItem('plaid_oauth_pending');
+        localStorage.removeItem('plaid_link_token');
       }
     }
   }, []);
@@ -146,7 +146,7 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
     if (!userId) return;
 
     // If OAuth is currently opening (fresh flag), don't create a new token
-    const pendingTimestamp = sessionStorage.getItem('plaid_oauth_pending');
+    const pendingTimestamp = localStorage.getItem('plaid_oauth_pending');
     if (pendingTimestamp && (Date.now() - Number(pendingTimestamp)) < 10_000) {
       console.log('[Plaid] ⏳ OAuth is currently opening. Skipping link token creation.');
       return;
@@ -154,9 +154,9 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
 
     // If returning from OAuth redirect, restore the stored link token
     if (isOAuthRedirect.current) {
-      const storedToken = sessionStorage.getItem('plaid_link_token');
+      const storedToken = localStorage.getItem('plaid_link_token');
       if (storedToken) {
-        console.log('[Plaid] 🔄 Restoring link token from sessionStorage for OAuth completion');
+        console.log('[Plaid] 🔄 Restoring link token from localStorage for OAuth completion');
         setState((prev) => ({
           ...prev,
           step: 'ready',
@@ -175,8 +175,8 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
       console.log('[Plaid] Creating link token with redirectUri:', redirectUri);
       const response = await createLinkToken(userId, userEmail, redirectUri);
 
-      // Store link token for OAuth redirect recovery (just in case)
-      sessionStorage.setItem('plaid_link_token', response.link_token);
+      // Store link token in localStorage for cross-tab OAuth redirect recovery
+      localStorage.setItem('plaid_link_token', response.link_token);
 
       setState((prev) => ({
         ...prev,
@@ -206,6 +206,10 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
 
   const handlePlaidSuccess: PlaidLinkOnSuccess = useCallback(async (publicToken, metadata) => {
     console.log('[Plaid] ✅ onSuccess called', { publicToken: publicToken?.substring(0, 20), metadata: metadata?.institution });
+
+    // Clean up OAuth storage after successful connection
+    localStorage.removeItem('plaid_oauth_pending');
+    localStorage.removeItem('plaid_link_token');
 
     const institutionInfo = {
       name: metadata.institution?.name || 'Unknown',
@@ -391,8 +395,8 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
     // The timestamp prevents the stale-flag detection from clearing it during
     // the same render cycle (before the browser actually navigates away)
     if (eventName === 'OPEN_OAUTH') {
-      console.log('[Plaid] 🔑 Setting OAuth pending flag in sessionStorage');
-      sessionStorage.setItem('plaid_oauth_pending', Date.now().toString());
+      console.log('[Plaid] 🔑 Setting OAuth pending flag in localStorage (cross-tab)');
+      localStorage.setItem('plaid_oauth_pending', Date.now().toString());
     }
   }, []);
 
