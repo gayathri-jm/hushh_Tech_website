@@ -20,15 +20,23 @@ export default defineConfig({
   ],
   build: {
     outDir: 'dist',
-    // strongly recommend cleaning to avoid stale assets on Vercel
     emptyOutDir: true,
-    // Disable sourcemaps in production to reduce memory usage on Vercel
-    // (Vercel 8GB limit can be exceeded with large assets + sourcemaps)
     sourcemap: false,
-    // Target ES2017+ for better iOS Safari compatibility
     target: 'es2017',
-    // Increase chunk size warning limit (we have large video files)
     chunkSizeWarningLimit: 5000,
+    // Security: Strip ALL console statements in production builds
+    // Prevents exposure of tokens, financial data, and internal logs
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,     // Remove console.log, warn, error, etc.
+        drop_debugger: true,    // Remove debugger statements
+        pure_funcs: ['console.log', 'console.warn', 'console.info', 'console.debug'],
+      },
+      format: {
+        comments: false,        // Remove all comments from output
+      },
+    },
   },
   server: {
     proxy: {

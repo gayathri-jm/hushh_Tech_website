@@ -7,6 +7,10 @@ import config from './resources/config/config.ts'
 // Initialize i18n for multi-language support
 import './i18n'
 
+// Production security: block DevTools, right-click, console output
+import initDevToolsGuard from './utils/devtools-guard'
+initDevToolsGuard()
+
 // Import DM Sans font weights
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/dm-sans/500.css";
