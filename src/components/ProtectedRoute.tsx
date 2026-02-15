@@ -57,7 +57,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
       if (!onboardingData || !onboardingData.is_completed) {
         if (!isOnOnboardingPage) {
-          navigate('/onboarding/step-1', { replace: true });
+          // Resume from where user left off
+          const step = onboardingData?.current_step || 1;
+          navigate(`/onboarding/step-${step}`, { replace: true });
           return;
         }
       }
