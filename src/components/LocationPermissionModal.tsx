@@ -21,7 +21,10 @@ export default function LocationPermissionModal({
       >
         {/* Location Icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg"
+            style={{ backgroundColor: '#2F80ED' }}
+          >
             <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
@@ -30,7 +33,7 @@ export default function LocationPermissionModal({
         </div>
 
         {/* Title */}
-        <h2 className="text-2xl font-bold text-slate-900 text-center mb-3">
+        <h2 className="text-2xl font-bold text-black text-center mb-3">
           Enable Location
         </h2>
 
@@ -45,15 +48,15 @@ export default function LocationPermissionModal({
           <p className="text-xs text-slate-500 font-medium mb-2">How it works:</p>
           <div className="space-y-2">
             <div className="flex items-start gap-2">
-              <span className="text-xs text-blue-600 font-bold mt-0.5">1.</span>
+              <span className="text-xs font-bold mt-0.5" style={{ color: '#2F80ED' }}>1.</span>
               <p className="text-xs text-slate-600">Tap "Detect My Location" below</p>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-xs text-blue-600 font-bold mt-0.5">2.</span>
+              <span className="text-xs font-bold mt-0.5" style={{ color: '#2F80ED' }}>2.</span>
               <p className="text-xs text-slate-600">Allow location access when prompted by your browser</p>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-xs text-blue-600 font-bold mt-0.5">3.</span>
+              <span className="text-xs font-bold mt-0.5" style={{ color: '#2F80ED' }}>3.</span>
               <p className="text-xs text-slate-600">Your country will be filled in automatically</p>
             </div>
           </div>
@@ -61,11 +64,14 @@ export default function LocationPermissionModal({
 
         {/* Buttons */}
         <div className="space-y-3">
-          {/* Allow Button */}
+          {/* CTA Button */}
           <button
             onClick={onRequestLocation}
             disabled={isDetecting}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all shadow-lg disabled:opacity-50 disabled:cursor-wait"
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 text-white rounded-xl font-semibold text-lg active:scale-[0.98] transition-all shadow-lg disabled:opacity-50 disabled:cursor-wait"
+            style={{ backgroundColor: isDetecting ? '#9BBEF5' : '#2F80ED' }}
+            onMouseEnter={(e) => { if (!isDetecting) (e.target as HTMLElement).style.backgroundColor = '#2570D4'; }}
+            onMouseLeave={(e) => { if (!isDetecting) (e.target as HTMLElement).style.backgroundColor = '#2F80ED'; }}
           >
             {isDetecting ? (
               <>
@@ -90,7 +96,7 @@ export default function LocationPermissionModal({
           <button
             onClick={onSkip}
             disabled={isDetecting}
-            className="w-full px-6 py-3 text-slate-600 hover:text-slate-800 font-medium text-base transition-colors disabled:opacity-50"
+            className="w-full px-6 py-3 text-slate-600 hover:text-black font-medium text-base transition-colors disabled:opacity-50"
           >
             Select Manually Instead →
           </button>

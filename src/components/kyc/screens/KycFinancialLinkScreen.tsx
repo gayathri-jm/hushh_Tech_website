@@ -37,15 +37,14 @@ import type { FinancialVerificationResult } from '../../../types/kyc';
 // =====================================================
 
 const COLORS = {
-  primary: '#0066FF',
-  primaryHover: '#0052CC',
-  primaryLight: '#E6F0FF',
-  primaryGradient: 'linear-gradient(135deg, #0066FF 0%, #00C9A7 100%)',
-  accent: '#00C9A7',
-  accentLight: '#E6FFF9',
+  primary: '#2F80ED',
+  primaryHover: '#2570D4',
+  primaryLight: '#EBF2FD',
+  accent: '#2F80ED',
+  accentLight: '#EBF2FD',
   bg: '#FFFFFF',
   bgSubtle: '#FAFAFA',
-  textPrimary: '#111111',
+  textPrimary: '#000000',
   textSecondary: '#6B7280',
   textTertiary: '#9CA3AF',
   border: '#E5E7EB',
@@ -440,13 +439,13 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
   const buttonBg = useMemo(() => {
     if (plaid.step === 'done' && plaid.canProceed) return COLORS.success;
     if (plaid.step === 'error' || (plaid.step === 'done' && !plaid.canProceed)) return COLORS.error;
-    return COLORS.primaryGradient;
+    return COLORS.primary;
   }, [plaid.step, plaid.canProceed]);
 
   const buttonHoverBg = useMemo(() => {
     if (plaid.step === 'done' && plaid.canProceed) return '#2DB84E';
     if (plaid.step === 'error' || (plaid.step === 'done' && !plaid.canProceed)) return '#E5342B';
-    return COLORS.primaryGradient;
+    return COLORS.primaryHover;
   }, [plaid.step, plaid.canProceed]);
 
   return (
@@ -472,12 +471,12 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
           mx="auto"
           w="100%"
         >
-        {/* Gradient Icon Badge */}
+        {/* Icon Badge */}
         <Flex
           w="64px"
           h="64px"
           borderRadius="18px"
-          bg={COLORS.primaryGradient}
+          bg={COLORS.primary}
           align="center"
           justify="center"
           mb={4}
@@ -657,12 +656,12 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
         data-onboarding-footer=""
       >
         <Box w="100%">
-        {/* "Continue to KYC" — gradient CTA */}
+        {/* "Continue to KYC" — CTA */}
         {plaid.step === 'done' && plaid.canProceed && (
           <Button
             w="100%"
             size="lg"
-            bg={COLORS.primaryGradient}
+            bg={COLORS.primary}
             color="white"
             borderRadius="14px"
             h="54px"
