@@ -1,8 +1,8 @@
 /**
  * KycFinancialLinkScreen — Pre-KYC Financial Verification
  * 
- * Clean UI. White background, black text, gray icons.
- * Primary CTA: Indigo-purple gradient matching KYC flow.
+ * iOS-first design. White background, black text, grey icons.
+ * Bright primary color accents (blue/teal) matching sign-nda style.
  * 
  * Links user's bank via Plaid and fetches 3 data points:
  * 1. Balance  2. Assets  3. Investments
@@ -20,6 +20,8 @@ import {
   Button,
   Flex,
   Spinner,
+  Badge,
+  HStack,
 } from '@chakra-ui/react';
 import { keyframes } from '@emotion/react';
 import { usePlaidLinkHook } from '../../../services/plaid/usePlaidLink';
@@ -35,25 +37,31 @@ import type { FinancialVerificationResult } from '../../../types/kyc';
 // =====================================================
 
 const COLORS = {
-  primary: '#2B8CEE',
-  primaryHover: '#2580D8',
-  primaryGradient: 'linear-gradient(135deg, #2B8CEE 0%, #1A6FCC 100%)',
+  primary: '#0066FF',
+  primaryHover: '#0052CC',
+  primaryLight: '#E6F0FF',
+  primaryGradient: 'linear-gradient(135deg, #0066FF 0%, #00C9A7 100%)',
+  accent: '#00C9A7',
+  accentLight: '#E6FFF9',
   bg: '#FFFFFF',
-  textPrimary: '#000000',
-  textSecondary: '#8E8E93',
-  textTertiary: '#AEAEB2',
-  border: '#E5E5EA',
-  borderLight: '#F2F2F7',
+  bgSubtle: '#FAFAFA',
+  textPrimary: '#111111',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  border: '#E5E7EB',
+  borderLight: '#F3F4F6',
   cardBg: '#FFFFFF',
-  cardBgHover: '#F9F9FB',
-  success: '#34C759',
-  successBg: '#F0FFF4',
-  error: '#FF3B30',
-  errorBg: '#FFF5F5',
-  pending: '#FF9500',
-  pendingBg: '#FFFBF0',
-  iconBg: '#F2F2F7',
-  green: '#34C759',
+  cardBgHover: '#F9FAFB',
+  success: '#22C55E',
+  successBg: '#F0FDF4',
+  successBorder: '#BBF7D0',
+  error: '#EF4444',
+  errorBg: '#FEF2F2',
+  errorBorder: '#FECACA',
+  pending: '#F59E0B',
+  pendingBg: '#FFFBEB',
+  iconBg: '#F3F4F6',
+  green: '#22C55E',
 };
 
 // =====================================================
@@ -200,30 +208,58 @@ const ProductCard: React.FC<{
     }
   }, [status]);
 
+  // Left accent color per status
+  const accentColor = useMemo(() => {
+    switch (status) {
+      case 'success': return COLORS.success;
+      case 'error': return COLORS.error;
+      case 'pending': return COLORS.pending;
+      case 'loading': return COLORS.primary;
+      default: return COLORS.border;
+    }
+  }, [status]);
+
   return (
     <Flex
       w="100%"
       bg={COLORS.cardBg}
-      borderRadius="14px"
+      borderRadius="16px"
       border="1px solid"
-      borderColor={status === 'success' ? COLORS.success : COLORS.border}
+      borderColor={status === 'success' ? COLORS.successBorder : COLORS.border}
       p={4}
       align="center"
       gap={3}
       transition="all 0.3s ease"
       animation={status !== 'idle' ? `${fadeIn} 0.4s ease ${index * 0.1}s both` : undefined}
-      _hover={{ bg: COLORS.cardBgHover }}
+      _hover={{ bg: COLORS.cardBgHover, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+      boxShadow="0 1px 3px rgba(0,0,0,0.02)"
+      position="relative"
+      overflow="hidden"
     >
+      {/* Left accent bar */}
+      <Box
+        position="absolute"
+        left={0}
+        top="20%"
+        bottom="20%"
+        w="3px"
+        borderRadius="0 4px 4px 0"
+        bg={accentColor}
+        transition="all 0.3s ease"
+      />
+
       {/* Icon container */}
       <Box
         w="44px"
         h="44px"
         borderRadius="12px"
-        bg={COLORS.iconBg}
+        bg={status === 'success' ? COLORS.successBg : COLORS.iconBg}
         display="flex"
         alignItems="center"
         justifyContent="center"
         flexShrink={0}
+        ml={1}
+        transition="background 0.3s ease"
       >
         {icon}
       </Box>
@@ -436,7 +472,41 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
           mx="auto"
           w="100%"
         >
-        {/* Title — first element, nothing above */}
+        {/* Gradient Icon Badge */}
+        <Flex
+          w="64px"
+          h="64px"
+          borderRadius="18px"
+          bg={COLORS.primaryGradient}
+          align="center"
+          justify="center"
+          mb={4}
+          boxShadow={`0 6px 20px ${COLORS.primary}30`}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 5H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M3 10h18" stroke="white" strokeWidth="1.8" />
+            <circle cx="16" cy="14.5" r="1.5" fill="white" />
+          </svg>
+        </Flex>
+
+        {/* Step badge */}
+        <Badge
+          bg={COLORS.primaryLight}
+          color={COLORS.primary}
+          px={3}
+          py={1}
+          borderRadius="full"
+          fontSize="10px"
+          fontWeight="700"
+          textTransform="uppercase"
+          letterSpacing="0.06em"
+          mb={3}
+        >
+          Pre-KYC Step
+        </Badge>
+
+        {/* Title */}
         <Heading
           as="h1"
           fontSize="28px"
@@ -462,21 +532,26 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
           {headerSubtitle}
         </Text>
 
-        {/* Security badge — prominent, right below subtitle */}
+        {/* Security badge — prominent pill */}
         <Flex
           align="center"
           gap={2}
           mb={6}
-          px={3}
-          py={2}
-          borderRadius="20px"
-          bg={COLORS.borderLight}
+          px={4}
+          py={2.5}
+          borderRadius="full"
+          bg={COLORS.accentLight}
+          border="1px solid"
+          borderColor={`${COLORS.accent}30`}
         >
-          <Box w="6px" h="6px" borderRadius="full" bg={COLORS.green} />
-          <Text fontSize="13px" color={COLORS.textSecondary} fontWeight="500">
-            Secured with 256-bit encryption · Powered by Plaid
+          <Box w="7px" h="7px" borderRadius="full" bg={COLORS.green} />
+          <Text fontSize="12px" color={COLORS.textSecondary} fontWeight="600">
+            256-bit encryption · Powered by Plaid
           </Text>
         </Flex>
+
+        {/* Gradient divider */}
+        <Box w="100%" h="2px" bg={`linear-gradient(90deg, transparent, ${COLORS.primary}40, ${COLORS.accent}40, transparent)`} borderRadius="full" mb={6} />
 
         {/* Product Cards */}
         <VStack spacing={3} w="100%" mb={6}>
@@ -560,48 +635,51 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
         </VStack>
       </Box>
 
-      {/* Sticky Bottom CTA — fixed to viewport bottom */}
+      {/* Sticky Bottom CTA — fixed to viewport bottom with glassmorphism */}
       <Box
         position="fixed"
         bottom={0}
         left={0}
         right={0}
-        bg={COLORS.bg}
+        bg="rgba(255,255,255,0.92)"
+        backdropFilter="blur(20px)"
+        sx={{ WebkitBackdropFilter: 'blur(20px)' }}
         borderTop="1px solid"
-        borderColor={COLORS.borderLight}
+        borderColor={COLORS.border}
         px={5}
         pt={4}
         pb={6}
         zIndex={10}
       >
         <Box maxW="390px" mx="auto" w="100%">
-        {/* "Continue to KYC" — ONLY visible after Plaid completes with data */}
+        {/* "Continue to KYC" — gradient CTA */}
         {plaid.step === 'done' && plaid.canProceed && (
           <Button
             w="100%"
             size="lg"
-            bg={COLORS.primary}
+            bg={COLORS.primaryGradient}
             color="white"
             borderRadius="14px"
-            h="52px"
+            h="54px"
             fontSize="16px"
             fontWeight="600"
             _hover={{
-              bg: COLORS.primaryHover,
-              transform: 'scale(0.99)',
+              transform: 'translateY(-1px)',
+              boxShadow: `0 6px 20px ${COLORS.primary}35`,
             }}
-            _active={{ transform: 'scale(0.97)' }}
-            transition="all 0.15s ease"
+            _active={{ transform: 'translateY(0)' }}
+            transition="all 0.2s ease"
             onClick={handleButtonClick}
             aria-label="Continue to KYC Step 1"
             tabIndex={0}
             animation={`${fadeIn} 0.4s ease both`}
+            boxShadow={`0 3px 12px ${COLORS.primary}25`}
           >
             Continue to KYC →
           </Button>
         )}
 
-        {/* Link / Retry / Loading button — shown when NOT done+canProceed */}
+        {/* Link / Retry / Loading button */}
         {!(plaid.step === 'done' && plaid.canProceed) && (
           <Button
             w="100%"
@@ -609,23 +687,24 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
             bg={buttonBg}
             color="white"
             borderRadius="14px"
-            h="52px"
+            h="54px"
             fontSize="16px"
             fontWeight="600"
             isDisabled={isInitializing || isProcessing}
             isLoading={isInitializing || isProcessing}
             loadingText={buttonText}
             _hover={{
-              bg: buttonHoverBg,
-              transform: 'scale(0.99)',
+              transform: 'translateY(-1px)',
+              boxShadow: `0 6px 20px ${COLORS.primary}30`,
             }}
-            _active={{ transform: 'scale(0.97)' }}
+            _active={{ transform: 'translateY(0)' }}
             _disabled={{
               bg: COLORS.border,
               color: COLORS.textTertiary,
               cursor: 'not-allowed',
+              boxShadow: 'none',
             }}
-            transition="all 0.15s ease"
+            transition="all 0.2s ease"
             onClick={handleButtonClick}
             aria-label={buttonText}
             tabIndex={0}
