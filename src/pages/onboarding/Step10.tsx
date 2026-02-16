@@ -58,7 +58,7 @@ function OnboardingStep10() {
       className="bg-slate-50 min-h-screen"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <div className="relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
+      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
         
         {/* Sticky Header */}
         <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">

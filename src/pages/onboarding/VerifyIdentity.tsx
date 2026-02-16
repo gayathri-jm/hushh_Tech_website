@@ -479,7 +479,7 @@ function VerifyIdentityPage() {
 
         {/* Back button */}
         <Button
-          onClick={() => navigate('/onboarding/step-12')}
+          onClick={() => navigate('/onboarding/step-13')}
           variant="link"
           color="orange.600"
           fontWeight="500"

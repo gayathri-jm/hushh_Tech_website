@@ -203,7 +203,7 @@ function OnboardingStep13() {
   const totalInvestment = calculateTotalInvestment();
   const hasAnyUnits = shareUnits.class_a_units > 0 || shareUnits.class_b_units > 0 || shareUnits.class_c_units > 0;
 
-  // Fix 2: Cleanup on unmount — clear timeouts, mark unmounted
+  // Fix 2: Cleanup on unmount â€” clear timeouts, mark unmounted
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -287,7 +287,7 @@ function OnboardingStep13() {
           if (financialData?.plaid_access_token) {
             if (!isMountedRef.current) return;
             setIsAutoFilling(true);
-            setAutoFillMessage('📍 Auto-filling from your linked bank...');
+            setAutoFillMessage('ðŸ“ Auto-filling from your linked bank...');
             console.log('[Step13] Plaid access_token found, fetching auth numbers...');
 
             const authData = await fetchAuthNumbers(financialData.plaid_access_token);
@@ -313,7 +313,7 @@ function OnboardingStep13() {
               setPlaidAccounts(mappedAccounts);
               if (financialData.institution_name) setPlaidInstitutionName(financialData.institution_name);
 
-              // Auto-select first account — only fill fields user hasn't touched
+              // Auto-select first account â€” only fill fields user hasn't touched
               const firstAccount = mappedAccounts[0];
               setSelectedAccountIdx(0);
 
@@ -339,7 +339,7 @@ function OnboardingStep13() {
             }
 
             setIsAutoFilling(false);
-            setAutoFillMessage('✅ Bank details auto-filled from Plaid');
+            setAutoFillMessage('âœ… Bank details auto-filled from Plaid');
             console.log('[Step13] Plaid auto-fill complete');
 
             // Fix 2: Use ref for timeout cleanup
@@ -554,7 +554,7 @@ function OnboardingStep13() {
   };
 
   const handleBack = () => {
-    navigate('/onboarding/step-12');
+    navigate('/onboarding/step-11');
   };
 
   return (
@@ -562,7 +562,7 @@ function OnboardingStep13() {
       className="bg-slate-50 min-h-screen"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <div className="relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
+      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
         
         {/* Sticky Header */}
         <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
@@ -606,12 +606,12 @@ function OnboardingStep13() {
             </div>
           )}
 
-          {/* Fix 3: Multi-Account Selector — only shown if Plaid returned 2+ accounts */}
+          {/* Fix 3: Multi-Account Selector â€” only shown if Plaid returned 2+ accounts */}
           {plaidAccounts.length > 1 && (
             <div className="mx-5 mb-5">
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
                 <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-3">
-                  {plaidInstitutionName ? `${plaidInstitutionName} — ` : ''}SELECT ACCOUNT
+                  {plaidInstitutionName ? `${plaidInstitutionName} â€” ` : ''}SELECT ACCOUNT
                 </p>
                 <div className="space-y-2">
                   {plaidAccounts.map((acct, idx) => {
@@ -646,12 +646,12 @@ function OnboardingStep13() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-slate-900 truncate">{acct.name}</p>
                           <p className="text-xs text-slate-500">
-                            {acct.subtype.charAt(0).toUpperCase() + acct.subtype.slice(1)} · ····{acct.mask}
+                            {acct.subtype.charAt(0).toUpperCase() + acct.subtype.slice(1)} Â· Â·Â·Â·Â·{acct.mask}
                           </p>
                         </div>
                         {/* Selected check */}
                         {isSelected && (
-                          <span className="text-[#2b8cee] text-sm font-bold">✓</span>
+                          <span className="text-[#2b8cee] text-sm font-bold">âœ“</span>
                         )}
                       </button>
                     );
@@ -692,7 +692,7 @@ function OnboardingStep13() {
                           className="text-xs font-bold"
                           style={{ color: shareClass.color }}
                         >
-                          {shareClass.name} ×{units}
+                          {shareClass.name} Ã—{units}
                         </span>
                       </div>
                     );
@@ -725,7 +725,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{bankNameError}</p>
               )}
               {touched.bankName && !bankNameError && bankName && (
-                <p className="text-green-600 text-xs font-medium">✓ Valid bank name</p>
+                <p className="text-green-600 text-xs font-medium">âœ“ Valid bank name</p>
               )}
             </div>
 
@@ -750,7 +750,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{accountHolderNameError}</p>
               )}
               {touched.accountHolderName && !accountHolderNameError && accountHolderName && (
-                <p className="text-green-600 text-xs font-medium">✓ Valid name</p>
+                <p className="text-green-600 text-xs font-medium">âœ“ Valid name</p>
               )}
             </div>
 
@@ -805,7 +805,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{accountNumberError}</p>
               )}
               {touched.accountNumber && !accountNumberError && accountNumber && (
-                <p className="text-green-600 text-xs font-medium">✓ Valid account number ({accountNumber.length} digits)</p>
+                <p className="text-green-600 text-xs font-medium">âœ“ Valid account number ({accountNumber.length} digits)</p>
               )}
             </div>
 
@@ -831,7 +831,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{confirmAccountNumberError}</p>
               )}
               {touched.confirmAccountNumber && !confirmAccountNumberError && confirmAccountNumber && (
-                <p className="text-green-600 text-xs font-medium">✓ Account numbers match</p>
+                <p className="text-green-600 text-xs font-medium">âœ“ Account numbers match</p>
               )}
             </div>
 
@@ -869,7 +869,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{bankCountryError}</p>
               )}
               {touched.bankCountry && !bankCountryError && bankCountry && (
-                <p className="text-green-600 text-xs font-medium">✓ Country selected</p>
+                <p className="text-green-600 text-xs font-medium">âœ“ Country selected</p>
               )}
             </div>
 
@@ -896,7 +896,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{routingNumberError}</p>
               )}
               {touched.routingNumber && !routingNumberError && routingNumber && (
-                <p className="text-green-600 text-xs font-medium">✓ Valid routing number ({routingNumber.length} digits)</p>
+                <p className="text-green-600 text-xs font-medium">âœ“ Valid routing number ({routingNumber.length} digits)</p>
               )}
               {!touched.routingNumber && (
                 <p className="text-xs font-medium text-slate-500 pt-1 pl-1">

@@ -22,54 +22,54 @@ const ChevronDownIcon = () => (
 
 // Country codes with flags (sorted by most common)
 const countryCodes = [
-  { code: '+1', country: 'USA', flag: '🇺🇸' },
-  { code: '+91', country: 'India', flag: '🇮🇳' },
-  { code: '+44', country: 'UK', flag: '🇬🇧' },
-  { code: '+86', country: 'China', flag: '🇨🇳' },
-  { code: '+81', country: 'Japan', flag: '🇯🇵' },
-  { code: '+49', country: 'Germany', flag: '🇩🇪' },
-  { code: '+33', country: 'France', flag: '🇫🇷' },
-  { code: '+61', country: 'Australia', flag: '🇦🇺' },
-  { code: '+65', country: 'Singapore', flag: '🇸🇬' },
-  { code: '+971', country: 'UAE', flag: '🇦🇪' },
-  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
-  { code: '+82', country: 'South Korea', flag: '🇰🇷' },
-  { code: '+55', country: 'Brazil', flag: '🇧🇷' },
-  { code: '+52', country: 'Mexico', flag: '🇲🇽' },
-  { code: '+39', country: 'Italy', flag: '🇮🇹' },
-  { code: '+34', country: 'Spain', flag: '🇪🇸' },
-  { code: '+31', country: 'Netherlands', flag: '🇳🇱' },
-  { code: '+7', country: 'Russia', flag: '🇷🇺' },
-  { code: '+62', country: 'Indonesia', flag: '🇮🇩' },
-  { code: '+60', country: 'Malaysia', flag: '🇲🇾' },
-  { code: '+66', country: 'Thailand', flag: '🇹🇭' },
-  { code: '+63', country: 'Philippines', flag: '🇵🇭' },
-  { code: '+92', country: 'Pakistan', flag: '🇵🇰' },
-  { code: '+880', country: 'Bangladesh', flag: '🇧🇩' },
-  { code: '+27', country: 'South Africa', flag: '🇿🇦' },
-  { code: '+234', country: 'Nigeria', flag: '🇳🇬' },
-  { code: '+20', country: 'Egypt', flag: '🇪🇬' },
-  { code: '+90', country: 'Turkey', flag: '🇹🇷' },
-  { code: '+48', country: 'Poland', flag: '🇵🇱' },
-  { code: '+46', country: 'Sweden', flag: '🇸🇪' },
-  { code: '+47', country: 'Norway', flag: '🇳🇴' },
-  { code: '+45', country: 'Denmark', flag: '🇩🇰' },
-  { code: '+358', country: 'Finland', flag: '🇫🇮' },
-  { code: '+41', country: 'Switzerland', flag: '🇨🇭' },
-  { code: '+43', country: 'Austria', flag: '🇦🇹' },
-  { code: '+32', country: 'Belgium', flag: '🇧🇪' },
-  { code: '+351', country: 'Portugal', flag: '🇵🇹' },
-  { code: '+30', country: 'Greece', flag: '🇬🇷' },
-  { code: '+353', country: 'Ireland', flag: '🇮🇪' },
-  { code: '+972', country: 'Israel', flag: '🇮🇱' },
-  { code: '+54', country: 'Argentina', flag: '🇦🇷' },
-  { code: '+56', country: 'Chile', flag: '🇨🇱' },
-  { code: '+57', country: 'Colombia', flag: '🇨🇴' },
-  { code: '+51', country: 'Peru', flag: '🇵🇪' },
-  { code: '+58', country: 'Venezuela', flag: '🇻🇪' },
-  { code: '+64', country: 'New Zealand', flag: '🇳🇿' },
-  { code: '+852', country: 'Hong Kong', flag: '🇭🇰' },
-  { code: '+84', country: 'Vietnam', flag: '🇻🇳' },
+  { code: '+1', country: 'USA', flag: 'ðŸ‡ºðŸ‡¸' },
+  { code: '+91', country: 'India', flag: 'ðŸ‡®ðŸ‡³' },
+  { code: '+44', country: 'UK', flag: 'ðŸ‡¬ðŸ‡§' },
+  { code: '+86', country: 'China', flag: 'ðŸ‡¨ðŸ‡³' },
+  { code: '+81', country: 'Japan', flag: 'ðŸ‡¯ðŸ‡µ' },
+  { code: '+49', country: 'Germany', flag: 'ðŸ‡©ðŸ‡ª' },
+  { code: '+33', country: 'France', flag: 'ðŸ‡«ðŸ‡·' },
+  { code: '+61', country: 'Australia', flag: 'ðŸ‡¦ðŸ‡º' },
+  { code: '+65', country: 'Singapore', flag: 'ðŸ‡¸ðŸ‡¬' },
+  { code: '+971', country: 'UAE', flag: 'ðŸ‡¦ðŸ‡ª' },
+  { code: '+966', country: 'Saudi Arabia', flag: 'ðŸ‡¸ðŸ‡¦' },
+  { code: '+82', country: 'South Korea', flag: 'ðŸ‡°ðŸ‡·' },
+  { code: '+55', country: 'Brazil', flag: 'ðŸ‡§ðŸ‡·' },
+  { code: '+52', country: 'Mexico', flag: 'ðŸ‡²ðŸ‡½' },
+  { code: '+39', country: 'Italy', flag: 'ðŸ‡®ðŸ‡¹' },
+  { code: '+34', country: 'Spain', flag: 'ðŸ‡ªðŸ‡¸' },
+  { code: '+31', country: 'Netherlands', flag: 'ðŸ‡³ðŸ‡±' },
+  { code: '+7', country: 'Russia', flag: 'ðŸ‡·ðŸ‡º' },
+  { code: '+62', country: 'Indonesia', flag: 'ðŸ‡®ðŸ‡©' },
+  { code: '+60', country: 'Malaysia', flag: 'ðŸ‡²ðŸ‡¾' },
+  { code: '+66', country: 'Thailand', flag: 'ðŸ‡¹ðŸ‡­' },
+  { code: '+63', country: 'Philippines', flag: 'ðŸ‡µðŸ‡­' },
+  { code: '+92', country: 'Pakistan', flag: 'ðŸ‡µðŸ‡°' },
+  { code: '+880', country: 'Bangladesh', flag: 'ðŸ‡§ðŸ‡©' },
+  { code: '+27', country: 'South Africa', flag: 'ðŸ‡¿ðŸ‡¦' },
+  { code: '+234', country: 'Nigeria', flag: 'ðŸ‡³ðŸ‡¬' },
+  { code: '+20', country: 'Egypt', flag: 'ðŸ‡ªðŸ‡¬' },
+  { code: '+90', country: 'Turkey', flag: 'ðŸ‡¹ðŸ‡·' },
+  { code: '+48', country: 'Poland', flag: 'ðŸ‡µðŸ‡±' },
+  { code: '+46', country: 'Sweden', flag: 'ðŸ‡¸ðŸ‡ª' },
+  { code: '+47', country: 'Norway', flag: 'ðŸ‡³ðŸ‡´' },
+  { code: '+45', country: 'Denmark', flag: 'ðŸ‡©ðŸ‡°' },
+  { code: '+358', country: 'Finland', flag: 'ðŸ‡«ðŸ‡®' },
+  { code: '+41', country: 'Switzerland', flag: 'ðŸ‡¨ðŸ‡­' },
+  { code: '+43', country: 'Austria', flag: 'ðŸ‡¦ðŸ‡¹' },
+  { code: '+32', country: 'Belgium', flag: 'ðŸ‡§ðŸ‡ª' },
+  { code: '+351', country: 'Portugal', flag: 'ðŸ‡µðŸ‡¹' },
+  { code: '+30', country: 'Greece', flag: 'ðŸ‡¬ðŸ‡·' },
+  { code: '+353', country: 'Ireland', flag: 'ðŸ‡®ðŸ‡ª' },
+  { code: '+972', country: 'Israel', flag: 'ðŸ‡®ðŸ‡±' },
+  { code: '+54', country: 'Argentina', flag: 'ðŸ‡¦ðŸ‡·' },
+  { code: '+56', country: 'Chile', flag: 'ðŸ‡¨ðŸ‡±' },
+  { code: '+57', country: 'Colombia', flag: 'ðŸ‡¨ðŸ‡´' },
+  { code: '+51', country: 'Peru', flag: 'ðŸ‡µðŸ‡ª' },
+  { code: '+58', country: 'Venezuela', flag: 'ðŸ‡»ðŸ‡ª' },
+  { code: '+64', country: 'New Zealand', flag: 'ðŸ‡³ðŸ‡¿' },
+  { code: '+852', country: 'Hong Kong', flag: 'ðŸ‡­ðŸ‡°' },
+  { code: '+84', country: 'Vietnam', flag: 'ðŸ‡»ðŸ‡³' },
 ];
 
 export default function OnboardingStep6() {
@@ -131,7 +131,7 @@ export default function OnboardingStep6() {
         
         if (dialCodeExists) {
           setCountryCode(dialCode);
-          setLocationMessage(`📍 ${result.data.city || result.data.country}`);
+          setLocationMessage(`ðŸ“ ${result.data.city || result.data.country}`);
           console.log('[Step8] Real-time GPS dial code:', dialCode);
 
           // Update cache for other steps
@@ -260,7 +260,7 @@ export default function OnboardingStep6() {
       className="bg-slate-50 min-h-screen"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <div className="relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
+      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
         
         {/* Sticky Header */}
         <header className="flex items-center px-4 pt-6 pb-4 bg-white/95 backdrop-blur-sm sticky top-0 z-10">

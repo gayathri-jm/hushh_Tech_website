@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
@@ -23,6 +23,20 @@ const PlusIcon = () => (
     <path d="M12 5V19M5 12H19" />
   </svg>
 );
+
+const ChevronDownIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6,9 12,15 18,9" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20,6 9,17 4,12" />
+  </svg>
+);
+
+type RecurringFrequency = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';
 
 // Share class configurations matching HTML template
 interface ShareClass {
@@ -81,16 +95,34 @@ const formatCurrency = (amount: number): string => {
   return `$${amount.toLocaleString()}`;
 };
 
+const MIN_RECURRING_AMOUNT = 100;
+const MAX_RECURRING_AMOUNT = 100000000;
+
+const formatNumberWithCommas = (value: string): string => {
+  const numbers = value.replace(/[^\d]/g, '');
+  return numbers.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
+const parseFormattedNumber = (value: string): number => {
+  return parseInt(value.replace(/[^\d]/g, ''), 10) || 0;
+};
+
 export default function OnboardingStep1() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const isFooterVisible = useFooterVisibility();
   const [units, setUnits] = useState<Record<string, number>>({
     class_a: 0,
     class_b: 0,
     class_c: 0,
   });
+  const [frequency, setFrequency] = useState<RecurringFrequency>('once_a_month');
+  const [investmentDay, setInvestmentDay] = useState('1st');
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [customAmount, setCustomAmount] = useState('');
+  const [customAmountError, setCustomAmountError] = useState<string | null>(null);
 
   // Calculate total investment
   const totalInvestment = SHARE_CLASSES.reduce((total, shareClass) => {
@@ -120,8 +152,7 @@ export default function OnboardingStep1() {
       const hasSkipped = sessionStorage.getItem('financial_link_skipped') === 'true';
 
       if (hasSkipped) {
-        // Clear the flag and allow access
-        sessionStorage.removeItem('financial_link_skipped');
+        // Keep the flag during onboarding to avoid local dev StrictMode double-effect redirect loops.
         console.log('[Step1] User skipped financial verification - allowing access');
       } else {
         // Gate: redirect to financial-link if not yet verified
@@ -140,7 +171,7 @@ export default function OnboardingStep1() {
       // Load existing selections if any
       const { data: onboardingData } = await config.supabaseClient
         .from('onboarding_data')
-        .select('class_a_units, class_b_units, class_c_units')
+        .select('class_a_units, class_b_units, class_c_units, recurring_frequency, recurring_day_of_month, recurring_amount')
         .eq('user_id', user.id)
         .single();
 
@@ -150,6 +181,37 @@ export default function OnboardingStep1() {
           class_b: onboardingData.class_b_units || 0,
           class_c: onboardingData.class_c_units || 0,
         });
+
+        if (onboardingData.recurring_frequency) {
+          const freqMap: Record<string, RecurringFrequency> = {
+            monthly: 'once_a_month',
+            bimonthly: 'twice_a_month',
+            weekly: 'weekly',
+            biweekly: 'every_other_week',
+          };
+          setFrequency(freqMap[onboardingData.recurring_frequency] || 'once_a_month');
+        }
+
+        if (onboardingData.recurring_day_of_month) {
+          const dayNum = onboardingData.recurring_day_of_month;
+          if (dayNum === 31) {
+            setInvestmentDay('Last');
+          } else {
+            const suffix = dayNum === 1 ? 'st' : dayNum === 2 ? 'nd' : dayNum === 3 ? 'rd' : 'th';
+            setInvestmentDay(`${dayNum}${suffix}`);
+          }
+        }
+
+        if (onboardingData.recurring_amount) {
+          const amount = onboardingData.recurring_amount;
+          if ([500000, 750000, 1000000, 1500000].includes(amount)) {
+            setSelectedAmount(amount);
+            setCustomAmount('');
+          } else {
+            setSelectedAmount(null);
+            setCustomAmount(amount.toLocaleString());
+          }
+        }
       }
     };
 
@@ -163,24 +225,101 @@ export default function OnboardingStep1() {
     }));
   };
 
+  const handleAmountClick = (amount: number) => {
+    setSelectedAmount(amount);
+    setCustomAmount('');
+    setCustomAmountError(null);
+    setError(null);
+  };
+
+  const validateRecurringAmount = (rawValue: number): string | null => {
+    if (rawValue === 0) return null;
+    if (rawValue < MIN_RECURRING_AMOUNT) {
+      return `Minimum recurring amount is $${MIN_RECURRING_AMOUNT.toLocaleString()}`;
+    }
+    if (rawValue > MAX_RECURRING_AMOUNT) {
+      return `Maximum recurring amount is $${(MAX_RECURRING_AMOUNT / 1000000).toFixed(0)}M`;
+    }
+    return null;
+  };
+
+  const handleCustomAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSelectedAmount(null);
+    setError(null);
+
+    const rawValue = e.target.value.replace(/[^\d]/g, '');
+    if (rawValue.length > 12) return;
+
+    const formattedValue = formatNumberWithCommas(rawValue);
+    setCustomAmount(formattedValue);
+    setCustomAmountError(validateRecurringAmount(parseFormattedNumber(formattedValue)));
+  };
+
+  const getFinalRecurringAmount = () => {
+    if (selectedAmount) return selectedAmount;
+    return parseFormattedNumber(customAmount);
+  };
+
   const handleNext = async () => {
     if (!userId || !config.supabaseClient || !hasSelection) return;
+    if (customAmountError) {
+      setError(customAmountError);
+      return;
+    }
 
     setIsLoading(true);
+    setError(null);
     try {
+      const recurringAmount = getFinalRecurringAmount();
+      const convertDayToInt = (day: string | number): number => {
+        if (typeof day === 'number') return day;
+        if (day === 'Last') return 31;
+        return parseInt(day.replace(/\D/g, ''), 10);
+      };
+
+      const convertFrequencyToDb = (freq: RecurringFrequency): string => {
+        const frequencyMap: Record<RecurringFrequency, string> = {
+          once_a_month: 'monthly',
+          twice_a_month: 'bimonthly',
+          weekly: 'weekly',
+          every_other_week: 'biweekly',
+        };
+        return frequencyMap[freq];
+      };
+
+      const updateData: Record<string, unknown> = {
+        selected_fund: 'hushh_fund_a',
+        class_a_units: units.class_a,
+        class_b_units: units.class_b,
+        class_c_units: units.class_c,
+        initial_investment_amount: totalInvestment,
+        current_step: 1,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (recurringAmount > 0) {
+        updateData.recurring_frequency = convertFrequencyToDb(frequency);
+        updateData.recurring_day_of_month = convertDayToInt(investmentDay);
+        updateData.recurring_amount = recurringAmount;
+      } else {
+        updateData.recurring_frequency = null;
+        updateData.recurring_day_of_month = null;
+        updateData.recurring_amount = null;
+      }
+
       // Save share unit selections to database
-      await config.supabaseClient
+      const { error: saveError } = await config.supabaseClient
         .from('onboarding_data')
-        .update({
-          selected_fund: 'hushh_fund_a',
-          class_a_units: units.class_a,
-          class_b_units: units.class_b,
-          class_c_units: units.class_c,
-          initial_investment_amount: totalInvestment,
-          current_step: 1,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('user_id', userId);
+
+      if (saveError) {
+        setError('Failed to save investment details');
+        return;
+      }
+
+      // Step 1 is persisted; skip marker is no longer needed.
+      sessionStorage.removeItem('financial_link_skipped');
 
       // Navigate to step 2
       navigate('/onboarding/step-2');
@@ -281,7 +420,7 @@ export default function OnboardingStep1() {
       className="bg-slate-50 min-h-screen"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <div className="relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
+      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
         
         {/* Sticky Header */}
         <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
@@ -295,7 +434,7 @@ export default function OnboardingStep1() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col px-6 pb-44">
+        <main className="flex-1 flex flex-col px-6 pb-72">
           {/* Header Section */}
           <div className="mb-8 mt-2 flex flex-col items-center text-center">
             <h1 className="text-slate-900 text-[22px] font-extrabold leading-tight tracking-tight mb-2">
@@ -316,9 +455,141 @@ export default function OnboardingStep1() {
             </p>
           </div>
 
+          {error && (
+            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           {/* Share Class Cards */}
           <div className="flex flex-col gap-6">
             {SHARE_CLASSES.map(renderShareClassCard)}
+          </div>
+
+          {/* Recurring Investment */}
+          <div className="mt-8 mb-3">
+            <h2 className="text-lg font-bold text-slate-900">Recurring Investment</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Optional. You can configure this now and avoid an extra step later.
+            </p>
+          </div>
+
+          {/* Frequency Section */}
+          <div className="mb-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <h3 className="text-base font-bold text-slate-900 mb-4">Frequency</h3>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {[
+                  { value: 'once_a_month', label: 'Once a month' },
+                  { value: 'twice_a_month', label: 'Twice a month' },
+                  { value: 'weekly', label: 'Weekly' },
+                  { value: 'every_other_week', label: 'Every other week' },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setFrequency(option.value as RecurringFrequency)}
+                    className={`flex h-11 items-center justify-center rounded-xl text-xs font-semibold transition-all ${
+                      frequency === option.value
+                        ? 'bg-[#2b8cee] text-white shadow-sm ring-2 ring-[#2b8cee] ring-offset-1'
+                        : 'bg-white border border-slate-200 text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative">
+                <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-slate-500">
+                  Investment day
+                </label>
+                <select
+                  value={investmentDay}
+                  onChange={(e) => setInvestmentDay(e.target.value)}
+                  className="w-full h-11 rounded-xl border border-slate-300 bg-white text-slate-900 px-3 text-sm font-medium focus:border-[#2b8cee] focus:ring-1 focus:ring-[#2b8cee] outline-none appearance-none"
+                >
+                  <option value="1st">1st</option>
+                  <option value="2nd">2nd</option>
+                  <option value="5th">5th</option>
+                  <option value="10th">10th</option>
+                  <option value="15th">15th</option>
+                  <option value="20th">20th</option>
+                  <option value="25th">25th</option>
+                  <option value="Last">Last day of month</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <ChevronDownIcon />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recurring Amount Section */}
+          <div className="mb-8">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <h3 className="text-base font-bold text-slate-900 mb-4">Recurring Amount</h3>
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {[500000, 750000, 1000000, 1500000].map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => handleAmountClick(amount)}
+                    className={`relative flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
+                      selectedAmount === amount
+                        ? 'border-2 border-[#2b8cee] bg-[#2b8cee]/5'
+                        : 'border border-slate-200 bg-white hover:border-[#2b8cee]/50 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className={`text-sm font-bold ${
+                      selectedAmount === amount ? 'text-[#2b8cee]' : 'text-slate-900'
+                    }`}>
+                      ${amount.toLocaleString()}
+                    </span>
+                    {selectedAmount === amount && (
+                      <div className="absolute -top-2 -right-2 bg-[#2b8cee] text-white rounded-full p-0.5">
+                        <CheckIcon />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <div className="relative">
+                  <span className={`absolute inset-y-0 left-0 pl-3 flex items-center font-medium text-lg ${
+                    customAmountError ? 'text-red-400' : 'text-slate-400'
+                  }`}>
+                    $
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={customAmount}
+                    onChange={handleCustomAmountChange}
+                    placeholder="Other Amount"
+                    className={`w-full h-12 rounded-xl border bg-white text-slate-900 pl-8 pr-3 text-lg font-bold outline-none transition-all placeholder:text-slate-300 ${
+                      customAmountError
+                        ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                        : 'border-slate-300 focus:border-[#2b8cee] focus:ring-1 focus:ring-[#2b8cee]'
+                    }`}
+                  />
+                </div>
+
+                {customAmountError && (
+                  <p className="text-red-500 text-xs font-medium px-1">{customAmountError}</p>
+                )}
+                {!customAmountError && customAmount && (
+                  <p className="text-green-600 text-xs font-medium px-1">
+                    Amount: ${parseFormattedNumber(customAmount).toLocaleString()}
+                  </p>
+                )}
+                {!customAmount && selectedAmount === null && (
+                  <p className="text-slate-400 text-xs px-1">
+                    Leave empty if you want to set recurring later.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         </main>
 
@@ -340,9 +611,9 @@ export default function OnboardingStep1() {
               {/* Next Button */}
               <button
                 onClick={handleNext}
-                disabled={!hasSelection || isLoading}
+                disabled={!hasSelection || isLoading || !!customAmountError}
                 className={`flex w-full cursor-pointer items-center justify-center rounded-full bg-[#2b8cee] py-4 text-white text-base font-bold transition-all hover:bg-blue-600 active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-400 ${
-                  !hasSelection || isLoading ? 'disabled:cursor-not-allowed' : ''
+                  !hasSelection || isLoading || !!customAmountError ? 'disabled:cursor-not-allowed' : ''
                 }`}
               >
                 {isLoading ? 'Saving...' : 'Next'}
@@ -360,7 +631,7 @@ export default function OnboardingStep1() {
             {/* Footer Note */}
             <div className="mt-4 text-center">
               <p className="text-[10px] text-slate-400 leading-tight">
-                Minimum investment per unit • Units can be adjusted later
+                Minimum investment per unit â€¢ Units can be adjusted later
               </p>
             </div>
           </div>

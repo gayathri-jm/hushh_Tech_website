@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Leadership from './components/Leadership';
@@ -53,7 +53,6 @@ import HushhIDHeroDemo from './pages/hushhid-hero-demo';
 import FinancialLinkPage from './pages/onboarding/FinancialLink';
 import OnboardingStep1 from './pages/onboarding/Step1';
 import OnboardingStep2 from './pages/onboarding/Step2';
-import OnboardingStep3 from './pages/onboarding/Step3';
 import OnboardingStep4 from './pages/onboarding/Step4';
 import OnboardingStep5 from './pages/onboarding/Step5';
 import OnboardingStep6 from './pages/onboarding/Step6';
@@ -62,7 +61,6 @@ import OnboardingStep8 from './pages/onboarding/Step8';
 import OnboardingStep9 from './pages/onboarding/Step9';
 const OnboardingStep10 = React.lazy(() => import('./pages/onboarding/Step10'));
 import OnboardingStep11 from './pages/onboarding/Step11';
-import OnboardingStep12 from './pages/onboarding/Step12';
 import OnboardingStep13 from './pages/onboarding/Step13';
 import VerifyIdentityPage from './pages/onboarding/VerifyIdentity';
 import VerifyCompletePage from './pages/onboarding/VerifyComplete';
@@ -251,7 +249,7 @@ function App() {
             } />
             <Route path="/onboarding/step-3" element={
               <ProtectedRoute>
-                <OnboardingStep3 />
+                <Navigate to="/onboarding/step-4" replace />
               </ProtectedRoute>
             } />
             <Route path="/onboarding/step-4" element={
@@ -298,7 +296,7 @@ function App() {
             } />
             <Route path="/onboarding/step-12" element={
               <ProtectedRoute>
-                <OnboardingStep12 />
+                <Navigate to="/onboarding/step-11" replace />
               </ProtectedRoute>
             } />
             <Route path="/onboarding/step-13" element={

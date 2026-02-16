@@ -207,7 +207,7 @@ function OnboardingStep8() {
   const applyLocationToForm = useCallback((locData: LocationData) => {
     console.log('[Step8] Applying location data to form:', locData);
 
-    // Zip code — no dropdown dependency
+    // Zip code â€” no dropdown dependency
     if (locData.postalCode) setZipCode(locData.postalCode);
 
     // Parse formattedAddress into address lines (GPS gives full address, IP doesn't)
@@ -223,14 +223,14 @@ function OnboardingStep8() {
       }
     }
 
-    // Country — set directly + store in ref for safety
+    // Country â€” set directly + store in ref for safety
     if (locData.countryCode) {
       pendingGpsCountry.current = locData.countryCode;
       setCountry(locData.countryCode);
       console.log('[Step8] Country set:', locData.countryCode);
     }
 
-    // State — store in ref, applied when states dropdown loads
+    // State â€” store in ref, applied when states dropdown loads
     if (locData.stateCode) {
       pendingGpsState.current = locData.stateCode;
       console.log('[Step8] Pending state (code):', locData.stateCode);
@@ -239,14 +239,14 @@ function OnboardingStep8() {
       console.log('[Step8] Pending state (name):', locData.state);
     }
 
-    // City — store in ref, applied when cities dropdown loads
+    // City â€” store in ref, applied when cities dropdown loads
     if (locData.city) {
       pendingGpsCity.current = locData.city;
       console.log('[Step8] Pending city:', locData.city);
     }
   }, []);
 
-  // Main data loading: existing data → LocationService (GPS + IP fallback) → cached profile
+  // Main data loading: existing data â†’ LocationService (GPS + IP fallback) â†’ cached profile
   useEffect(() => {
     const loadData = async () => {
       if (!config.supabaseClient) return;
@@ -272,9 +272,9 @@ function OnboardingStep8() {
         return;
       }
 
-      // 2. Auto-detect location using LocationService (GPS → IP fallback)
+      // 2. Auto-detect location using LocationService (GPS â†’ IP fallback)
       setIsDetecting(true);
-      setDetectionMessage('📍 Detecting your location...');
+      setDetectionMessage('ðŸ“ Detecting your location...');
       console.log('[Step8] Detecting location via LocationService...');
 
       try {
@@ -283,7 +283,7 @@ function OnboardingStep8() {
         if (result.data) {
           const source = result.source === 'detected' ? 'GPS' : 'IP';
           console.log(`[Step8] Location detected via ${source}:`, result.data);
-          setDetectionMessage(`📍 ${result.data.city || result.data.country || 'Location detected'}`);
+          setDetectionMessage(`ðŸ“ ${result.data.city || result.data.country || 'Location detected'}`);
 
           // Save to Supabase for consistency
           try {
@@ -497,7 +497,7 @@ function OnboardingStep8() {
       className="bg-slate-50 min-h-screen"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <div className="relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
+      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
         
         {/* Sticky Header */}
         <header className="flex items-center px-4 pt-6 pb-4 bg-white/95 backdrop-blur-sm sticky top-0 z-10">

@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
+
+type RecurringFrequency = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';
 
 // Back arrow icon
 const BackIcon = () => (
@@ -32,6 +34,18 @@ const ArrowForwardIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="5" y1="12" x2="19" y2="12" />
     <polyline points="12,5 19,12 12,19" />
+  </svg>
+);
+
+const ChevronDownIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6,9 12,15 18,9" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20,6 9,17 4,12" />
   </svg>
 );
 
@@ -125,6 +139,18 @@ const formatFullCurrency = (amount: number): string => {
   }).format(amount);
 };
 
+const MIN_RECURRING_AMOUNT = 100;
+const MAX_RECURRING_AMOUNT = 100000000;
+
+const formatNumberWithCommas = (value: string): string => {
+  const numbers = value.replace(/[^\d]/g, '');
+  return numbers.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
+const parseFormattedNumber = (value: string): number => {
+  return parseInt(value.replace(/[^\d]/g, ''), 10) || 0;
+};
+
 function OnboardingStep11() {
   const navigate = useNavigate();
   const isFooterVisible = useFooterVisibility();
@@ -139,6 +165,12 @@ function OnboardingStep11() {
     class_b_units: 0,
     class_c_units: 0,
   });
+  const [frequency, setFrequency] = useState<RecurringFrequency>('once_a_month');
+  const [investmentDay, setInvestmentDay] = useState('1st');
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [customAmount, setCustomAmount] = useState('');
+  const [customAmountError, setCustomAmountError] = useState<string | null>(null);
+  const [showRecurringEditor, setShowRecurringEditor] = useState(false);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -180,7 +212,7 @@ function OnboardingStep11() {
 
       const { data } = await config.supabaseClient
         .from('onboarding_data')
-        .select('class_a_units, class_b_units, class_c_units, initial_investment_amount')
+        .select('class_a_units, class_b_units, class_c_units, initial_investment_amount, recurring_frequency, recurring_day_of_month, recurring_amount')
         .eq('user_id', user.id)
         .single();
 
@@ -190,6 +222,37 @@ function OnboardingStep11() {
           class_b_units: data.class_b_units || 0,
           class_c_units: data.class_c_units || 0,
         });
+
+        if (data.recurring_frequency) {
+          const freqMap: Record<string, RecurringFrequency> = {
+            monthly: 'once_a_month',
+            bimonthly: 'twice_a_month',
+            weekly: 'weekly',
+            biweekly: 'every_other_week',
+          };
+          setFrequency(freqMap[data.recurring_frequency] || 'once_a_month');
+        }
+
+        if (data.recurring_day_of_month) {
+          const dayNum = data.recurring_day_of_month;
+          if (dayNum === 31) {
+            setInvestmentDay('Last');
+          } else {
+            const suffix = dayNum === 1 ? 'st' : dayNum === 2 ? 'nd' : dayNum === 3 ? 'rd' : 'th';
+            setInvestmentDay(`${dayNum}${suffix}`);
+          }
+        }
+
+        if (data.recurring_amount) {
+          const amount = data.recurring_amount;
+          if ([500000, 750000, 1000000, 1500000].includes(amount)) {
+            setSelectedAmount(amount);
+            setCustomAmount('');
+          } else {
+            setSelectedAmount(null);
+            setCustomAmount(amount.toLocaleString());
+          }
+        }
       }
     };
 
@@ -261,6 +324,41 @@ function OnboardingStep11() {
     setSavingModal(false);
   };
 
+  const handleAmountClick = (amount: number) => {
+    setSelectedAmount(amount);
+    setCustomAmount('');
+    setCustomAmountError(null);
+    setError(null);
+  };
+
+  const validateRecurringAmount = (rawValue: number): string | null => {
+    if (rawValue === 0) return null;
+    if (rawValue < MIN_RECURRING_AMOUNT) {
+      return `Minimum recurring amount is $${MIN_RECURRING_AMOUNT.toLocaleString()}`;
+    }
+    if (rawValue > MAX_RECURRING_AMOUNT) {
+      return `Maximum recurring amount is $${(MAX_RECURRING_AMOUNT / 1000000).toFixed(0)}M`;
+    }
+    return null;
+  };
+
+  const handleCustomAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSelectedAmount(null);
+    setError(null);
+
+    const rawValue = e.target.value.replace(/[^\d]/g, '');
+    if (rawValue.length > 12) return;
+
+    const formattedValue = formatNumberWithCommas(rawValue);
+    setCustomAmount(formattedValue);
+    setCustomAmountError(validateRecurringAmount(parseFormattedNumber(formattedValue)));
+  };
+
+  const getFinalRecurringAmount = () => {
+    if (selectedAmount) return selectedAmount;
+    return parseFormattedNumber(customAmount);
+  };
+
   // Get units for modal display
   const getModalUnits = (classId: string): number => {
     if (classId === 'class_a') return localShareUnits.class_a_units;
@@ -272,6 +370,12 @@ function OnboardingStep11() {
   const handleContinue = async () => {
     if (totalInvestment < 1000000) {
       setError('Minimum investment is $1 million');
+      return;
+    }
+
+    if (customAmountError) {
+      setShowRecurringEditor(true);
+      setError(customAmountError);
       return;
     }
 
@@ -291,14 +395,43 @@ function OnboardingStep11() {
       return;
     }
 
+    const recurringAmount = getFinalRecurringAmount();
+    const convertDayToInt = (day: string | number): number => {
+      if (typeof day === 'number') return day;
+      if (day === 'Last') return 31;
+      return parseInt(day.replace(/\D/g, ''), 10);
+    };
+
+    const convertFrequencyToDb = (freq: RecurringFrequency): string => {
+      const frequencyMap: Record<RecurringFrequency, string> = {
+        once_a_month: 'monthly',
+        twice_a_month: 'bimonthly',
+        weekly: 'weekly',
+        every_other_week: 'biweekly',
+      };
+      return frequencyMap[freq];
+    };
+
+    const updateData: Record<string, unknown> = {
+      user_id: user.id,
+      initial_investment_amount: totalInvestment,
+      current_step: 12,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (recurringAmount > 0) {
+      updateData.recurring_frequency = convertFrequencyToDb(frequency);
+      updateData.recurring_day_of_month = convertDayToInt(investmentDay);
+      updateData.recurring_amount = recurringAmount;
+    } else {
+      updateData.recurring_frequency = null;
+      updateData.recurring_day_of_month = null;
+      updateData.recurring_amount = null;
+    }
+
     const { error: upsertError } = await config.supabaseClient
       .from('onboarding_data')
-      .upsert({
-        user_id: user.id,
-        initial_investment_amount: totalInvestment,
-        current_step: 11,
-        updated_at: new Date().toISOString(),
-      }, {
+      .upsert(updateData, {
         onConflict: 'user_id'
       });
 
@@ -308,7 +441,7 @@ function OnboardingStep11() {
       return;
     }
 
-    navigate('/onboarding/step-12');
+    navigate('/onboarding/step-13');
   };
 
   // Get units for a class
@@ -320,7 +453,14 @@ function OnboardingStep11() {
   };
 
   const hasAnyUnits = shareUnits.class_a_units > 0 || shareUnits.class_b_units > 0 || shareUnits.class_c_units > 0;
-  const isFormValid = hasAnyUnits && totalInvestment >= 1000000;
+  const recurringAmount = getFinalRecurringAmount();
+  const hasValidRecurringAmount =
+    !customAmountError &&
+    (
+      !customAmount || selectedAmount !== null ||
+      (recurringAmount >= MIN_RECURRING_AMOUNT && recurringAmount <= MAX_RECURRING_AMOUNT)
+    );
+  const isFormValid = hasAnyUnits && totalInvestment >= 1000000 && hasValidRecurringAmount;
 
   const handleBack = () => {
     navigate('/onboarding/step-10');
@@ -335,12 +475,28 @@ function OnboardingStep11() {
     return parts.join(' + ') + ' units';
   };
 
+  const getFrequencyLabel = (value: RecurringFrequency): string => {
+    if (value === 'once_a_month') return 'Once a month';
+    if (value === 'twice_a_month') return 'Twice a month';
+    if (value === 'weekly') return 'Weekly';
+    return 'Every other week';
+  };
+
+  const recurringSummaryTitle =
+    recurringAmount > 0
+      ? `$${recurringAmount.toLocaleString()} recurring`
+      : 'No recurring investment configured';
+  const recurringSummarySubtitle =
+    recurringAmount > 0
+      ? `${getFrequencyLabel(frequency)} • Day ${investmentDay}`
+      : 'Tap Edit to add recurring amount, frequency, and day.';
+
   return (
     <div 
       className="bg-slate-50 min-h-screen"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <div className="relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
+      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
         
         {/* Sticky Header */}
         <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
@@ -481,6 +637,155 @@ function OnboardingStep11() {
               </p>
             </div>
           </div>
+
+          {/* Recurring Investment */}
+          <div className="px-5 mb-3">
+            <h2 className="text-lg font-bold text-slate-900">Recurring Investment</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Optional. Review now and edit only if needed.
+            </p>
+          </div>
+
+          {/* Collapsed summary + edit */}
+          <div className="mx-5 mb-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-900 truncate">{recurringSummaryTitle}</p>
+                  <p className="text-xs text-slate-500 mt-1">{recurringSummarySubtitle}</p>
+                </div>
+                <button
+                  onClick={() => setShowRecurringEditor((prev) => !prev)}
+                  className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  {showRecurringEditor ? 'Hide' : 'Edit'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {showRecurringEditor && (
+            <>
+              {/* Frequency Section */}
+              <div className="mx-5 mb-6">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                  <h3 className="text-base font-bold text-slate-900 mb-4">Frequency</h3>
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    {[
+                      { value: 'once_a_month', label: 'Once a month' },
+                      { value: 'twice_a_month', label: 'Twice a month' },
+                      { value: 'weekly', label: 'Weekly' },
+                      { value: 'every_other_week', label: 'Every other week' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setFrequency(option.value as RecurringFrequency)}
+                        className={`flex h-11 items-center justify-center rounded-xl text-xs font-semibold transition-all ${
+                          frequency === option.value
+                            ? 'bg-[#2b8cee] text-white shadow-sm ring-2 ring-[#2b8cee] ring-offset-1'
+                            : 'bg-white border border-slate-200 text-slate-900 hover:bg-slate-50'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="relative">
+                    <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-slate-500">
+                      Investment day
+                    </label>
+                    <select
+                      value={investmentDay}
+                      onChange={(e) => setInvestmentDay(e.target.value)}
+                      className="w-full h-11 rounded-xl border border-slate-300 bg-white text-slate-900 px-3 text-sm font-medium focus:border-[#2b8cee] focus:ring-1 focus:ring-[#2b8cee] outline-none appearance-none"
+                    >
+                      <option value="1st">1st</option>
+                      <option value="2nd">2nd</option>
+                      <option value="5th">5th</option>
+                      <option value="10th">10th</option>
+                      <option value="15th">15th</option>
+                      <option value="20th">20th</option>
+                      <option value="25th">25th</option>
+                      <option value="Last">Last day of month</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                      <ChevronDownIcon />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recurring Amount Section */}
+              <div className="mx-5 mb-8">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                  <h3 className="text-base font-bold text-slate-900 mb-4">Recurring Amount</h3>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {[500000, 750000, 1000000, 1500000].map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => handleAmountClick(amount)}
+                        className={`relative flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
+                          selectedAmount === amount
+                            ? 'border-2 border-[#2b8cee] bg-[#2b8cee]/5'
+                            : 'border border-slate-200 bg-white hover:border-[#2b8cee]/50 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className={`text-sm font-bold ${
+                          selectedAmount === amount ? 'text-[#2b8cee]' : 'text-slate-900'
+                        }`}>
+                          ${amount.toLocaleString()}
+                        </span>
+                        {selectedAmount === amount && (
+                          <div className="absolute -top-2 -right-2 bg-[#2b8cee] text-white rounded-full p-0.5">
+                            <CheckIcon />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <span className={`absolute inset-y-0 left-0 pl-3 flex items-center font-medium text-lg ${
+                        customAmountError ? 'text-red-400' : 'text-slate-400'
+                      }`}>
+                        $
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={customAmount}
+                        onChange={handleCustomAmountChange}
+                        placeholder="Other Amount"
+                        className={`w-full h-12 rounded-xl border bg-white text-slate-900 pl-8 pr-3 text-lg font-bold outline-none transition-all placeholder:text-slate-300 ${
+                          customAmountError
+                            ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                            : 'border-slate-300 focus:border-[#2b8cee] focus:ring-1 focus:ring-[#2b8cee]'
+                        }`}
+                      />
+                    </div>
+
+                    {customAmountError && (
+                      <p className="text-red-500 text-xs font-medium px-1">{customAmountError}</p>
+                    )}
+                    {!customAmountError && customAmount && (
+                      <p className="text-green-600 text-xs font-medium px-1">
+                        Amount: ${parseFormattedNumber(customAmount).toLocaleString()}
+                      </p>
+                    )}
+                    {!customAmount && selectedAmount === null && (
+                      <p className="text-slate-400 text-xs px-1">
+                        Leave empty if you want to set recurring later.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
         </main>
 
         {/* Fixed Footer - matching template exactly */}
@@ -523,7 +828,7 @@ function OnboardingStep11() {
               {/* Footer Note */}
               <div className="text-center">
                 <p className="text-[10px] text-slate-500 uppercase tracking-wide">
-                  Minimum investment per unit • Units can be adjusted later
+                  Minimum investment per unit â€¢ Units can be adjusted later
                 </p>
               </div>
             </div>

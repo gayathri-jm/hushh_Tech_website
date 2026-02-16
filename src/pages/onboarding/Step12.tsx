@@ -376,7 +376,7 @@ function OnboardingStep12() {
       className="bg-slate-50 min-h-screen"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <div className="relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
+      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
         
         {/* Sticky Header */}
         <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
@@ -470,7 +470,7 @@ function OnboardingStep12() {
                           style={{ backgroundColor: shareClass.color }}
                         />
                         <span className="text-xs font-semibold text-slate-900">
-                          {shareClass.name} ×{units}
+                          {shareClass.name} Ã—{units}
                         </span>
                       </div>
                     );
@@ -611,7 +611,7 @@ function OnboardingStep12() {
                 {/* Min/Max hint */}
                 {!customAmount && !selectedAmount && (
                   <p className="text-slate-400 text-xs px-1">
-                    Min: $100 • Max: $100M
+                    Min: $100 â€¢ Max: $100M
                   </p>
                 )}
               </div>

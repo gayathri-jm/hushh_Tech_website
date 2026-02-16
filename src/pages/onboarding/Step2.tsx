@@ -79,7 +79,7 @@ export default function OnboardingStep2() {
         })
         .eq('user_id', userId);
 
-      navigate('/onboarding/step-3');
+      navigate('/onboarding/step-4');
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -101,7 +101,7 @@ export default function OnboardingStep2() {
         console.error('Error:', error);
       }
     }
-    navigate('/onboarding/step-3');
+    navigate('/onboarding/step-4');
   };
 
   const handleBack = () => {
@@ -113,7 +113,7 @@ export default function OnboardingStep2() {
       className="bg-slate-50 min-h-screen"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <div className="relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
+      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
         
         {/* Sticky Header */}
         <header className="flex items-center px-4 pt-6 pb-4 bg-white/95 backdrop-blur-sm sticky top-0 z-10">

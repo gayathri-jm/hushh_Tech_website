@@ -112,6 +112,14 @@ const isTokenValid = (expiration: string | null): boolean => {
   return Date.now() < expiresAt - 60_000;
 };
 
+const isHttpsUrl = (value: string): boolean => {
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 // =====================================================
 // Database Restore — Most Stable
 // =====================================================
@@ -272,6 +280,8 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
 
   // Get the redirect URI (current page without query params)
   const getRedirectUri = useCallback(() => {
+    const configuredRedirect = import.meta.env?.VITE_PLAID_REDIRECT_URI?.trim();
+    if (configuredRedirect) return configuredRedirect;
     return `${window.location.origin}${window.location.pathname}`;
   }, []);
 
@@ -295,8 +305,19 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
         setState(s => ({ ...s, step: 'ready', linkToken: result.link_token }));
       } else {
         // Normal flow — include redirect_uri for OAuth banks
-        console.log('[Plaid] Creating link token with redirect_uri:', redirectUri);
-        const result = await createLinkToken(userId, userEmail, redirectUri);
+        const canUseRedirectUri = isHttpsUrl(redirectUri);
+
+        if (!canUseRedirectUri) {
+          // Plaid requires HTTPS redirect_uri. Skip on local HTTP so non-OAuth institutions still work.
+          console.warn('[Plaid] Skipping redirect_uri because it is not HTTPS:', redirectUri);
+        }
+
+        console.log('[Plaid] Creating link token with redirect_uri:', canUseRedirectUri ? redirectUri : 'none');
+        const result = await createLinkToken(
+          userId,
+          userEmail,
+          canUseRedirectUri ? redirectUri : undefined,
+        );
         expirationRef.current = result.expiration;
         setState(s => ({ ...s, step: 'ready', linkToken: result.link_token }));
       }
