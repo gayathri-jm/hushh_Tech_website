@@ -635,23 +635,27 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
         </VStack>
       </Box>
 
-      {/* Sticky Bottom CTA — fixed to viewport bottom with glassmorphism */}
+      {/* Sticky Bottom CTA — fixed, centered, connected to footer */}
       <Box
         position="fixed"
         bottom={0}
-        left={0}
-        right={0}
-        bg="rgba(255,255,255,0.92)"
+        left="50%"
+        transform="translateX(-50%)"
+        w="100%"
+        maxW="500px"
+        bg="rgba(255,255,255,0.95)"
         backdropFilter="blur(20px)"
         sx={{ WebkitBackdropFilter: 'blur(20px)' }}
         borderTop="1px solid"
         borderColor={COLORS.border}
         px={5}
         pt={4}
-        pb={6}
+        pb="env(safe-area-inset-bottom, 24px)"
         zIndex={10}
+        boxShadow="0 -4px 20px rgba(0,0,0,0.03)"
+        data-onboarding-footer=""
       >
-        <Box maxW="390px" mx="auto" w="100%">
+        <Box w="100%">
         {/* "Continue to KYC" — gradient CTA */}
         {plaid.step === 'done' && plaid.canProceed && (
           <Button

@@ -437,6 +437,16 @@ export const KycFlowContainer: React.FC<KycFlowContainerProps> = ({
             userId={userId}
             userEmail={userEmail}
             onContinue={handleFinancialLinkComplete}
+            onSkip={() => {
+              // Skip financial verification — proceed to KYC intro
+              console.log('[KYC Flow] User skipped financial verification');
+              setState(prev => ({
+                ...prev,
+                step: 'INTRO',
+                financialVerified: true,
+                financialData: null,
+              }));
+            }}
             bankName={bankName}
           />
         );
