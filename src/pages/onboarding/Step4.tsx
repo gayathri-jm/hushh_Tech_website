@@ -100,7 +100,7 @@ export default function OnboardingStep4() {
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationDetected, setLocationDetected] = useState(false);
   const [userManuallyChanged, setUserManuallyChanged] = useState(false);
-  const [locationStatus, setLocationStatus] = useState<'detecting' | 'success' | 'denied' | 'failed' | 'manual' | null>(null);
+  const [locationStatus, setLocationStatus] = useState<'detecting' | 'success' | 'ip-success' | 'denied' | 'failed' | 'manual' | null>(null);
   const [detectedLocation, setDetectedLocation] = useState<string>('');
   const [userConfirmedManual, setUserConfirmedManual] = useState(false);
   const [showPermissionHelp, setShowPermissionHelp] = useState(false);
@@ -169,7 +169,8 @@ export default function OnboardingStep4() {
     }
   }, [userId, locationStatus, hasPreviousData]);
 
-  // GPS location detection function using location service
+  // Location detection function using location service
+  // Tries GPS first, then falls back to IP-based geolocation
   const detectLocation = async (uid: string) => {
     setIsDetectingLocation(true);
     setLocationStatus('detecting');
@@ -177,14 +178,13 @@ export default function OnboardingStep4() {
     try {
       const result = await locationService.detectLocation();
 
+      // GPS-based detection succeeded
       if (result.source === 'detected' && result.data) {
         const locationData: LocationData = result.data;
-        console.log('[Step4] Location detected:', locationData);
+        console.log('[Step4] GPS location detected:', locationData);
 
-        // Map country code to full name
         const countryName = COUNTRY_CODE_TO_NAME[locationData.countryCode] || locationData.country;
 
-        // Update UI with detected country
         if (countries.includes(countryName)) {
           setCitizenshipCountry(countryName);
           setResidenceCountry(countryName);
@@ -194,23 +194,45 @@ export default function OnboardingStep4() {
         setDetectedLocation(locationText);
         setLocationDetected(true);
         setLocationStatus('success');
-        setHasPreviousData(false); // Clear previous data flag (now using GPS data)
+        setHasPreviousData(false);
 
-        // Save GPS location data for use in Step 8 and Step 10
+        // Save location data for later steps
         await locationService.saveLocationToOnboarding(uid, locationData);
+
+      // IP-based detection succeeded (GPS was unavailable/denied but IP worked)
+      } else if (result.source === 'ip-detected' && result.data) {
+        const locationData: LocationData = result.data;
+        console.log('[Step4] IP-based location detected:', locationData);
+
+        const countryName = COUNTRY_CODE_TO_NAME[locationData.countryCode] || locationData.country;
+
+        if (countries.includes(countryName)) {
+          setCitizenshipCountry(countryName);
+          setResidenceCountry(countryName);
+        }
+
+        const locationText = locationData.city || locationData.state || countryName;
+        setDetectedLocation(locationText);
+        setLocationDetected(true);
+        setLocationStatus('ip-success');
+        setHasPreviousData(false);
+
+        // Save IP location data for later steps
+        await locationService.saveLocationToOnboarding(uid, locationData);
+
+      // Both GPS and IP failed with explicit denial
       } else if (result.source === 'denied') {
-        console.log('[Step4] Location permission denied');
+        console.log('[Step4] Location permission denied, IP also failed');
         setLocationStatus('denied');
-        // Don't set defaults - require user to explicitly select
+
+      // Everything failed
       } else {
-        console.log('[Step4] Location detection failed:', result.error);
+        console.log('[Step4] All location detection failed:', result.error);
         setLocationStatus('failed');
-        // Don't set defaults - require user to explicitly select
       }
     } catch (error) {
       console.error('[Step4] Location detection error:', error);
       setLocationStatus('failed');
-      // Don't set defaults - require user to explicitly select
     } finally {
       setIsDetectingLocation(false);
     }
@@ -322,6 +344,8 @@ export default function OnboardingStep4() {
         return 'bg-blue-50 border-blue-200';
       case 'success':
         return 'bg-green-50 border-green-200';
+      case 'ip-success':
+        return 'bg-green-50 border-green-200';
       case 'denied':
         return 'bg-amber-50 border-amber-200';
       case 'failed':
@@ -339,6 +363,8 @@ export default function OnboardingStep4() {
         return 'Detecting your location...';
       case 'success':
         return `Location detected: ${detectedLocation}`;
+      case 'ip-success':
+        return `Location detected: ${detectedLocation}`;
       case 'denied':
         return 'Location access denied';
       case 'failed':
@@ -353,11 +379,13 @@ export default function OnboardingStep4() {
   const getStatusMessage = (status: typeof locationStatus) => {
     switch (status) {
       case 'detecting':
-        return "We're using your device GPS to pre-fill your country...";
+        return "We're detecting your location to pre-fill your country...";
       case 'success':
-        return "We've automatically filled in your country based on your location. You can change it if needed.";
+        return "We've automatically filled in your country based on your GPS location. You can change it if needed.";
+      case 'ip-success':
+        return "We've detected your approximate location based on your network. You can change it if needed.";
       case 'denied':
-        return 'Your browser blocked location access. Please select your country manually below, or enable location permissions and try again.';
+        return 'Location access was not available. Please select your country manually below.';
       case 'failed':
         return "We couldn't determine your location. Please select your country manually below.";
       case 'manual':
@@ -404,6 +432,7 @@ export default function OnboardingStep4() {
                   <div className="flex-shrink-0 mt-0.5">
                     {locationStatus === 'detecting' && <SpinnerIcon />}
                     {locationStatus === 'success' && <CheckCircleIcon className="text-green-600" />}
+                    {locationStatus === 'ip-success' && <CheckCircleIcon className="text-green-600" />}
                     {locationStatus === 'denied' && <AlertTriangleIcon className="text-amber-600" />}
                     {locationStatus === 'failed' && <AlertCircleIcon className="text-red-600" />}
                     {locationStatus === 'manual' && <MapPinIcon className="text-blue-600" />}

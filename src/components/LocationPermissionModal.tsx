@@ -31,14 +31,33 @@ export default function LocationPermissionModal({
 
         {/* Title */}
         <h2 className="text-2xl font-bold text-slate-900 text-center mb-3">
-          Location Permission
+          Enable Location
         </h2>
 
         {/* Description */}
-        <p className="text-slate-600 text-center mb-8 leading-relaxed">
-          We need your location to automatically fill in your country and region.
-          This helps us comply with investment regulations and create your account faster.
+        <p className="text-slate-600 text-center mb-4 leading-relaxed">
+          We'll detect your location to automatically fill in your country and region.
+          This helps us comply with investment regulations.
         </p>
+
+        {/* How it works */}
+        <div className="bg-slate-50 rounded-xl p-4 mb-6">
+          <p className="text-xs text-slate-500 font-medium mb-2">How it works:</p>
+          <div className="space-y-2">
+            <div className="flex items-start gap-2">
+              <span className="text-xs text-blue-600 font-bold mt-0.5">1.</span>
+              <p className="text-xs text-slate-600">Tap "Detect My Location" below</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-xs text-blue-600 font-bold mt-0.5">2.</span>
+              <p className="text-xs text-slate-600">Allow location access when prompted by your browser</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-xs text-blue-600 font-bold mt-0.5">3.</span>
+              <p className="text-xs text-slate-600">Your country will be filled in automatically</p>
+            </div>
+          </div>
+        </div>
 
         {/* Buttons */}
         <div className="space-y-3">
@@ -59,10 +78,10 @@ export default function LocationPermissionModal({
             ) : (
               <>
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                  <path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
                 </svg>
-                <span>Allow Location Access</span>
+                <span>Detect My Location</span>
               </>
             )}
           </button>

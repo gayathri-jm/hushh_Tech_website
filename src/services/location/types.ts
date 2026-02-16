@@ -59,10 +59,13 @@ export type LocationLoadingState =
 
 // Location detection result
 export interface LocationDetectionResult {
-  source: 'cached' | 'detected' | 'failed' | 'denied';
+  source: 'cached' | 'detected' | 'ip-detected' | 'failed' | 'denied';
   data: LocationData | null;
   error?: string;
 }
+
+// Permission state for geolocation
+export type GeoPermissionState = 'granted' | 'denied' | 'prompt' | 'unavailable';
 
 // GPS coordinates
 export interface Coordinates {
