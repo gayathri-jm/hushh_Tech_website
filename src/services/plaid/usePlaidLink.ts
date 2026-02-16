@@ -1,8 +1,9 @@
 /**
- * usePlaidLink — Plaid Link hook with OAuth support
+ * usePlaidLink — Plaid Link hook with OAuth + State Persistence
  * 
  * Flow: Create token → Open Link → Exchange → Fetch data
  * OAuth: Detects oauth_state_id in URL → resumes session automatically
+ * Persistence: Saves state to sessionStorage → survives page reloads
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { usePlaidLink as usePlaidLinkSDK, PlaidLinkOnSuccess, PlaidLinkOnExit, PlaidLinkOnEvent } from 'react-plaid-link';
@@ -42,27 +43,131 @@ export interface UsePlaidLinkReturn extends PlaidLinkState {
 }
 
 // =====================================================
+// Session Storage Persistence
+// =====================================================
+
+const STORAGE_KEY = 'plaid_link_state';
+
+interface PersistedState {
+  linkToken: string | null;
+  expiration: string | null;
+  step: PlaidLinkState['step'];
+  institution: PlaidLinkState['institution'];
+  financialData: FinancialDataResponse | null;
+  canProceed: boolean;
+  productsAvailable: number;
+  balanceStatus: ProductFetchStatus;
+  assetsStatus: ProductFetchStatus;
+  investmentsStatus: ProductFetchStatus;
+  savedAt: number;
+}
+
+/** Save current state to sessionStorage */
+const persistState = (state: PlaidLinkState, expiration?: string | null) => {
+  try {
+    const persisted: PersistedState = {
+      linkToken: state.linkToken,
+      expiration: expiration || null,
+      step: state.step,
+      institution: state.institution,
+      financialData: state.financialData,
+      canProceed: state.canProceed,
+      productsAvailable: state.productsAvailable,
+      balanceStatus: state.balanceStatus,
+      assetsStatus: state.assetsStatus,
+      investmentsStatus: state.investmentsStatus,
+      savedAt: Date.now(),
+    };
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
+  } catch {
+    // sessionStorage not available — silently ignore
+  }
+};
+
+/** Load persisted state from sessionStorage */
+const loadPersistedState = (): PersistedState | null => {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as PersistedState;
+  } catch {
+    return null;
+  }
+};
+
+/** Clear persisted state */
+const clearPersistedState = () => {
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // silent
+  }
+};
+
+/** Check if a link token is still valid (not expired) */
+const isTokenValid = (expiration: string | null): boolean => {
+  if (!expiration) return false;
+  const expiresAt = new Date(expiration).getTime();
+  // Add 60s buffer — don't use tokens about to expire
+  return Date.now() < expiresAt - 60_000;
+};
+
+// =====================================================
 // Hook
 // =====================================================
 
 export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLinkReturn => {
-  const [state, setState] = useState<PlaidLinkState>({
-    step: 'idle',
-    linkToken: null,
-    error: null,
-    institution: null,
-    balanceStatus: 'idle',
-    assetsStatus: 'idle',
-    investmentsStatus: 'idle',
-    financialData: null,
-    canProceed: false,
-    productsAvailable: 0,
-  });
+  // Try to restore state from sessionStorage on first render
+  const cached = useRef(loadPersistedState());
+  const expirationRef = useRef<string | null>(cached.current?.expiration || null);
+
+  const getInitialState = (): PlaidLinkState => {
+    const c = cached.current;
+    if (!c) return defaultState();
+
+    // If we have completed data, restore it immediately
+    if (c.step === 'done' && c.financialData) {
+      console.log('[Plaid] 🔄 Restoring completed state from sessionStorage');
+      return {
+        step: 'done',
+        linkToken: c.linkToken,
+        error: null,
+        institution: c.institution,
+        balanceStatus: c.balanceStatus,
+        assetsStatus: c.assetsStatus,
+        investmentsStatus: c.investmentsStatus,
+        financialData: c.financialData,
+        canProceed: c.canProceed,
+        productsAvailable: c.productsAvailable,
+      };
+    }
+
+    // If we have a valid link token, restore ready state
+    if (c.linkToken && isTokenValid(c.expiration)) {
+      console.log('[Plaid] 🔄 Restoring link token from sessionStorage');
+      return {
+        ...defaultState(),
+        step: 'ready',
+        linkToken: c.linkToken,
+        institution: c.institution,
+      };
+    }
+
+    // Cached state is stale — start fresh
+    return defaultState();
+  };
+
+  const [state, setState] = useState<PlaidLinkState>(getInitialState);
 
   const accessTokenRef = useRef<string | null>(null);
   const assetPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const initializedRef = useRef(false);
   const isOAuthResumeRef = useRef(false);
+
+  // Persist state on every change
+  useEffect(() => {
+    persistState(state, expirationRef.current);
+  }, [state]);
 
   // Detect OAuth redirect: URL has ?oauth_state_id=...
   const getOAuthState = useCallback(() => {
@@ -90,13 +195,15 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
         console.log('[Plaid] 🔄 OAuth resume detected:', { oauthStateId, receivedRedirectUri });
         isOAuthResumeRef.current = true;
 
-        const { link_token } = await createLinkToken(userId, userEmail, undefined, receivedRedirectUri);
-        setState(s => ({ ...s, step: 'ready', linkToken: link_token }));
+        const result = await createLinkToken(userId, userEmail, undefined, receivedRedirectUri);
+        expirationRef.current = result.expiration;
+        setState(s => ({ ...s, step: 'ready', linkToken: result.link_token }));
       } else {
         // Normal flow — include redirect_uri for OAuth banks
         console.log('[Plaid] Creating link token with redirect_uri:', redirectUri);
-        const { link_token } = await createLinkToken(userId, userEmail, redirectUri);
-        setState(s => ({ ...s, step: 'ready', linkToken: link_token }));
+        const result = await createLinkToken(userId, userEmail, redirectUri);
+        expirationRef.current = result.expiration;
+        setState(s => ({ ...s, step: 'ready', linkToken: result.link_token }));
       }
     } catch (err: any) {
       console.error('[Plaid] ❌ Token creation failed:', err);
@@ -104,13 +211,34 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
     }
   }, [userId, userEmail, getOAuthState, getRedirectUri]);
 
-  // Auto-init once
+  // Auto-init — only if we don't already have a valid state
   useEffect(() => {
-    if (userId && !initializedRef.current) {
-      initializedRef.current = true;
+    if (!userId || initializedRef.current) return;
+    initializedRef.current = true;
+
+    const oauthStateId = getOAuthState();
+
+    // If OAuth resume → always create new token (required by Plaid)
+    if (oauthStateId) {
       initToken();
+      return;
     }
-  }, [userId, initToken]);
+
+    // If we restored a completed state → no need to init
+    if (state.step === 'done' && state.financialData) {
+      console.log('[Plaid] ✅ Already completed — skipping token creation');
+      return;
+    }
+
+    // If we restored a valid link token → no need to init
+    if (state.step === 'ready' && state.linkToken && isTokenValid(expirationRef.current)) {
+      console.log('[Plaid] ✅ Valid link token restored — skipping token creation');
+      return;
+    }
+
+    // No cached state or expired → create fresh token
+    initToken();
+  }, [userId, initToken, getOAuthState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Step 2: Handle Plaid Link success
   const handleSuccess: PlaidLinkOnSuccess = useCallback(async (publicToken, metadata) => {
@@ -242,13 +370,11 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
   }, [ready, open]);
 
   const retry = useCallback(() => {
-    setState({
-      step: 'idle', linkToken: null, error: null, institution: null,
-      balanceStatus: 'idle', assetsStatus: 'idle', investmentsStatus: 'idle',
-      financialData: null, canProceed: false, productsAvailable: 0,
-    });
+    clearPersistedState();
+    setState(defaultState());
     accessTokenRef.current = null;
     initializedRef.current = false;
+    expirationRef.current = null;
     initToken();
   }, [initToken]);
 
@@ -258,5 +384,19 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
     open: openPlaidLink,
   };
 };
+
+// Default empty state
+const defaultState = (): PlaidLinkState => ({
+  step: 'idle',
+  linkToken: null,
+  error: null,
+  institution: null,
+  balanceStatus: 'idle',
+  assetsStatus: 'idle',
+  investmentsStatus: 'idle',
+  financialData: null,
+  canProceed: false,
+  productsAvailable: 0,
+});
 
 export default usePlaidLinkHook;

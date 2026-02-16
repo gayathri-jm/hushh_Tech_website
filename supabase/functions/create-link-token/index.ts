@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
       secret: PLAID_SECRET,
       user: { client_user_id: userId, email_address: userEmail },
       client_name: 'Hushh',
-      products: ['auth', 'transactions', 'investments', 'assets'],
+      products: ['auth'],
       country_codes: ['US'],
       language: 'en',
     };
@@ -71,10 +71,11 @@ Deno.serve(async (req) => {
       JSON.stringify({ link_token: data.link_token, expiration: data.expiration }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('[create-link-token] Error:', err);
+    const message = err instanceof Error ? err.message : 'Internal server error';
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
