@@ -151,7 +151,7 @@ const AIDetectedPreferences: React.FC<AIDetectedPreferencesProps> = ({ userId, o
           .from('user_enriched_profiles')
           .select('*')
           .eq('user_id', userId)
-          .single();
+          .maybeSingle();
 
         if (fetchError) {
           if (fetchError.code === 'PGRST116') {

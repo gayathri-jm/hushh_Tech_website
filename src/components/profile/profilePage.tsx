@@ -140,14 +140,14 @@ const ProfilePage: React.FC = () => {
           .from('investor_profiles')
           .select('id, user_confirmed')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
         // Check onboarding_data status
         const { data: onboarding, error: onboardingError } = await config.supabaseClient
           .from('onboarding_data')
           .select('is_completed, current_step')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
         setOnboardingStatus({
           hasProfile: !!profile && !profileError,

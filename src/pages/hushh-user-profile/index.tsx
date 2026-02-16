@@ -276,7 +276,7 @@ const HushhUserProfilePage: React.FC = () => {
           .from("investor_profiles")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (existingProfile) {
           // Always load the slug if it exists (regardless of investor_profile)
@@ -312,7 +312,7 @@ const HushhUserProfilePage: React.FC = () => {
           .from("onboarding_data")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (onboardingData) {
           // Mark that user has completed onboarding
@@ -370,7 +370,7 @@ const HushhUserProfilePage: React.FC = () => {
                 user_confirmed: false,
               })
               .select("slug")
-              .single();
+              .maybeSingle();
 
             // Set the slug immediately if created
             if (newProfile?.slug) {
@@ -492,7 +492,7 @@ const HushhUserProfilePage: React.FC = () => {
             .from("investor_profiles")
             .upsert(updatePayload)
             .select("slug")
-            .single();
+            .maybeSingle();
 
           // Set profile slug if returned
           if (upsertData?.slug) {

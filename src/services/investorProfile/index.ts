@@ -80,7 +80,7 @@ export async function createInvestorProfile(
       user_confirmed: false,
     })
     .select()
-    .single();
+    .maybeSingle();
   
   if (insertError) {
     throw new Error(`Failed to save investor profile: ${insertError.message}`);
@@ -180,7 +180,7 @@ export async function updateInvestorProfile(
     .update(updateData)
     .eq("user_id", user.id)
     .select()
-    .single();
+    .maybeSingle();
   
   if (updateError) {
     throw new Error(`Failed to update investor profile: ${updateError.message}`);
@@ -271,7 +271,7 @@ export async function fetchPublicInvestorProfileBySlug(slug: string): Promise<an
     .eq('slug', slug)
     .eq('is_public', true)
     .eq('user_confirmed', true)
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Public profile not found: ${error.message}`);
@@ -318,7 +318,7 @@ export async function regenerateProfileSlug(): Promise<string> {
     .update({ slug: '' })
     .eq('user_id', user.id)
     .select('slug')
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Failed to regenerate slug: ${error.message}`);

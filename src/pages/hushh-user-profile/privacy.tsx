@@ -49,7 +49,7 @@ const PrivacyControlsPage: React.FC = () => {
         .from("investor_profiles")
         .select("privacy_settings")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 

@@ -61,7 +61,7 @@ const ViewPreferencesPage: React.FC = () => {
           .from("investor_profiles")
           .select("*")
           .eq("user_id", userIdToFetch)
-          .single();
+          .maybeSingle();
 
         if (error) {
           throw error;
