@@ -109,9 +109,8 @@ export function useLocationDropdowns(
       setLoadingCities(true);
       setCitiesError(false);
       try {
-        const stateObj = states.find(s => s.isoCode === state);
-        const stateName = stateObj?.name || state;
-        const list = await getCitiesOfState(country, stateName);
+        // Edge function expects ISO code (e.g. "MH"), not name ("Maharashtra")
+        const list = await getCitiesOfState(country, state);
         if (!cancelled) setCities(list);
       } catch {
         if (!cancelled) setCitiesError(true);
