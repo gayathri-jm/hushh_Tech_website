@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
+import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { fetchAuthNumbers } from '../../services/plaid/plaidService';
 
@@ -483,26 +484,20 @@ function OnboardingStep13() {
 
     const encryptedAccountNumber = btoa(accountNumber);
 
-    const { error: upsertError } = await config.supabaseClient
-      .from('onboarding_data')
-      .upsert({
-        user_id: user.id,
-        bank_name: bankName.trim(),
-        bank_account_holder_name: accountHolderName.trim(),
-        bank_account_number_encrypted: encryptedAccountNumber,
-        bank_routing_number: routingNumber.trim(),
-        bank_address_city: bankCity.trim() || null,
-        bank_address_country: bankCountry,
-        bank_account_type: accountType,
-        banking_info_skipped: false,
-        banking_info_submitted_at: new Date().toISOString(),
-        current_step: 13,
-        is_completed: true,
-        completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id'
-      });
+    const { error: upsertError } = await upsertOnboardingData(user.id, {
+      bank_name: bankName.trim(),
+      bank_account_holder_name: accountHolderName.trim(),
+      bank_account_number_encrypted: encryptedAccountNumber,
+      bank_routing_number: routingNumber.trim(),
+      bank_address_city: bankCity.trim() || null,
+      bank_address_country: bankCountry,
+      bank_account_type: accountType,
+      banking_info_skipped: false,
+      banking_info_submitted_at: new Date().toISOString(),
+      current_step: 13,
+      is_completed: true,
+      completed_at: new Date().toISOString(),
+    });
 
     if (upsertError) {
       setError('Failed to save banking information');
@@ -531,18 +526,12 @@ function OnboardingStep13() {
       return;
     }
 
-    const { error: upsertError } = await config.supabaseClient
-      .from('onboarding_data')
-      .upsert({
-        user_id: user.id,
-        banking_info_skipped: true,
-        current_step: 13,
-        is_completed: true,
-        completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id'
-      });
+    const { error: upsertError } = await upsertOnboardingData(user.id, {
+      banking_info_skipped: true,
+      current_step: 13,
+      is_completed: true,
+      completed_at: new Date().toISOString(),
+    });
 
     if (upsertError) {
       setError('Failed to save data');

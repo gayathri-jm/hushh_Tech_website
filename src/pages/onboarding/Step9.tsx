@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
+import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 
 // Back arrow icon (same as Step3)
@@ -202,17 +203,11 @@ function OnboardingStep9() {
       return;
     }
 
-    const { error: upsertError } = await config.supabaseClient
-      .from('onboarding_data')
-      .upsert({
-        user_id: user.id,
-        ssn_encrypted: ssn,
-        date_of_birth: isoDob,
-        current_step: 9,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id'
-      });
+    const { error: upsertError } = await upsertOnboardingData(user.id, {
+      ssn_encrypted: ssn,
+      date_of_birth: isoDob,
+      current_step: 9,
+    });
 
     if (upsertError) {
       setError('Failed to save data');
@@ -252,17 +247,11 @@ function OnboardingStep9() {
       return;
     }
 
-    const { error: upsertError } = await config.supabaseClient
-      .from('onboarding_data')
-      .upsert({
-        user_id: user.id,
-        ssn_encrypted: '999-99-9999',
-        date_of_birth: isoDob,
-        current_step: 9,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id'
-      });
+    const { error: upsertError } = await upsertOnboardingData(user.id, {
+      ssn_encrypted: '999-99-9999',
+      date_of_birth: isoDob,
+      current_step: 9,
+    });
 
     if (upsertError) {
       setError('Failed to save data');

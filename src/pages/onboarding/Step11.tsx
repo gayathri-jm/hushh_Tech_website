@@ -1,6 +1,7 @@
 import { useState, useEffect, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
+import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 
 type RecurringFrequency = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';
@@ -303,18 +304,12 @@ function OnboardingStep11() {
       return;
     }
 
-    const { error: upsertError } = await config.supabaseClient
-      .from('onboarding_data')
-      .upsert({
-        user_id: user.id,
-        class_a_units: localShareUnits.class_a_units,
-        class_b_units: localShareUnits.class_b_units,
-        class_c_units: localShareUnits.class_c_units,
-        initial_investment_amount: modalTotalInvestment,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id'
-      });
+    const { error: upsertError } = await upsertOnboardingData(user.id, {
+      class_a_units: localShareUnits.class_a_units,
+      class_b_units: localShareUnits.class_b_units,
+      class_c_units: localShareUnits.class_c_units,
+      initial_investment_amount: modalTotalInvestment,
+    });
 
     if (!upsertError) {
       setShareUnits({ ...localShareUnits });
@@ -429,11 +424,7 @@ function OnboardingStep11() {
       updateData.recurring_amount = null;
     }
 
-    const { error: upsertError } = await config.supabaseClient
-      .from('onboarding_data')
-      .upsert(updateData, {
-        onConflict: 'user_id'
-      });
+    const { error: upsertError } = await upsertOnboardingData(user.id, updateData);
 
     if (upsertError) {
       setError('Failed to save data');

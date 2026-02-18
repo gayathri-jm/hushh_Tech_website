@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
+import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { getAllCountries, getStatesOfCountry, getCitiesOfState } from '../../data/locationData';
 import { locationService } from '../../services/location/locationService';
@@ -461,21 +462,15 @@ function OnboardingStep8() {
       return;
     }
 
-    const { error: upsertError } = await config.supabaseClient
-      .from('onboarding_data')
-      .upsert({
-        user_id: user.id,
-        address_line_1: addressLine1.trim(),
-        address_line_2: addressLine2.trim() || null,
-        address_country: country,
-        state: state,
-        city: city,
-        zip_code: zipCode.trim(),
-        current_step: 8,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id'
-      });
+    const { error: upsertError } = await upsertOnboardingData(user.id, {
+      address_line_1: addressLine1.trim(),
+      address_line_2: addressLine2.trim() || null,
+      address_country: country,
+      state: state,
+      city: city,
+      zip_code: zipCode.trim(),
+      current_step: 8,
+    });
 
     if (upsertError) {
       setError('Failed to save data');

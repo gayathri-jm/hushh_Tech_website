@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
+import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 
 // Back arrow icon
@@ -86,17 +87,11 @@ export default function OnboardingStep7() {
       return;
     }
 
-    const { error: upsertError } = await config.supabaseClient
-      .from('onboarding_data')
-      .upsert({
-        user_id: user.id,
-        legal_first_name: firstName.trim(),
-        legal_last_name: lastName.trim(),
-        current_step: 7,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id'
-      });
+    const { error: upsertError } = await upsertOnboardingData(user.id, {
+      legal_first_name: firstName.trim(),
+      legal_last_name: lastName.trim(),
+      current_step: 7,
+    });
 
     if (upsertError) {
       setError('Failed to save data');
