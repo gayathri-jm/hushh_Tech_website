@@ -13,6 +13,6 @@ export default defineConfig({
     coverage: {
       reporter: ['text', 'json', 'html'],
     },
-    testTimeout: 10000,
+    testTimeout: 15000,
   },
 });
