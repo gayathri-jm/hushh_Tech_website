@@ -27,6 +27,10 @@ interface LocationDropdownState {
   city: string;
   loadingStates: boolean;
   loadingCities: boolean;
+  statesError: boolean;
+  citiesError: boolean;
+  retryStates: () => void;
+  retryCities: () => void;
   setCountry: (code: string) => void;
   setState: (code: string) => void;
   setCity: (name: string) => void;
@@ -48,6 +52,8 @@ export function useLocationDropdowns(
 
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
+  const [statesError, setStatesError] = useState(false);
+  const [citiesError, setCitiesError] = useState(false);
 
   // Pending refs — store GPS values until dropdown options arrive
   const pendingState = useRef<string | null>(null);
@@ -80,11 +86,12 @@ export function useLocationDropdowns(
 
     const load = async () => {
       setLoadingStates(true);
+      setStatesError(false);
       try {
         const list = await getStatesOfCountry(country);
         if (!cancelled) setStates(list);
       } catch {
-        // Silently fail — user can still type manually
+        if (!cancelled) setStatesError(true);
       } finally {
         if (!cancelled) setLoadingStates(false);
       }
@@ -100,13 +107,14 @@ export function useLocationDropdowns(
 
     const load = async () => {
       setLoadingCities(true);
+      setCitiesError(false);
       try {
         const stateObj = states.find(s => s.isoCode === state);
         const stateName = stateObj?.name || state;
         const list = await getCitiesOfState(country, stateName);
         if (!cancelled) setCities(list);
       } catch {
-        // Silently fail
+        if (!cancelled) setCitiesError(true);
       } finally {
         if (!cancelled) setLoadingCities(false);
       }
@@ -154,10 +162,32 @@ export function useLocationDropdowns(
     if (cityName) pendingCity.current = cityName;
   }, []);
 
+  // Retry functions — re-trigger the useEffect by toggling country/state
+  const retryStates = useCallback(() => {
+    if (!country) return;
+    setStatesError(false);
+    setStates([]);
+    // Re-trigger by setting same value (force via raw setter)
+    const c = country;
+    setCountryRaw('');
+    setTimeout(() => setCountryRaw(c), 0);
+  }, [country]);
+
+  const retryCities = useCallback(() => {
+    if (!state) return;
+    setCitiesError(false);
+    setCities([]);
+    const s = state;
+    setStateRaw('');
+    setTimeout(() => setStateRaw(s), 0);
+  }, [state]);
+
   return {
     countries, states, cities,
     country, state, city,
     loadingStates, loadingCities,
+    statesError, citiesError,
+    retryStates, retryCities,
     setCountry, setState, setCity,
     applyDetectedLocation,
   };

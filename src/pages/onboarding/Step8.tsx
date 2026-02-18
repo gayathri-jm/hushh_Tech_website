@@ -6,13 +6,14 @@
  *
  * Data priority: Saved address → GPS detection → Step 6 country.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { useLocationDropdowns } from '../../hooks/useLocationDropdowns';
 import { locationService } from '../../services/location/locationService';
+import { SearchableSelect } from '../../components/onboarding/SearchableSelect';
 
 // ─── Validation helpers ─────────────────────────────────────────────────────
 
@@ -38,12 +39,6 @@ const validateZip = (v: string) => {
 const BackIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 18l-6-6 6-6" />
-  </svg>
-);
-
-const ChevronDown = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
-    <path d="M6 9l6 6 6-6" />
   </svg>
 );
 
@@ -234,8 +229,6 @@ function OnboardingStep8() {
         : 'border-gray-200 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee]'
     }`;
 
-  const selectClass = 'w-full h-12 px-4 pr-10 rounded-lg border border-gray-200 bg-white text-slate-900 text-base focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all appearance-none disabled:bg-slate-50 disabled:text-slate-400';
-
   // ─── Render ─────────────────────────────────────────────────────────────
 
   return (
@@ -322,52 +315,49 @@ function OnboardingStep8() {
 
           {/* Card 2: Region */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-5 space-y-5 mb-4">
-            {/* Country */}
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-900" htmlFor="country">Country</label>
-              <div className="relative">
-                <select id="country" value={dropdowns.country}
-                  onChange={e => dropdowns.setCountry(e.target.value)}
-                  className={selectClass} autoComplete="country" aria-required="true"
-                >
-                  <option value="">Select country…</option>
-                  {dropdowns.countries.map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronDown /></div>
-              </div>
-            </div>
+            {/* Country — searchable */}
+            <SearchableSelect
+              id="country"
+              label="Country"
+              value={dropdowns.country}
+              options={dropdowns.countries.map(c => ({ value: c.isoCode, label: c.name }))}
+              onChange={dropdowns.setCountry}
+              placeholder="Search country…"
+              required
+              autoComplete="country"
+            />
 
-            {/* State & City */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-900" htmlFor="state">State</label>
-                <div className="relative">
-                  <select id="state" value={dropdowns.state}
-                    onChange={e => dropdowns.setState(e.target.value)}
-                    disabled={!dropdowns.country || dropdowns.loadingStates}
-                    className={selectClass} autoComplete="address-level1" aria-required="true"
-                  >
-                    <option value="">{dropdowns.loadingStates ? 'Loading…' : 'Select'}</option>
-                    {dropdowns.states.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronDown /></div>
-                </div>
-              </div>
+            {/* State & City — searchable with error/retry */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <SearchableSelect
+                id="state"
+                label="State / Province"
+                value={dropdowns.state}
+                options={dropdowns.states.map(s => ({ value: s.isoCode, label: s.name }))}
+                onChange={dropdowns.setState}
+                placeholder="Search state…"
+                disabled={!dropdowns.country}
+                loading={dropdowns.loadingStates}
+                loadError={dropdowns.statesError}
+                onRetry={dropdowns.retryStates}
+                required
+                autoComplete="address-level1"
+              />
 
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-900" htmlFor="city">City</label>
-                <div className="relative">
-                  <select id="city" value={dropdowns.city}
-                    onChange={e => dropdowns.setCity(e.target.value)}
-                    disabled={!dropdowns.state || dropdowns.loadingCities}
-                    className={selectClass} autoComplete="address-level2" aria-required="true"
-                  >
-                    <option value="">{dropdowns.loadingCities ? 'Loading…' : 'Select'}</option>
-                    {dropdowns.cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronDown /></div>
-                </div>
-              </div>
+              <SearchableSelect
+                id="city"
+                label="City"
+                value={dropdowns.city}
+                options={dropdowns.cities.map(c => ({ value: c.name, label: c.name }))}
+                onChange={dropdowns.setCity}
+                placeholder="Search city…"
+                disabled={!dropdowns.state}
+                loading={dropdowns.loadingCities}
+                loadError={dropdowns.citiesError}
+                onRetry={dropdowns.retryCities}
+                required
+                autoComplete="address-level2"
+              />
             </div>
 
             {/* ZIP */}
