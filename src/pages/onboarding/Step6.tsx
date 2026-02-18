@@ -2,9 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
-
-// Edge Function URL for GPS geocoding (real-time location detection)
-const LOCATION_GEOCODE_API = `${config.SUPABASE_URL}/functions/v1/hushh-location-geocode`;
+import { locationService, type LocationData } from '../../services/location';
 
 // Back arrow icon
 const BackIcon = () => (
@@ -81,89 +79,71 @@ export default function OnboardingStep6() {
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
   const isFooterVisible = useFooterVisibility();
-  const locationAbortController = useRef<AbortController | null>(null);
+  const isUnmountedRef = useRef(false);
 
   useEffect(() => {
     // Scroll to top on component mount
     window.scrollTo(0, 0);
   }, []);
 
-  // Real-time GPS detection function
-  const detectLocationRealTime = async (uid: string) => {
-    if (!navigator.geolocation) {
-      console.log('[Step8] Geolocation not available');
-      return;
-    }
-
+  const detectLocationForDialCode = async (uid: string, cachedDialCode?: string) => {
     setIsDetectingLocation(true);
-    setLocationMessage('Detecting location...');
+    setLocationMessage('Detecting your country code...');
 
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000, // 1 minute cache - fresher than Step 6
-        });
-      });
+      const result = await locationService.detectLocation();
 
-      const { latitude, longitude } = position.coords;
-      console.log(`[Step8] Real-time GPS: ${latitude}, ${longitude}`);
+      if (!result.data) {
+        throw new Error(result.error || 'Could not detect location');
+      }
 
-      locationAbortController.current = new AbortController();
+      const locationData: LocationData = result.data;
+      const dialCode = locationData.phoneDialCode;
+      const dialCodeExists = countryCodes.some(c => c.code === dialCode);
 
-      const response = await fetch(LOCATION_GEOCODE_API, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': config.SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${config.SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ latitude, longitude }),
-        signal: locationAbortController.current.signal,
-      });
-
-      const result = await response.json();
-
-      if (result.success && result.data?.phoneDialCode) {
-        const dialCode = result.data.phoneDialCode;
-        const dialCodeExists = countryCodes.some(c => c.code === dialCode);
-        
-        if (dialCodeExists) {
-          setCountryCode(dialCode);
-          setLocationMessage(`ðŸ“ ${result.data.city || result.data.country}`);
-          console.log('[Step8] Real-time GPS dial code:', dialCode);
-
-          // Update cache for other steps
-          if (config.supabaseClient) {
-            await config.supabaseClient
-              .from('onboarding_data')
-              .update({
-                gps_detected_phone_dial_code: dialCode,
-                gps_location_data: result.data,
-                gps_detected_country: result.data.country,
-                gps_detected_state: result.data.state,
-                gps_detected_city: result.data.city,
-                gps_detected_postal_code: result.data.postalCode,
-                updated_at: new Date().toISOString(),
-              })
-              .eq('user_id', uid);
-          }
+      // Cache the detected location for other steps (even if the dial code isn't in our short list).
+      if (config.supabaseClient) {
+        try {
+          await locationService.saveLocationToOnboarding(uid, locationData);
+        } catch (saveErr) {
+          console.warn('[Step6] Failed to cache location:', saveErr);
         }
-        
-        setTimeout(() => setLocationMessage(null), 2000);
       }
+
+      if (dialCodeExists) {
+        setCountryCode(dialCode);
+        setLocationMessage(`Detected: ${locationData.city || locationData.country}`);
+        console.log('[Step6] Detected phone dial code:', dialCode, 'via', result.source);
+      } else if (cachedDialCode && countryCodes.some(c => c.code === cachedDialCode)) {
+        setCountryCode(cachedDialCode);
+        setLocationMessage('Using your previous detected country code');
+      } else {
+        setLocationMessage(null);
+      }
+
+      setTimeout(() => {
+        if (!isUnmountedRef.current) setLocationMessage(null);
+      }, 2000);
     } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        console.log('[Step8] GPS detection failed:', error);
+      console.log('[Step6] Location detection failed:', error);
+
+      if (cachedDialCode && countryCodes.some(c => c.code === cachedDialCode)) {
+        setCountryCode(cachedDialCode);
+        setLocationMessage('Using your previous detected country code');
+        setTimeout(() => {
+          if (!isUnmountedRef.current) setLocationMessage(null);
+        }, 2000);
+      } else {
+        setLocationMessage(null);
       }
-      setLocationMessage(null);
     } finally {
-      setIsDetectingLocation(false);
+      if (!isUnmountedRef.current) setIsDetectingLocation(false);
     }
   };
 
   useEffect(() => {
+    isUnmountedRef.current = false;
+
     const getCurrentUser = async () => {
       if (!config.supabaseClient) return;
       
@@ -177,7 +157,8 @@ export default function OnboardingStep6() {
       // Load existing data
       const { data: onboardingData } = await config.supabaseClient
         .from('onboarding_data')
-        .select('phone_number, phone_country_code, gps_detected_phone_dial_code')
+        // Select * to remain compatible across schema revisions (gps_detected_* columns may not exist).
+        .select('*')
         .eq('user_id', user.id)
         .single();
 
@@ -186,22 +167,27 @@ export default function OnboardingStep6() {
         setPhoneNumber(onboardingData.phone_number);
         if (onboardingData?.phone_country_code) {
           setCountryCode(onboardingData.phone_country_code);
-          console.log('[Step8] Using saved phone country code:', onboardingData.phone_country_code);
+          console.log('[Step6] Using saved phone country code:', onboardingData.phone_country_code);
           return;
         }
       }
-      
-      // For new users: Always detect GPS in real-time (don't rely on stale cache)
-      console.log('[Step8] Detecting location in real-time...');
-      detectLocationRealTime(user.id);
+
+      const cachedDialCode = (onboardingData as any)?.gps_detected_phone_dial_code || undefined;
+      if (cachedDialCode && countryCodes.some(c => c.code === cachedDialCode)) {
+        // Pre-fill immediately from cache, then attempt fresh detection.
+        setCountryCode(cachedDialCode);
+      }
+
+      // Detect fresh (GPS if available, otherwise IP fallback).
+      console.log('[Step6] Detecting location for phone dial code...');
+      detectLocationForDialCode(user.id, cachedDialCode);
     };
 
     getCurrentUser();
     
     return () => {
-      if (locationAbortController.current) {
-        locationAbortController.current.abort();
-      }
+      isUnmountedRef.current = true;
+      locationService.cancel();
     };
   }, [navigate]);
 
@@ -284,6 +270,17 @@ export default function OnboardingStep6() {
             <p className="text-slate-500 text-[14px] font-normal leading-relaxed">
               We'll send a confirmation code to verify your identity.
             </p>
+
+            {locationMessage && (
+              <div className="mt-4 flex justify-center">
+                <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                  {isDetectingLocation && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#2b8cee] animate-pulse" aria-hidden="true" />
+                  )}
+                  <span>{locationMessage}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Phone Input Form */}

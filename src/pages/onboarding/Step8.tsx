@@ -173,15 +173,17 @@ function OnboardingStep8() {
   // Apply pending state when states list loads
   useEffect(() => {
     if (states.length > 0 && pendingGpsState.current) {
-      const stateCode = pendingGpsState.current;
-      const stateExists = states.some(s => s.isoCode === stateCode || s.name === stateCode);
-      if (stateExists) {
-        // Use isoCode if it matches, otherwise use name
-        const matchingState = states.find(s => s.isoCode === stateCode || s.name === stateCode);
-        if (matchingState) {
-          console.log('[Step8] Applying pending GPS state:', matchingState.isoCode);
-          setState(matchingState.isoCode);
-        }
+      const raw = pendingGpsState.current.trim();
+      const rawLower = raw.toLowerCase();
+
+      // Match by ISO code or exact name (case-insensitive), then fall back to partial match.
+      const matchingState =
+        states.find(s => s.isoCode.toLowerCase() === rawLower || s.name.toLowerCase() === rawLower) ||
+        states.find(s => s.name.toLowerCase().includes(rawLower) || rawLower.includes(s.name.toLowerCase()));
+
+      if (matchingState) {
+        console.log('[Step8] Applying pending GPS state:', matchingState.isoCode);
+        setState(matchingState.isoCode);
       }
       pendingGpsState.current = null;
     }
@@ -190,11 +192,16 @@ function OnboardingStep8() {
   // Apply pending city when cities list loads
   useEffect(() => {
     if (cities.length > 0 && pendingGpsCity.current) {
-      const cityName = pendingGpsCity.current;
-      const cityExists = cities.some(c => c.name === cityName);
-      if (cityExists) {
-        console.log('[Step8] Applying pending GPS city:', cityName);
-        setCity(cityName);
+      const raw = pendingGpsCity.current.trim();
+      const rawLower = raw.toLowerCase();
+
+      const matchingCity =
+        cities.find(c => c.name.toLowerCase() === rawLower) ||
+        cities.find(c => c.name.toLowerCase().includes(rawLower) || rawLower.includes(c.name.toLowerCase()));
+
+      if (matchingCity) {
+        console.log('[Step8] Applying pending GPS city:', matchingCity.name);
+        setCity(matchingCity.name);
       }
       pendingGpsCity.current = null;
     }
@@ -247,6 +254,40 @@ function OnboardingStep8() {
     }
   }, []);
 
+  const handleDetectLocationClick = useCallback(async () => {
+    if (!config.supabaseClient) return;
+
+    const { data: { user } } = await config.supabaseClient.auth.getUser();
+    if (!user) return;
+
+    setIsDetecting(true);
+    setDetectionMessage('Detecting your location...');
+
+    try {
+      const result = await locationService.detectLocation();
+      if (!result.data) {
+        setDetectionMessage(null);
+        return;
+      }
+
+      // Save to Supabase for consistency (best-effort cache only).
+      try {
+        await locationService.saveLocationToOnboarding(user.id, result.data);
+      } catch (saveErr) {
+        console.warn('[Step8] Failed to save location cache:', saveErr);
+      }
+
+      applyLocationToForm(result.data);
+      setDetectionMessage(result.data.city || result.data.country || 'Location detected');
+      setTimeout(() => setDetectionMessage(null), 2000);
+    } catch (err) {
+      console.warn('[Step8] Manual location detection failed:', err);
+      setDetectionMessage(null);
+    } finally {
+      setIsDetecting(false);
+    }
+  }, [applyLocationToForm]);
+
   // Main data loading: existing data â†’ LocationService (GPS + IP fallback) â†’ cached profile
   useEffect(() => {
     const loadData = async () => {
@@ -266,7 +307,8 @@ function OnboardingStep8() {
       if (onboardingData?.address_line_1) {
         setAddressLine1(onboardingData.address_line_1 || '');
         setAddressLine2(onboardingData.address_line_2 || '');
-        setCountry(onboardingData.address_country || 'US');
+        // Some rows store country name (e.g. "United States") while the dropdown expects ISO code (e.g. "US").
+        setCountry(locationService.mapCountryToIsoCode(onboardingData.address_country || 'US'));
         setState(onboardingData.state || '');
         setCity(onboardingData.city || '');
         setZipCode(onboardingData.zip_code || '');
@@ -518,12 +560,12 @@ function OnboardingStep8() {
             </p>
             
             {/* Location Detection Status */}
-            {(isDetecting || detectionMessage) && (
-              <div className={`mt-4 py-2 px-4 rounded-full inline-flex items-center gap-2 text-sm font-medium transition-all ${
-                isDetecting 
-                  ? 'bg-blue-50 text-blue-600 animate-pulse' 
-                  : 'bg-green-50 text-green-600'
-              }`}>
+             {(isDetecting || detectionMessage) && (
+               <div className={`mt-4 py-2 px-4 rounded-full inline-flex items-center gap-2 text-sm font-medium transition-all ${
+                 isDetecting 
+                   ? 'bg-blue-50 text-blue-600 animate-pulse' 
+                   : 'bg-green-50 text-green-600'
+               }`}>
                 {isDetecting ? (
                   <>
                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -535,9 +577,20 @@ function OnboardingStep8() {
                 ) : (
                   <span>{detectionMessage}</span>
                 )}
-              </div>
-            )}
-          </div>
+               </div>
+             )}
+
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={handleDetectLocationClick}
+                disabled={isDetecting}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Use my current location
+              </button>
+            </div>
+           </div>
 
           {/* Error Message */}
           {error && (

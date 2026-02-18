@@ -1,5 +1,6 @@
 // hushh-location-geocode - Edge Function for GPS-based reverse geocoding
-// Uses Google Geocoding API to convert lat/lng to full address components
+// Uses Google Geocoding API (if configured) to convert lat/lng to full address components.
+// Falls back to OpenStreetMap Nominatim when Google is not configured or fails.
 
 import { corsHeaders } from '../_shared/cors.ts';
 
@@ -74,6 +75,8 @@ const COUNTRY_TIMEZONES: Record<string, string> = {
   'SA': 'Asia/Riyadh',
 };
 
+const NOMINATIM_REVERSE_API = 'https://nominatim.openstreetmap.org/reverse';
+
 interface GeocodingResult {
   country: string;
   countryCode: string;
@@ -88,6 +91,159 @@ interface GeocodingResult {
   longitude: number;
 }
 
+const getDialCodeForCountry = (countryCode: string): string => {
+  const code = (countryCode || '').toUpperCase();
+  return COUNTRY_DIAL_CODES[code] || '+1';
+};
+
+const getTimezoneForCountry = (countryCode: string): string => {
+  const code = (countryCode || '').toUpperCase();
+  return COUNTRY_TIMEZONES[code] || 'UTC';
+};
+
+const parseIsoSubdivisionCode = (value: unknown): string => {
+  const str = typeof value === 'string' ? value.trim() : '';
+  if (!str) return '';
+  const last = str.includes('-') ? str.split('-').pop() : str;
+  return (last || '').toUpperCase();
+};
+
+const reverseGeocodeViaGoogle = async (
+  latitude: number,
+  longitude: number,
+  apiKey: string
+): Promise<GeocodingResult> => {
+  // Call Google Geocoding API
+  const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
+
+  console.log(`[hushh-location-geocode] Reverse geocoding via Google: ${latitude}, ${longitude}`);
+
+  const response = await fetch(geocodeUrl);
+  const data = await response.json();
+
+  if (data.status !== 'OK' || !data.results || data.results.length === 0) {
+    throw new Error(`Google geocoding failed: ${data.status || 'Unknown status'}`);
+  }
+
+  // Parse address components from Google response
+  const result = data.results[0];
+  const components = result.address_components || [];
+
+  let country = '';
+  let countryCode = '';
+  let state = '';
+  let stateCode = '';
+  let city = '';
+  let postalCode = '';
+
+  for (const component of components) {
+    const types = component.types || [];
+
+    if (types.includes('country')) {
+      country = component.long_name;
+      countryCode = component.short_name;
+    } else if (types.includes('administrative_area_level_1')) {
+      state = component.long_name;
+      stateCode = component.short_name;
+    } else if (types.includes('locality')) {
+      city = component.long_name;
+    } else if (types.includes('sublocality_level_1') && !city) {
+      city = component.long_name;
+    } else if (types.includes('postal_code')) {
+      postalCode = component.long_name;
+    }
+  }
+
+  const phoneDialCode = getDialCodeForCountry(countryCode);
+  const timezone = getTimezoneForCountry(countryCode);
+
+  return {
+    country,
+    countryCode,
+    state,
+    stateCode,
+    city,
+    postalCode,
+    phoneDialCode,
+    timezone,
+    formattedAddress: result.formatted_address || '',
+    latitude,
+    longitude,
+  };
+};
+
+const reverseGeocodeViaNominatim = async (
+  req: Request,
+  latitude: number,
+  longitude: number
+): Promise<GeocodingResult> => {
+  const url =
+    `${NOMINATIM_REVERSE_API}?format=jsonv2&lat=${encodeURIComponent(latitude)}` +
+    `&lon=${encodeURIComponent(longitude)}&addressdetails=1`;
+
+  const userAgent =
+    Deno.env.get('NOMINATIM_USER_AGENT') || 'hushh-location-geocode/1.0 (https://hushh.ai)';
+
+  const headers: HeadersInit = {
+    'Accept': 'application/json',
+    'Accept-Language': 'en',
+    // Nominatim requires an identifiable User-Agent.
+    'User-Agent': userAgent,
+  };
+
+  // Some providers log/expect a Referer; use Origin when available.
+  const origin = req.headers.get('origin');
+  if (origin) headers['Referer'] = origin;
+
+  console.log(`[hushh-location-geocode] Reverse geocoding via Nominatim: ${latitude}, ${longitude}`);
+
+  const response = await fetch(url, { headers });
+  if (!response.ok) {
+    throw new Error(`Nominatim geocoding failed: ${response.status}`);
+  }
+
+  const json = await response.json() as any;
+  const addr = json?.address || {};
+
+  const countryCode = String(addr?.country_code || '').toUpperCase();
+
+  const stateIso =
+    addr?.['ISO3166-2-lvl4'] ||
+    addr?.['ISO3166-2-lvl6'] ||
+    addr?.['ISO3166-2-lvl3'] ||
+    addr?.['ISO3166-2-lvl5'] ||
+    '';
+
+  const stateCode = parseIsoSubdivisionCode(stateIso || addr?.state_code || '');
+
+  const city =
+    addr?.city ||
+    addr?.town ||
+    addr?.village ||
+    addr?.hamlet ||
+    addr?.suburb ||
+    addr?.county ||
+    addr?.state_district ||
+    '';
+
+  const phoneDialCode = getDialCodeForCountry(countryCode);
+  const timezone = getTimezoneForCountry(countryCode);
+
+  return {
+    country: String(addr?.country || ''),
+    countryCode,
+    state: String(addr?.state || addr?.region || ''),
+    stateCode,
+    city: String(city || ''),
+    postalCode: String(addr?.postcode || ''),
+    phoneDialCode,
+    timezone,
+    formattedAddress: String(json?.display_name || ''),
+    latitude,
+    longitude,
+  };
+};
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -97,7 +253,7 @@ Deno.serve(async (req) => {
   try {
     const { latitude, longitude } = await req.json();
 
-    if (!latitude || !longitude) {
+    if (latitude == null || longitude == null) {
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -110,93 +266,61 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get Google Maps API key from environment
+    const latNum = typeof latitude === 'number' ? latitude : Number(latitude);
+    const lonNum = typeof longitude === 'number' ? longitude : Number(longitude);
+
+    if (!Number.isFinite(latNum) || !Number.isFinite(lonNum)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid latitude or longitude',
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Prefer Google (if configured), but always fall back to Nominatim for robustness.
     const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
-    
-    if (!apiKey) {
-      console.error('[hushh-location-geocode] Missing GOOGLE_MAPS_API_KEY');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Geocoding service not configured' 
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+
+    let locationData: GeocodingResult | null = null;
+    let lastError: unknown = null;
+
+    if (apiKey) {
+      try {
+        locationData = await reverseGeocodeViaGoogle(latNum, lonNum, apiKey);
+      } catch (err) {
+        lastError = err;
+        console.warn('[hushh-location-geocode] Google geocoding failed, falling back to Nominatim:', err);
+      }
+    } else {
+      console.log('[hushh-location-geocode] GOOGLE_MAPS_API_KEY not set, using Nominatim fallback');
     }
 
-    // Call Google Geocoding API
-    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
-    
-    console.log(`[hushh-location-geocode] Reverse geocoding: ${latitude}, ${longitude}`);
-    
-    const response = await fetch(geocodeUrl);
-    const data = await response.json();
-
-    if (data.status !== 'OK' || !data.results || data.results.length === 0) {
-      console.error('[hushh-location-geocode] Google API error:', data.status);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Geocoding failed: ${data.status}` 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Parse address components from Google response
-    const result = data.results[0];
-    const components = result.address_components || [];
-    
-    let country = '';
-    let countryCode = '';
-    let state = '';
-    let stateCode = '';
-    let city = '';
-    let postalCode = '';
-
-    for (const component of components) {
-      const types = component.types || [];
-      
-      if (types.includes('country')) {
-        country = component.long_name;
-        countryCode = component.short_name;
-      } else if (types.includes('administrative_area_level_1')) {
-        state = component.long_name;
-        stateCode = component.short_name;
-      } else if (types.includes('locality')) {
-        city = component.long_name;
-      } else if (types.includes('sublocality_level_1') && !city) {
-        city = component.long_name;
-      } else if (types.includes('postal_code')) {
-        postalCode = component.long_name;
+    if (!locationData) {
+      try {
+        locationData = await reverseGeocodeViaNominatim(req, latNum, lonNum);
+      } catch (err) {
+        lastError = err;
       }
     }
 
-    // Get phone dial code from country code
-    const phoneDialCode = COUNTRY_DIAL_CODES[countryCode] || '+1';
-    
-    // Get timezone from country code
-    const timezone = COUNTRY_TIMEZONES[countryCode] || 'UTC';
-
-    const locationData: GeocodingResult = {
-      country,
-      countryCode,
-      state,
-      stateCode,
-      city,
-      postalCode,
-      phoneDialCode,
-      timezone,
-      formattedAddress: result.formatted_address || '',
-      latitude,
-      longitude,
-    };
+    if (!locationData) {
+      const msg = lastError instanceof Error ? lastError.message : 'Geocoding failed';
+      console.error('[hushh-location-geocode] All providers failed:', lastError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: msg,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     console.log('[hushh-location-geocode] Success:', JSON.stringify(locationData, null, 2));
 

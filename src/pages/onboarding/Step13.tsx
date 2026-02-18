@@ -640,7 +640,7 @@ function OnboardingStep13() {
                         </div>
                         {/* Selected check */}
                         {isSelected && (
-                          <span className="text-[#2b8cee] text-sm font-bold">âœ“</span>
+                          <span className="text-[#2b8cee] text-sm font-bold">*</span>
                         )}
                       </button>
                     );
@@ -681,7 +681,7 @@ function OnboardingStep13() {
                           className="text-xs font-bold"
                           style={{ color: shareClass.color }}
                         >
-                          {shareClass.name} Ã—{units}
+                          {shareClass.name} —{units}
                         </span>
                       </div>
                     );
@@ -714,7 +714,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{bankNameError}</p>
               )}
               {touched.bankName && !bankNameError && bankName && (
-                <p className="text-green-600 text-xs font-medium">âœ“ Valid bank name</p>
+                <p className="text-green-600 text-xs font-medium">* Valid bank name</p>
               )}
             </div>
 
@@ -739,7 +739,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{accountHolderNameError}</p>
               )}
               {touched.accountHolderName && !accountHolderNameError && accountHolderName && (
-                <p className="text-green-600 text-xs font-medium">âœ“ Valid name</p>
+                <p className="text-green-600 text-xs font-medium">* Valid name</p>
               )}
             </div>
 
@@ -794,7 +794,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{accountNumberError}</p>
               )}
               {touched.accountNumber && !accountNumberError && accountNumber && (
-                <p className="text-green-600 text-xs font-medium">âœ“ Valid account number ({accountNumber.length} digits)</p>
+                <p className="text-green-600 text-xs font-medium">* Valid account number ({accountNumber.length} digits)</p>
               )}
             </div>
 
@@ -820,7 +820,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{confirmAccountNumberError}</p>
               )}
               {touched.confirmAccountNumber && !confirmAccountNumberError && confirmAccountNumber && (
-                <p className="text-green-600 text-xs font-medium">âœ“ Account numbers match</p>
+                <p className="text-green-600 text-xs font-medium">* Account numbers match</p>
               )}
             </div>
 
@@ -858,7 +858,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{bankCountryError}</p>
               )}
               {touched.bankCountry && !bankCountryError && bankCountry && (
-                <p className="text-green-600 text-xs font-medium">âœ“ Country selected</p>
+                <p className="text-green-600 text-xs font-medium">* Country selected</p>
               )}
             </div>
 
@@ -885,7 +885,7 @@ function OnboardingStep13() {
                 <p className="text-red-500 text-xs font-medium">{routingNumberError}</p>
               )}
               {touched.routingNumber && !routingNumberError && routingNumber && (
-                <p className="text-green-600 text-xs font-medium">âœ“ Valid routing number ({routingNumber.length} digits)</p>
+                <p className="text-green-600 text-xs font-medium">* Valid routing number ({routingNumber.length} digits)</p>
               )}
               {!touched.routingNumber && (
                 <p className="text-xs font-medium text-slate-500 pt-1 pl-1">

@@ -22,7 +22,8 @@ export type ReferralSource =
 
 export type AccountStructure = 'individual' | 'other';
 
-export type RecurringFrequency = 'weekly' | 'biweekly' | 'monthly' | 'bimonthly';
+// Matches onboarding_data.recurring_frequency DB constraint.
+export type RecurringFrequency = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';
 
 // Account tier information for UI display
 export interface AccountTierInfo {

@@ -30,7 +30,9 @@ const IP_GEO_API_PRIMARY = 'https://ipwho.is/';
 const IP_GEO_API_BACKUP = 'https://ipwhois.app/json/';
 
 // Reverse geocoding fallbacks (no API key required)
-const NOMINATIM_REVERSE_API = 'https://nominatim.openstreetmap.org/reverse';
+// NOTE: The official OSM Nominatim instance does not send permissive CORS headers, so browser fetch() is blocked.
+// Use a CORS-enabled public Nominatim instance as the client-side fallback.
+const NOMINATIM_REVERSE_API = 'https://nominatim.terrestris.de/reverse';
 const BIGDATA_REVERSE_API = 'https://api.bigdatacloud.net/data/reverse-geocode-client';
 
 // Country code to phone dial code mapping (used when provider doesn't return calling code)
@@ -576,28 +578,61 @@ export class LocationService {
       throw new Error('Supabase client not configured');
     }
 
+    const now = new Date().toISOString();
     const countryName = COUNTRY_CODE_TO_NAME[locationData.countryCode] || locationData.country;
 
-    const { error } = await config.supabaseClient
-      .from('onboarding_data')
-      .update({
-        gps_location_data: locationData,
-        gps_detected_country: countryName,
-        gps_detected_state: locationData.state,
-        gps_detected_city: locationData.city,
-        gps_detected_postal_code: locationData.postalCode,
-        gps_detected_phone_dial_code: locationData.phoneDialCode,
-        gps_detected_timezone: locationData.timezone,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', userId);
+    const updateV2 = {
+      // Matches the current onboarding_data schema (gps_* columns).
+      gps_latitude: locationData.latitude,
+      gps_longitude: locationData.longitude,
+      gps_city: locationData.city || null,
+      gps_state: locationData.state || null,
+      gps_country: countryName || locationData.country || null,
+      gps_zip_code: locationData.postalCode || null,
+      gps_full_address: locationData.formattedAddress || null,
+      gps_detected_at: now,
+      updated_at: now,
+    } satisfies Record<string, unknown>;
 
-    if (error) {
-      console.error('[LocationService] Failed to save location:', error);
-      throw error;
+    const updateLegacy = {
+      // Backward-compatible payload for older schemas that stored the full JSON blob.
+      gps_location_data: locationData,
+      gps_detected_country: countryName,
+      gps_detected_state: locationData.state,
+      gps_detected_city: locationData.city,
+      gps_detected_postal_code: locationData.postalCode,
+      gps_detected_phone_dial_code: locationData.phoneDialCode,
+      gps_detected_timezone: locationData.timezone,
+      updated_at: now,
+    } satisfies Record<string, unknown>;
+
+    const tryUpdate = async (payload: Record<string, unknown>) => {
+      const { error } = await config.supabaseClient
+        .from('onboarding_data')
+        .update(payload)
+        .eq('user_id', userId);
+      return error;
+    };
+
+    const errorV2 = await tryUpdate(updateV2);
+    if (!errorV2) {
+      console.log('[LocationService] Location saved to onboarding_data (gps_* columns)');
+      return;
     }
 
-    console.log('[LocationService] Location saved to onboarding_data');
+    // If columns are missing (schema mismatch), try the legacy JSON columns.
+    if (errorV2.code === 'PGRST204' || errorV2.message?.toLowerCase().includes('schema cache')) {
+      const errorLegacy = await tryUpdate(updateLegacy);
+      if (!errorLegacy) {
+        console.log('[LocationService] Location saved to onboarding_data (legacy gps_location_data columns)');
+        return;
+      }
+      console.error('[LocationService] Failed to save location (legacy):', errorLegacy);
+      throw errorLegacy;
+    }
+
+    console.error('[LocationService] Failed to save location:', errorV2);
+    throw errorV2;
   }
 
   /**
@@ -608,12 +643,38 @@ export class LocationService {
 
     const { data, error } = await config.supabaseClient
       .from('onboarding_data')
-      .select('gps_location_data')
+      .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
-    if (error || !data?.gps_location_data) return null;
-    return data.gps_location_data as LocationData;
+    if (error || !data) return null;
+
+    // Prefer the richer legacy JSON blob if present.
+    if ((data as any)?.gps_location_data) {
+      return (data as any).gps_location_data as LocationData;
+    }
+
+    // Otherwise, reconstruct from gps_* columns if present.
+    const lat = (data as any).gps_latitude;
+    const lon = (data as any).gps_longitude;
+    if (typeof lat !== 'number' || typeof lon !== 'number') return null;
+
+    const country = String((data as any).gps_country || '');
+    const inferredCountryCode = this.mapCountryToIsoCode(country);
+
+    return {
+      country,
+      countryCode: inferredCountryCode,
+      state: String((data as any).gps_state || ''),
+      stateCode: '',
+      city: String((data as any).gps_city || ''),
+      postalCode: String((data as any).gps_zip_code || ''),
+      phoneDialCode: this.getDialCodeForCountry(inferredCountryCode),
+      timezone: this.getDeviceTimezone(),
+      formattedAddress: String((data as any).gps_full_address || ''),
+      latitude: lat,
+      longitude: lon,
+    };
   }
 
   /**

@@ -131,7 +131,8 @@ export default function OnboardingStep4() {
       // Load existing data if any
       const { data: onboardingData } = await config.supabaseClient
         .from('onboarding_data')
-        .select('citizenship_country, residence_country, gps_location_data')
+        // Select * to remain compatible across schema revisions (some environments removed gps_location_data).
+        .select('*')
         .eq('user_id', user.id)
         .single();
 
@@ -197,7 +198,12 @@ export default function OnboardingStep4() {
         setHasPreviousData(false);
 
         // Save location data for later steps
-        await locationService.saveLocationToOnboarding(uid, locationData);
+        try {
+          await locationService.saveLocationToOnboarding(uid, locationData);
+        } catch (saveErr) {
+          // Location detection succeeded; caching is best-effort.
+          console.warn('[Step4] Failed to cache location:', saveErr);
+        }
 
       // IP-based detection succeeded (GPS was unavailable/denied but IP worked)
       } else if (result.source === 'ip-detected' && result.data) {
@@ -218,7 +224,12 @@ export default function OnboardingStep4() {
         setHasPreviousData(false);
 
         // Save IP location data for later steps
-        await locationService.saveLocationToOnboarding(uid, locationData);
+        try {
+          await locationService.saveLocationToOnboarding(uid, locationData);
+        } catch (saveErr) {
+          // Location detection succeeded; caching is best-effort.
+          console.warn('[Step4] Failed to cache IP location:', saveErr);
+        }
 
       // Both GPS and IP failed with explicit denial
       } else if (result.source === 'denied') {

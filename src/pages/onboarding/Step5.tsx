@@ -79,7 +79,8 @@ export default function OnboardingStep5() {
       // Load existing data if any
       const { data: onboardingData } = await config.supabaseClient
         .from('onboarding_data')
-        .select('account_structure, phone_number, phone_country_code, gps_detected_phone_dial_code, gps_location_data')
+        // Select * to remain compatible across schema revisions (gps_location_data columns may not exist).
+        .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 

@@ -226,12 +226,20 @@ function OnboardingStep11() {
 
         if (data.recurring_frequency) {
           const freqMap: Record<string, RecurringFrequency> = {
+            // Current DB values (match onboarding_data_recurring_frequency_check)
+            once_a_month: 'once_a_month',
+            twice_a_month: 'twice_a_month',
+            weekly: 'weekly',
+            every_other_week: 'every_other_week',
+
+            // Legacy values (older constraint/data)
             monthly: 'once_a_month',
             bimonthly: 'twice_a_month',
-            weekly: 'weekly',
             biweekly: 'every_other_week',
           };
-          setFrequency(freqMap[data.recurring_frequency] || 'once_a_month');
+
+          const raw = String(data.recurring_frequency);
+          setFrequency(freqMap[raw] || 'once_a_month');
         }
 
         if (data.recurring_day_of_month) {
@@ -398,13 +406,8 @@ function OnboardingStep11() {
     };
 
     const convertFrequencyToDb = (freq: RecurringFrequency): string => {
-      const frequencyMap: Record<RecurringFrequency, string> = {
-        once_a_month: 'monthly',
-        twice_a_month: 'bimonthly',
-        weekly: 'weekly',
-        every_other_week: 'biweekly',
-      };
-      return frequencyMap[freq];
+      // DB constraint expects these exact values.
+      return freq;
     };
 
     const updateData: Record<string, unknown> = {

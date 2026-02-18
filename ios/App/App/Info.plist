@@ -63,5 +63,7 @@
 		<string>https</string>
 		<string>http</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We use your location to auto-fill your country and address during onboarding.</string>
 </dict>
 </plist>
