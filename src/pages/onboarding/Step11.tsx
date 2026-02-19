@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
+import OnboardingStepProgress from '../../components/onboarding/OnboardingStepProgress';
 
 type RecurringFrequency = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';
 
@@ -502,6 +503,8 @@ function OnboardingStep11() {
             <BackIcon />
           </button>
         </header>
+
+        <OnboardingStepProgress currentStep={11} />
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto pb-48 sm:pb-64">

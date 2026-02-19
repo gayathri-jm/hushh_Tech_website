@@ -6,6 +6,7 @@ import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { locationService, LocationData, COUNTRY_CODE_TO_NAME } from '../../services/location';
 import PermissionHelpModal from '../../components/PermissionHelpModal';
 import LocationPermissionModal from '../../components/LocationPermissionModal';
+import OnboardingStepProgress from '../../components/onboarding/OnboardingStepProgress';
 
 // Back arrow icon
 const BackIcon = () => (
@@ -420,6 +421,8 @@ export default function OnboardingStep4() {
             <BackIcon />
           </button>
         </header>
+
+        <OnboardingStepProgress currentStep={4} />
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col px-4 sm:px-6 pb-40 sm:pb-44">

@@ -4,6 +4,7 @@ import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { fetchAuthNumbers } from '../../services/plaid/plaidService';
+import OnboardingStepProgress from '../../components/onboarding/OnboardingStepProgress';
 
 // SVG Icons
 const BackIcon = () => (
@@ -563,6 +564,8 @@ function OnboardingStep13() {
             <BackIcon />
           </button>
         </header>
+
+        <OnboardingStepProgress currentStep={13} />
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto pb-48 sm:pb-64">

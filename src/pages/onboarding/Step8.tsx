@@ -14,6 +14,7 @@ import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { useLocationDropdowns } from '../../hooks/useLocationDropdowns';
 import { locationService } from '../../services/location/locationService';
 import { SearchableSelect } from '../../components/onboarding/SearchableSelect';
+import OnboardingStepProgress from '../../components/onboarding/OnboardingStepProgress';
 
 // ─── Validation helpers ─────────────────────────────────────────────────────
 
@@ -242,6 +243,8 @@ function OnboardingStep8() {
             <span className="text-base font-bold tracking-tight">Back</span>
           </button>
         </header>
+
+        <OnboardingStepProgress currentStep={8} />
 
         {/* Content */}
         <main className="flex-1 flex flex-col px-4 sm:px-6 pb-40 sm:pb-48 overflow-y-auto">

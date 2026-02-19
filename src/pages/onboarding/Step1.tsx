@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
+import OnboardingStepProgress from '../../components/onboarding/OnboardingStepProgress';
 
 // Back arrow icon
 const BackIcon = () => (
@@ -433,6 +434,8 @@ export default function OnboardingStep1() {
             <BackIcon />
           </button>
         </header>
+
+        <OnboardingStepProgress currentStep={1} />
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col px-4 sm:px-6 pb-56 sm:pb-72">
