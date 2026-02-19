@@ -117,6 +117,40 @@ const COUNTRIES = [
   { code: 'AE', name: 'United Arab Emirates' },
 ];
 
+// Plaid account from auth/get response
+interface PlaidAccount {
+  accountId: string;
+  name: string;
+  mask: string; // last 4 digits
+  subtype: string;
+  achAccount: string;
+  achRouting: string;
+}
+
+// Known Plaid sandbox test values — never auto-fill these in production
+const SANDBOX_TEST_ACCOUNTS = new Set([
+  '1111222233330000', '1111222233331111', '2222333344440000',
+  '3333444455550000', '6666777788880000', '0000000000000000',
+]);
+const SANDBOX_TEST_ROUTING = new Set([
+  '011401533', '021000021', '011000015', '054001725',
+]);
+
+// Validate Plaid-returned data before auto-filling
+const isValidPlaidAccountNumber = (value: string): boolean => {
+  if (!value || value.length < 4 || value.length > 17) return false;
+  if (!/^\d+$/.test(value)) return false;
+  if (SANDBOX_TEST_ACCOUNTS.has(value)) return false;
+  return true;
+};
+
+const isValidPlaidRoutingNumber = (value: string): boolean => {
+  if (!value || value.length !== 9) return false;
+  if (!/^\d+$/.test(value)) return false;
+  if (SANDBOX_TEST_ROUTING.has(value)) return false;
+  return true;
+};
+
 // Format currency for display
 const formatCurrency = (amount: number): string => {
   if (amount >= 1000000000) {
@@ -137,26 +171,17 @@ function OnboardingStep13() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Plaid auto-fill status
+  // Plaid auto-fill status message (shown as banner)
   const [autoFillMessage, setAutoFillMessage] = useState<string | null>(null);
-  const [isAutoFilling, setIsAutoFilling] = useState(false);
 
-  // Fix 2: Timeout ref for cleanup on unmount
+  // Cleanup refs for async operations
   const autoFillTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
 
-  // Fix 1: Track which fields user has manually edited (prevents overwrite)
+  // Track which fields user has manually edited (prevents Plaid overwrite)
   const userModifiedFields = useRef(new Set<string>());
 
-  // Fix 3: Multiple accounts from Plaid
-  interface PlaidAccount {
-    accountId: string;
-    name: string;
-    mask: string; // last 4 digits
-    subtype: string;
-    achAccount: string;
-    achRouting: string;
-  }
+  // Plaid multi-account state
   const [plaidAccounts, setPlaidAccounts] = useState<PlaidAccount[]>([]);
   const [selectedAccountIdx, setSelectedAccountIdx] = useState(0);
   const [plaidInstitutionName, setPlaidInstitutionName] = useState('');
@@ -205,7 +230,7 @@ function OnboardingStep13() {
   const totalInvestment = calculateTotalInvestment();
   const hasAnyUnits = shareUnits.class_a_units > 0 || shareUnits.class_b_units > 0 || shareUnits.class_c_units > 0;
 
-  // Fix 2: Cleanup on unmount - clear timeouts, mark unmounted
+  // Cleanup on unmount — clear timeouts, mark unmounted
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -214,7 +239,7 @@ function OnboardingStep13() {
     };
   }, []);
 
-  // Fix 3: Apply selected account from multi-account picker
+  // Apply selected account from multi-account picker
   const applyAccountSelection = useCallback((account: PlaidAccount) => {
     if (!userModifiedFields.current.has('accountNumber')) {
       setAccountNumber(account.achAccount);
@@ -228,6 +253,159 @@ function OnboardingStep13() {
       if (subtype === 'checking' || subtype === 'savings') setAccountType(subtype);
     }
   }, []);
+
+  // ─── Plaid Auto-Fill Logic ───
+  // Fetches ACH account/routing numbers from Plaid via the user's stored access_token.
+  // Validates data before auto-filling (rejects sandbox test values).
+  // If multiple accounts exist, shows picker instead of blindly selecting the first.
+  const attemptPlaidAutoFill = async (
+    userId: string,
+    dbHasBankName: boolean,
+    dbHasCountry: boolean,
+  ) => {
+    if (!config.supabaseClient) return;
+
+    try {
+      // 1. Check if user has a Plaid access token from the financial link step
+      const { data: financialData } = await config.supabaseClient
+        .from('user_financial_data')
+        .select('plaid_access_token, institution_name')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!financialData?.plaid_access_token) return; // No linked bank — nothing to auto-fill
+      if (!isMountedRef.current) return;
+
+      setAutoFillMessage('🔍 Auto-filling from your linked bank...');
+      console.log('[Step13] Plaid access_token found, fetching auth numbers...');
+
+      // 2. Fetch ACH auth numbers from Plaid via Edge Function
+      const authData = await fetchAuthNumbers(financialData.plaid_access_token);
+      if (!isMountedRef.current) return;
+
+      // Handle expired/invalid access token
+      if (!authData) {
+        console.warn('[Step13] Plaid returned no auth data — token may be expired');
+        setAutoFillMessage('⚠️ Bank connection expired. Please enter details manually.');
+        autoFillTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current) setAutoFillMessage(null);
+        }, 5000);
+        return;
+      }
+
+      const achNumbers = authData.numbers?.ach || [];
+      const accounts = authData.accounts || [];
+
+      // Handle no ACH accounts (bank doesn't support ACH)
+      if (achNumbers.length === 0) {
+        console.warn('[Step13] No ACH accounts returned from Plaid');
+        setAutoFillMessage('⚠️ Your bank does not support ACH. Please enter details manually.');
+        autoFillTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current) setAutoFillMessage(null);
+        }, 5000);
+        return;
+      }
+
+      // 3. Map Plaid response to our PlaidAccount format
+      const mappedAccounts: PlaidAccount[] = achNumbers.map((ach: any) => {
+        const matched = accounts.find((a: any) => a.account_id === ach.account_id) as any;
+        return {
+          accountId: ach.account_id || '',
+          name: matched?.name || matched?.official_name || 'Account',
+          mask: matched?.mask || (ach.account ? ach.account.slice(-4) : '****'),
+          subtype: matched?.subtype || 'checking',
+          achAccount: ach.account || '',
+          achRouting: ach.routing || '',
+        };
+      });
+
+      // 4. Validate data — reject sandbox/test values
+      const hasAnySandboxData = mappedAccounts.some(
+        (acct) =>
+          SANDBOX_TEST_ACCOUNTS.has(acct.achAccount) ||
+          SANDBOX_TEST_ROUTING.has(acct.achRouting),
+      );
+
+      if (hasAnySandboxData) {
+        console.error('[Step13] 🚨 Sandbox test data detected — NOT auto-filling in production');
+        setAutoFillMessage('⚠️ Test bank data detected. Please enter your real bank details.');
+        autoFillTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current) setAutoFillMessage(null);
+        }, 6000);
+        return;
+      }
+
+      // Filter out accounts with invalid data
+      const validAccounts = mappedAccounts.filter(
+        (acct) => isValidPlaidAccountNumber(acct.achAccount) && isValidPlaidRoutingNumber(acct.achRouting),
+      );
+
+      if (validAccounts.length === 0) {
+        console.warn('[Step13] No valid accounts after validation');
+        setAutoFillMessage('⚠️ Could not verify bank details. Please enter manually.');
+        autoFillTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current) setAutoFillMessage(null);
+        }, 5000);
+        return;
+      }
+
+      // 5. Set accounts for picker UI
+      setPlaidAccounts(validAccounts);
+      if (financialData.institution_name) setPlaidInstitutionName(financialData.institution_name);
+
+      // 6. Auto-fill logic depends on number of accounts
+      if (validAccounts.length === 1) {
+        // Single account — auto-fill directly
+        const account = validAccounts[0];
+        setSelectedAccountIdx(0);
+
+        if (!userModifiedFields.current.has('accountNumber')) {
+          setAccountNumber(account.achAccount);
+          setConfirmAccountNumber(account.achAccount);
+        }
+        if (!userModifiedFields.current.has('routingNumber')) {
+          setRoutingNumber(account.achRouting);
+        }
+        if (!userModifiedFields.current.has('accountType')) {
+          const subtype = account.subtype as 'checking' | 'savings';
+          if (subtype === 'checking' || subtype === 'savings') setAccountType(subtype);
+        }
+
+        setAutoFillMessage('✅ Bank details auto-filled from Plaid');
+      } else {
+        // Multiple accounts — show picker, DON'T auto-select
+        // User must explicitly choose which account to use
+        setSelectedAccountIdx(-1); // -1 = nothing selected yet
+        setAutoFillMessage('👆 Select which bank account to use for wire transfers');
+      }
+
+      // Fill bank name & country only if not already set
+      if (financialData.institution_name && !dbHasBankName && !userModifiedFields.current.has('bankName')) {
+        setBankName(financialData.institution_name);
+      }
+      if (!dbHasCountry && !userModifiedFields.current.has('bankCountry')) {
+        setBankCountry('US'); // ACH = US-only
+      }
+
+      console.log('[Step13] Plaid auto-fill complete:', {
+        accountsFound: validAccounts.length,
+        institution: financialData.institution_name,
+      });
+
+      // Clear success message after delay
+      autoFillTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) setAutoFillMessage(null);
+      }, 5000);
+    } catch (err) {
+      console.error('[Step13] Plaid auto-fill failed:', err);
+      if (isMountedRef.current) {
+        setAutoFillMessage('⚠️ Could not auto-fill bank details. Please enter manually.');
+        autoFillTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current) setAutoFillMessage(null);
+        }, 5000);
+      }
+    }
+  };
 
   // Load existing data
   useEffect(() => {
@@ -275,87 +453,11 @@ function OnboardingStep13() {
         if (data.bank_address_country) { setBankCountry(data.bank_address_country); dbHasCountry = true; }
       }
 
-      // --- Plaid Auto-Fill: fetch auth numbers if user linked a bank ---
-      // Only auto-fill fields that are still empty (don't overwrite saved data)
+      // --- Plaid Auto-Fill ---
+      // Only attempt if user hasn't already saved bank data in a previous session
       const hasBankDataAlready = data?.bank_routing_number;
       if (!hasBankDataAlready) {
-        try {
-          const { data: financialData } = await config.supabaseClient
-            .from('user_financial_data')
-            .select('plaid_access_token, institution_name')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-          if (financialData?.plaid_access_token) {
-            if (!isMountedRef.current) return;
-            setIsAutoFilling(true);
-            setAutoFillMessage('ðŸ“ Auto-filling from your linked bank...');
-            console.log('[Step13] Plaid access_token found, fetching auth numbers...');
-
-            const authData = await fetchAuthNumbers(financialData.plaid_access_token);
-            if (!isMountedRef.current) return;
-
-            // Fix 3: Build multi-account list
-            const achNumbers = authData?.numbers?.ach || [];
-            const accounts = authData?.accounts || [];
-
-            if (achNumbers.length > 0) {
-              const mappedAccounts: PlaidAccount[] = achNumbers.map((ach: any) => {
-                const matchedAccount = accounts.find((a: any) => a.account_id === ach.account_id) as any;
-                return {
-                  accountId: ach.account_id || '',
-                  name: matchedAccount?.name || matchedAccount?.official_name || 'Account',
-                  mask: matchedAccount?.mask || (ach.account ? ach.account.slice(-4) : '****'),
-                  subtype: matchedAccount?.subtype || 'checking',
-                  achAccount: ach.account || '',
-                  achRouting: ach.routing || '',
-                };
-              });
-
-              setPlaidAccounts(mappedAccounts);
-              if (financialData.institution_name) setPlaidInstitutionName(financialData.institution_name);
-
-              // Auto-select first account - only fill fields user hasn't touched
-              const firstAccount = mappedAccounts[0];
-              setSelectedAccountIdx(0);
-
-              if (!userModifiedFields.current.has('accountNumber') && firstAccount.achAccount) {
-                setAccountNumber(firstAccount.achAccount);
-                setConfirmAccountNumber(firstAccount.achAccount);
-              }
-              if (!userModifiedFields.current.has('routingNumber') && firstAccount.achRouting) {
-                setRoutingNumber(firstAccount.achRouting);
-              }
-              if (!userModifiedFields.current.has('accountType')) {
-                const subtype = firstAccount.subtype as 'checking' | 'savings';
-                if (subtype === 'checking' || subtype === 'savings') setAccountType(subtype);
-              }
-            }
-
-            // Fill bank name & country only if not already set from DB or user
-            if (financialData.institution_name && !dbHasBankName && !userModifiedFields.current.has('bankName')) {
-              setBankName(financialData.institution_name);
-            }
-            if (!dbHasCountry && !userModifiedFields.current.has('bankCountry')) {
-              setBankCountry('US'); // ACH = US-only
-            }
-
-            setIsAutoFilling(false);
-            setAutoFillMessage('âœ… Bank details auto-filled from Plaid');
-            console.log('[Step13] Plaid auto-fill complete');
-
-            // Fix 2: Use ref for timeout cleanup
-            autoFillTimeoutRef.current = setTimeout(() => {
-              if (isMountedRef.current) setAutoFillMessage(null);
-            }, 4000);
-          }
-        } catch (err) {
-          console.warn('[Step13] Plaid auto-fill failed (non-blocking):', err);
-          if (isMountedRef.current) {
-            setAutoFillMessage(null);
-            setIsAutoFilling(false);
-          }
-        }
+        await attemptPlaidAutoFill(user.id, dbHasBankName, dbHasCountry);
       }
     };
 
@@ -483,6 +585,8 @@ function OnboardingStep13() {
       return;
     }
 
+    // ⚠️ NOTE: btoa() is base64 ENCODING, not encryption.
+    // TODO: Replace with server-side AES-256 encryption or Supabase Vault for production security.
     const encryptedAccountNumber = btoa(accountNumber);
 
     const { error: upsertError } = await upsertOnboardingData(user.id, {
@@ -598,7 +702,7 @@ function OnboardingStep13() {
             </div>
           )}
 
-          {/* Fix 3: Multi-Account Selector - only shown if Plaid returned 2+ accounts */}
+          {/* Multi-Account Selector — shown when Plaid returns 2+ accounts */}
           {plaidAccounts.length > 1 && (
             <div className="mx-5 mb-5">
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
