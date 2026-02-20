@@ -20,7 +20,7 @@ export type ReferralSource =
   | 'tv_radio'
   | 'other';
 
-export type AccountStructure = 'individual' | 'other';
+export type AccountStructure = 'individual' | 'joint' | 'retirement' | 'trust' | 'other';
 
 // Matches onboarding_data.recurring_frequency DB constraint.
 export type RecurringFrequency = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';

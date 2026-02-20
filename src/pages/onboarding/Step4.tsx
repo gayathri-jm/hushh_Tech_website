@@ -5,7 +5,6 @@ import { upsertOnboardingData } from '../../services/onboarding/upsertOnboarding
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { locationService, LocationData, COUNTRY_CODE_TO_NAME } from '../../services/location';
 import PermissionHelpModal from '../../components/PermissionHelpModal';
-import LocationPermissionModal from '../../components/LocationPermissionModal';
 import { OnboardingStepProgress } from '../../components/onboarding/OnboardingStepProgress';
 
 // Back arrow icon
@@ -57,6 +56,21 @@ const MapPinIcon = ({ className }: { className?: string }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
     <circle cx="12" cy="10" r="3"></circle>
+  </svg>
+);
+
+const GlobeIcon = ({ className }: { className?: string }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="2" y1="12" x2="22" y2="12"></line>
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+  </svg>
+);
+
+const HomeIcon = ({ className }: { className?: string }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M3 9.5L12 3l9 6.5"></path>
+    <path d="M5 10.5V21h14V10.5"></path>
   </svg>
 );
 
@@ -302,11 +316,9 @@ export default function OnboardingStep4() {
   const handleDetectLocation = async () => {
     if (!userId) return;
 
-    // Close modal first
-    setShowLocationModal(false);
-
-    // Then trigger GPS detection (will show browser permission popup)
+    // Trigger GPS detection (browser permission popup), then reveal status UI.
     await detectLocation(userId);
+    setShowLocationModal(false);
   };
 
   // Handle user skipping location detection
@@ -346,26 +358,6 @@ export default function OnboardingStep4() {
     return 'Continue';
   };
 
-  // Helper functions for status card
-  const getStatusCardStyle = (status: typeof locationStatus) => {
-    switch (status) {
-      case 'detecting':
-        return 'bg-blue-50 border-blue-200';
-      case 'success':
-        return 'bg-green-50 border-green-200';
-      case 'ip-success':
-        return 'bg-green-50 border-green-200';
-      case 'denied':
-        return 'bg-amber-50 border-amber-200';
-      case 'failed':
-        return 'bg-red-50 border-red-200';
-      case 'manual':
-        return 'bg-slate-50 border-slate-200';
-      default:
-        return 'bg-white border-gray-200';
-    }
-  };
-
   const getStatusTitle = (status: typeof locationStatus) => {
     switch (status) {
       case 'detecting':
@@ -379,7 +371,7 @@ export default function OnboardingStep4() {
       case 'failed':
         return 'Could not detect location';
       case 'manual':
-        return 'Manual selection confirmed';
+        return userConfirmedManual ? 'Manual selection confirmed' : 'Select your country manually';
       default:
         return '';
     }
@@ -398,209 +390,219 @@ export default function OnboardingStep4() {
       case 'failed':
         return "We couldn't determine your location. Please select your country manually below.";
       case 'manual':
-        return "You've manually selected your country. Click Continue to proceed.";
+        return userConfirmedManual
+          ? "You've manually selected your country. Click Continue to proceed."
+          : 'Choose your country of citizenship and residence below, then confirm your selection.';
       default:
         return '';
     }
   };
 
+  const isErrorStatus = locationStatus === 'denied' || locationStatus === 'failed';
+  const isSuccessStatus = locationStatus === 'success' || locationStatus === 'ip-success';
+  const shouldShowForm = Boolean(locationStatus || hasPreviousData);
+  const canConfirmSelection = Boolean(citizenshipCountry && residenceCountry && !userConfirmedManual);
+
   return (
-    <div 
-      className="bg-slate-50 min-h-screen"
+    <div
+      className="min-h-screen bg-slate-50"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
       <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
-        
         {/* Sticky Header */}
-        <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
-          <button 
+        <header className="sticky top-0 z-20 flex items-center bg-white/90 px-4 pt-4 pb-2 backdrop-blur-sm sm:px-6 sm:pt-5">
+          <button
             onClick={handleBack}
             aria-label="Go back"
-            className="flex size-10 shrink-0 items-center justify-center text-slate-900 rounded-full hover:bg-slate-50 transition-colors"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full text-slate-900 transition-colors hover:bg-slate-100"
           >
             <BackIcon />
           </button>
         </header>
 
-        <OnboardingStepProgress currentStep={4} />
+        <OnboardingStepProgress currentStep={4} totalSteps={12} visibleSteps={12} />
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col px-4 sm:px-6 pb-40 sm:pb-44">
-          {/* Header Section */}
-          <div className="mb-8 text-center">
-            <h1 className="text-slate-900 text-[22px] font-bold leading-tight tracking-tight mb-3">
-              Confirm your residence
-            </h1>
-            <p className="text-slate-500 text-[14px] font-normal leading-relaxed">
-              We need to know where you live and pay taxes to open your investment account.
-            </p>
+        <main className="relative flex-1 overflow-y-auto px-4 pb-40 sm:px-6 sm:pb-48">
+          <div
+            className={`transition-all duration-300 ${
+              showLocationModal ? 'pointer-events-none scale-[0.98] blur-[3px] opacity-70' : ''
+            }`}
+          >
+            <div className="mb-10 mt-2 px-1 text-center">
+              <h1 className="mb-3 text-2xl font-bold leading-tight text-slate-900">
+                Confirm your residence
+              </h1>
+              <p className="mx-auto max-w-[300px] text-sm leading-relaxed text-slate-500">
+                We need to know where you live and pay taxes to open your investment account.
+              </p>
+            </div>
 
-            {/* Persistent Location Status Card */}
-            {locationStatus && (
-              <div className={`mt-4 rounded-2xl border p-4 ${getStatusCardStyle(locationStatus)}`}>
-                <div className="flex items-start gap-3">
-                  {/* Icon based on status */}
-                  <div className="flex-shrink-0 mt-0.5">
-                    {locationStatus === 'detecting' && <SpinnerIcon />}
-                    {locationStatus === 'success' && <CheckCircleIcon className="text-green-600" />}
-                    {locationStatus === 'ip-success' && <CheckCircleIcon className="text-green-600" />}
-                    {locationStatus === 'denied' && <AlertTriangleIcon className="text-amber-600" />}
-                    {locationStatus === 'failed' && <AlertCircleIcon className="text-red-600" />}
-                    {locationStatus === 'manual' && <MapPinIcon className="text-blue-600" />}
-                  </div>
+            <div className="mb-8 space-y-3">
+              {locationStatus === 'detecting' && (
+                <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 shadow-sm">
+                  <SpinnerIcon />
+                  <p className="truncate text-xs font-medium text-slate-600">{getStatusTitle(locationStatus)}</p>
+                </div>
+              )}
 
-                  {/* Status Message */}
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold mb-1 text-slate-900">
-                      {getStatusTitle(locationStatus)}
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      {getStatusMessage(locationStatus)}
-                    </p>
-
-                    {/* Action Links */}
-                    {locationStatus === 'denied' && (
-                      <div className="mt-3 flex gap-3">
-                        <button
-                          onClick={handleRetry}
-                          className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                        >
-                          Try Again
-                        </button>
-                        <button
-                          onClick={handleShowPermissionHelp}
-                          className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                        >
-                          How to Enable Location \u2192
-                        </button>
-                      </div>
+              {isErrorStatus && (
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 shadow-sm">
+                  <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+                    {locationStatus === 'denied' ? (
+                      <AlertTriangleIcon className="h-5 w-5 shrink-0 text-red-500" />
+                    ) : (
+                      <AlertCircleIcon className="h-5 w-5 shrink-0 text-red-500" />
                     )}
-
-                    {locationStatus === 'failed' && (
-                      <button
-                        onClick={handleRetry}
-                        className="mt-3 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                      >
-                        Retry Detection
-                      </button>
-                    )}
+                    <p className="truncate text-xs font-medium text-slate-600">{getStatusTitle(locationStatus)}</p>
                   </div>
+                  <button
+                    onClick={handleRetry}
+                    className="shrink-0 whitespace-nowrap text-xs font-semibold text-[#3A63B8] transition-colors hover:underline"
+                  >
+                    Retry
+                  </button>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
 
-          {/* Only show form card if user has taken action */}
-          {(locationStatus || hasPreviousData) && (
-            <>
-              {/* Previous Data Info - Show when GPS denied/failed but we have old data */}
-              {hasPreviousData && (locationStatus === 'denied' || locationStatus === 'failed') && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2.5">
-              <svg
-                className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
-              <div className="flex-1">
-                <p className="text-xs text-blue-900">
-                  <span className="font-semibold">Using your previously selected country.</span>
-                  {' '}You can change it if needed below.
-                  {locationStatus === 'denied' && ' Or enable location access to detect automatically.'}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Carded Form Block */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-6 mb-8">
-            {/* Country of Citizenship */}
-            <div className="mb-6 relative">
-              <label className="block text-slate-900 text-sm font-medium leading-normal mb-2 ml-1">
-                Country of citizenship
-              </label>
-              <div className="relative">
-                <select
-                  value={citizenshipCountry}
-                  onChange={(e) => handleCitizenshipChange(e.target.value)}
-                  disabled={isDetectingLocation}
-                  className={`w-full bg-white text-slate-900 border rounded-xl h-14 px-4 pr-10 text-base font-normal focus:outline-none focus:ring-1 transition-all cursor-pointer appearance-none ${
-                    isDetectingLocation
-                      ? 'disabled:bg-slate-50 disabled:cursor-wait border-gray-200'
-                      : (locationStatus === 'denied' || locationStatus === 'failed') && !userManuallyChanged
-                        ? 'border-amber-400 ring-2 ring-amber-200 animate-pulse-slow'
-                        : 'border-gray-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]'
-                  }`}
-                >
-                  <option disabled value="">Select country</option>
-                  {countries.map((country) => (
-                    <option key={country} value={country}>{country}</option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-500">
-                  <ChevronDownIcon />
-                </div>
-              </div>
-            </div>
-
-            {/* Country of Residence */}
-            <div className="relative">
-              <label className="block text-slate-900 text-sm font-medium leading-normal mb-2 ml-1">
-                Country of residence
-              </label>
-              <div className="relative">
-                <select
-                  value={residenceCountry}
-                  onChange={(e) => handleResidenceChange(e.target.value)}
-                  disabled={isDetectingLocation}
-                  className={`w-full bg-white text-slate-900 border rounded-xl h-14 px-4 pr-10 text-base font-normal focus:outline-none focus:ring-1 transition-all cursor-pointer appearance-none ${
-                    isDetectingLocation
-                      ? 'disabled:bg-slate-50 disabled:cursor-wait border-gray-200'
-                      : (locationStatus === 'denied' || locationStatus === 'failed') && !userManuallyChanged
-                        ? 'border-amber-400 ring-2 ring-amber-200 animate-pulse-slow'
-                        : 'border-gray-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]'
-                  }`}
-                >
-                  <option disabled value="">Select country</option>
-                  {countries.map((country) => (
-                    <option key={country} value={country}>{country}</option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-500">
-                  <ChevronDownIcon />
-                </div>
-              </div>
-            </div>
-
-            {/* Manual Selection Confirmation */}
-            {userManuallyChanged && !userConfirmedManual && !locationDetected && (
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <p className="text-sm text-slate-700 mb-3">
-                  Ready to proceed with your selected country?
-                </p>
+              {locationStatus === 'denied' && (
                 <button
-                  onClick={handleConfirmManualSelection}
-                  disabled={!citizenshipCountry || !residenceCountry}
-                  className="w-full py-3 px-4 bg-[#2b8cee] text-white rounded-lg font-semibold hover:bg-[#2070c0] disabled:bg-slate-300 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                  onClick={handleShowPermissionHelp}
+                  className="ml-1 text-xs font-semibold text-[#3A63B8] transition-colors hover:underline"
                 >
-                  Confirm My Country Selection
+                  How to enable location
                 </button>
+              )}
+
+              {hasPreviousData && isErrorStatus && (
+                <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 shadow-sm">
+                  <CheckCircleIcon className="h-[18px] w-[18px] shrink-0 text-[#3A63B8]" />
+                  <p className="flex-1 truncate text-xs text-slate-700">
+                    <span className="font-semibold text-[#3A63B8]">Using previous selection.</span> Change if needed.
+                  </p>
+                </div>
+              )}
+
+              {isSuccessStatus && (
+                <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 shadow-sm">
+                  <CheckCircleIcon className="h-[18px] w-[18px] shrink-0 text-[#3A63B8]" />
+                  <p className="truncate text-xs text-slate-700">
+                    <span className="font-semibold text-[#3A63B8]">Location detected:</span> {detectedLocation}
+                  </p>
+                </div>
+              )}
+
+              {locationStatus === 'manual' && !userConfirmedManual && (
+                <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
+                  <MapPinIcon className="h-[18px] w-[18px] shrink-0 text-slate-500" />
+                  <p className="truncate text-xs text-slate-600">{getStatusMessage(locationStatus)}</p>
+                </div>
+              )}
+            </div>
+
+            {shouldShowForm && (
+              <div className="space-y-6 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 opacity-80">
+                    <GlobeIcon className="text-slate-600" />
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-800">
+                      Country of citizenship
+                    </label>
+                  </div>
+
+                  <div className="relative">
+                    <select
+                      value={citizenshipCountry}
+                      onChange={(e) => handleCitizenshipChange(e.target.value)}
+                      disabled={isDetectingLocation}
+                      className={`w-full appearance-none rounded-lg border bg-white py-3 pl-3 pr-8 text-sm font-medium text-slate-900 outline-none transition-shadow focus:border-[#3A63B8] focus:ring-1 focus:ring-[#3A63B8] ${
+                        isDetectingLocation
+                          ? 'cursor-wait border-slate-200 bg-slate-50'
+                          : isErrorStatus && !userManuallyChanged
+                            ? 'border-red-300 ring-1 ring-red-200'
+                            : 'border-slate-200'
+                      }`}
+                    >
+                      <option disabled value="">
+                        Select country
+                      </option>
+                      {countries.map((country) => (
+                        <option key={country} value={country}>
+                          {country}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5">
+                      <ChevronDownIcon />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 opacity-80">
+                    <HomeIcon className="text-slate-600" />
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-800">
+                      Country of residence
+                    </label>
+                  </div>
+
+                  <div className="relative">
+                    <select
+                      value={residenceCountry}
+                      onChange={(e) => handleResidenceChange(e.target.value)}
+                      disabled={isDetectingLocation}
+                      className={`w-full appearance-none rounded-lg border bg-white py-3 pl-3 pr-8 text-sm font-medium text-slate-900 outline-none transition-shadow focus:border-[#3A63B8] focus:ring-1 focus:ring-[#3A63B8] ${
+                        isDetectingLocation
+                          ? 'cursor-wait border-slate-200 bg-slate-50'
+                          : isErrorStatus && !userManuallyChanged
+                            ? 'border-red-300 ring-1 ring-red-200'
+                            : 'border-slate-200'
+                      }`}
+                    >
+                      <option disabled value="">
+                        Select country
+                      </option>
+                      {countries.map((country) => (
+                        <option key={country} value={country}>
+                          {country}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5">
+                      <ChevronDownIcon />
+                    </div>
+                  </div>
+                </div>
+
+                {!locationDetected && (
+                  <div className="border-t border-slate-100 pt-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="whitespace-nowrap text-xs text-slate-500">
+                        {userConfirmedManual ? 'Selection confirmed.' : 'Ready to proceed?'}
+                      </p>
+                      <button
+                        onClick={handleConfirmManualSelection}
+                        disabled={!canConfirmSelection}
+                        className={`whitespace-nowrap rounded-full px-5 py-2 text-xs font-semibold transition-all active:scale-[0.98] ${
+                          userConfirmedManual
+                            ? 'cursor-default bg-emerald-100 text-emerald-700'
+                            : canConfirmSelection
+                              ? 'bg-[#3A63B8] text-white shadow-sm hover:bg-[#2e4f94]'
+                              : 'cursor-not-allowed bg-slate-200 text-slate-400'
+                        }`}
+                      >
+                        {userConfirmedManual ? 'Confirmed' : 'Confirm Selection'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
-            </>
-          )}
         </main>
 
         {/* Fixed Footer - Hidden when main footer is visible */}
-        {!isFooterVisible && (
+        {!isFooterVisible && !showLocationModal && (
           <div
             className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto border-t border-slate-100 bg-white/90 backdrop-blur-md px-4 sm:px-6 pt-4 sm:pt-5 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
             data-onboarding-footer
@@ -614,8 +616,8 @@ export default function OnboardingStep4() {
                 data-onboarding-cta
                 className={`flex w-full h-11 sm:h-12 cursor-pointer items-center justify-center rounded-full px-6 text-sm sm:text-base font-semibold transition-all active:scale-[0.98] ${
                   canContinue && !isLoading && !isDetectingLocation
-                    ? 'bg-[#2b8cee] text-white hover:bg-[#2070c0] shadow-md shadow-[#2b8cee]/20'
-                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    ? 'bg-[#3A63B8] text-white hover:bg-[#2e4f94] shadow-sm'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                 }`}
               >
                 {isDetectingLocation && (
@@ -637,20 +639,109 @@ export default function OnboardingStep4() {
             </div>
           </div>
         )}
+
+        {showLocationModal && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/10 p-3 backdrop-blur-[2px] sm:p-4">
+            <div
+              className="relative w-full max-w-[360px] rounded-[32px] border border-white/40 bg-white/70 p-5 text-center shadow-[0_20px_60px_-10px_rgba(15,23,42,0.35)] backdrop-blur-[20px] sm:p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 rounded-t-[32px] bg-gradient-to-b from-white/35 to-transparent" />
+
+              <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.85)_0%,rgba(255,255,255,0.12)_32%,rgba(58,99,184,0.45)_70%,rgba(58,99,184,0.92)_100%)] shadow-[0_15px_35px_rgba(58,99,184,0.3),inset_0_0_20px_rgba(255,255,255,0.5)]">
+                <MapPinIcon className="h-7 w-7 text-[#3A63B8]" />
+              </div>
+
+              <h2 className="relative mb-2 text-[20px] font-bold tracking-tight text-slate-900">Enable Location</h2>
+              <p className="relative mb-5 text-[13px] leading-snug text-slate-600">
+                We&apos;ll detect your location to auto-fill your region for regulatory compliance.
+              </p>
+
+              <div className="relative mb-5 rounded-xl border border-white/50 bg-white/35 p-4 text-left backdrop-blur-md">
+                <h3 className="mb-3 pl-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#3A63B8]/80">
+                  How it works
+                </h3>
+                <div className="space-y-2.5 pl-1">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#3A63B8]/10 text-[9px] font-bold text-[#3A63B8]">
+                      1
+                    </span>
+                    <span className="text-[12px] font-medium text-slate-700">Tap &quot;Detect My Location&quot; below</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#3A63B8]/10 text-[9px] font-bold text-[#3A63B8]">
+                      2
+                    </span>
+                    <span className="text-[12px] font-medium text-slate-700">Allow access when prompted</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#3A63B8]/10 text-[9px] font-bold text-[#3A63B8]">
+                      3
+                    </span>
+                    <span className="text-[12px] font-medium text-slate-700">Auto-fill country and region</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleDetectLocation}
+                disabled={isDetectingLocation || !userId}
+                className="group relative mb-3 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-b from-[#4a74d4] to-[#2d4d91] px-5 py-3.5 text-[15px] font-semibold text-white shadow-[0_10px_20px_rgba(58,99,184,0.35),inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(0,0,0,0.2)] transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isDetectingLocation ? (
+                  <>
+                    <svg className="h-[18px] w-[18px] animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <span>Detecting...</span>
+                  </>
+                ) : (
+                  <>
+                    <MapPinIcon className="h-[18px] w-[18px]" />
+                    <span>Detect My Location</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleSkipDetection}
+                disabled={isDetectingLocation}
+                className="mb-5 text-[13px] font-medium text-slate-500 transition-colors hover:text-[#3A63B8] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Select Manually Instead
+              </button>
+
+              <div className="flex items-start gap-2 border-t border-slate-200/60 pt-3 text-left">
+                <svg
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <p className="text-[10px] leading-tight text-slate-400">
+                  Your location is only used to auto-fill your country. We do not track your movements.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Permission Help Modal */}
       <PermissionHelpModal
         isOpen={showPermissionHelp}
         onClose={() => setShowPermissionHelp(false)}
-      />
-
-      {/* Location Permission Modal */}
-      <LocationPermissionModal
-        isOpen={showLocationModal}
-        onRequestLocation={handleDetectLocation}
-        onSkip={handleSkipDetection}
-        isDetecting={isDetectingLocation}
       />
     </div>
   );

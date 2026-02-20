@@ -267,48 +267,46 @@ function OnboardingStep9() {
   };
 
   return (
-    <div 
-      className="bg-slate-50 min-h-screen"
-      style={{ fontFamily: "'Manrope', sans-serif" }}
-    >
-      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
-        
-        {/* Sticky Header */}
-        <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
-          <button 
+    <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'Manrope', sans-serif" }}>
+      <div className="onboarding-shell relative mx-auto flex min-h-screen w-full max-w-[500px] flex-col overflow-hidden border-x border-slate-100 bg-white shadow-xl">
+        <header className="sticky top-0 z-20 flex items-center justify-between bg-white/90 px-4 pt-4 pb-2 backdrop-blur-sm sm:px-6 sm:pt-5">
+          <button
             onClick={handleBack}
             aria-label="Go back"
-            className="flex size-10 shrink-0 items-center justify-center text-slate-900 rounded-full hover:bg-slate-50 transition-colors"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full text-slate-900 transition-colors hover:bg-slate-100"
           >
             <BackIcon />
           </button>
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="text-sm font-semibold tracking-wide text-slate-500 transition-colors hover:text-[#3A63B8]"
+          >
+            SKIP
+          </button>
         </header>
 
-        <OnboardingStepProgress currentStep={9} />
+        <OnboardingStepProgress currentStep={9} totalSteps={12} displayStep={8} />
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col px-4 sm:px-6 pb-40 sm:pb-44">
-          {/* Header Section - 22px title, 14px subtitle, center aligned */}
-          <div className="mb-8 mt-2 flex flex-col items-center text-center">
-            <h1 className="text-slate-900 text-[22px] font-extrabold leading-tight tracking-tight mb-2">
+        <main className="flex-1 overflow-y-auto px-4 pb-32 sm:px-6 sm:pb-40">
+          <div className="mb-8 mt-1 flex flex-col items-center px-2 text-center">
+            <h1 className="mb-2 text-2xl font-bold leading-tight text-slate-900">
               We just need a few more details
             </h1>
-            <p className="text-slate-500 text-sm font-bold">
+            <p className="text-sm text-slate-500">
               Federal law requires us to collect this info for tax reporting.
             </p>
           </div>
 
-          {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {error}
             </div>
           )}
 
-          {/* SSN Card */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div className="mb-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <label className="flex flex-col w-full">
-              <p className="text-slate-900 text-sm font-semibold leading-normal pb-2">Social Security number</p>
+              <p className="pb-2 text-sm font-semibold leading-normal text-slate-900">Social Security number</p>
               <div className="relative">
                 <input
                   type="text"
@@ -317,28 +315,29 @@ function OnboardingStep9() {
                   placeholder="000-00-0000"
                   maxLength={11}
                   inputMode="numeric"
-                  className="flex w-full rounded-lg text-slate-900 border border-slate-200 bg-white h-12 px-4 pr-10 text-base font-medium placeholder:text-slate-400 focus:outline-0 focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 pr-10 text-base font-medium tracking-widest text-slate-900 placeholder:text-slate-400 transition-all focus:border-[#3A63B8] focus:outline-none focus:ring-2 focus:ring-[#3A63B8]/20"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                   <LockIcon />
                 </span>
               </div>
             </label>
-            
-            {/* Accordion for SSN info */}
-            <div className="mt-4 border-t border-slate-100 pt-3">
+
+            <div className="mt-4 border-t border-slate-200/60 pt-3">
               <details 
                 className="group"
                 open={showInfo}
                 onToggle={(e) => setShowInfo((e.target as HTMLDetailsElement).open)}
               >
-                <summary className="flex cursor-pointer items-center gap-2 py-1 text-[#2b8cee] hover:text-[#2b8cee]/80 transition-colors list-none select-none">
-                  <InfoIcon />
-                  <span className="text-sm font-bold">Why do we need your SSN?</span>
-                  <ChevronDownIcon className="ml-auto transition-transform group-open:rotate-180" />
+                <summary className="flex list-none cursor-pointer items-center justify-between py-1 text-sm font-medium text-[#3A63B8] transition-colors hover:text-[#2c4f97]">
+                  <span className="flex items-center gap-2">
+                    <InfoIcon />
+                    <span>Why do we need your SSN?</span>
+                  </span>
+                  <ChevronDownIcon className="transition-transform group-open:rotate-180" />
                 </summary>
-                <div className="pt-3 pb-1">
-                  <p className="text-slate-500 text-sm font-medium leading-relaxed">
+                <div className="pb-1 pt-3">
+                  <p className="text-sm leading-relaxed text-slate-500">
                     We are required by federal law to collect this information to prevent fraud and verify your identity before opening an investment account.
                   </p>
                 </div>
@@ -346,10 +345,9 @@ function OnboardingStep9() {
             </div>
           </div>
 
-          {/* DOB Card */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <label className="flex flex-col w-full">
-              <p className="text-slate-900 text-sm font-semibold leading-normal pb-2">Date of birth</p>
+              <p className="pb-2 text-sm font-semibold leading-normal text-slate-900">Date of birth</p>
               <div className="relative">
                 <input
                   type="text"
@@ -358,9 +356,8 @@ function OnboardingStep9() {
                   placeholder="MM/DD/YYYY"
                   maxLength={10}
                   inputMode="numeric"
-                  className="flex w-full rounded-lg text-slate-900 border border-slate-200 bg-white h-12 px-4 pr-10 text-base font-medium placeholder:text-slate-400 focus:outline-0 focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 pr-10 text-base font-medium text-slate-900 placeholder:text-slate-400 transition-all focus:border-[#3A63B8] focus:outline-none focus:ring-2 focus:ring-[#3A63B8]/20"
                 />
-                {/* Clickable Calendar Icon */}
                 <button 
                   type="button"
                   onClick={openDatePicker}
@@ -369,7 +366,6 @@ function OnboardingStep9() {
                 >
                   <CalendarIcon />
                 </button>
-                {/* Hidden native date input */}
                 <input
                   ref={dateInputRef}
                   type="date"
@@ -385,44 +381,23 @@ function OnboardingStep9() {
           </div>
         </main>
 
-        {/* Fixed Footer - Hidden when main footer is visible (matching Step3 exactly) */}
         {!isFooterVisible && (
           <div
-            className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto border-t border-slate-100 bg-white/90 backdrop-blur-md px-4 sm:px-6 pt-4 sm:pt-5 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
+            className="fixed bottom-0 left-0 right-0 z-50 mx-auto w-full max-w-[500px] border-t border-slate-200 bg-white/80 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+12px)] backdrop-blur-md sm:px-6 sm:pt-5"
             data-onboarding-footer
           >
-            {/* Buttons */}
-            <div className="flex flex-col gap-3 sm:gap-4">
-              {/* Continue Button */}
-              <button
-                onClick={handleContinue}
-                disabled={!isFormValid || loading}
-                data-onboarding-cta
-                className={`flex w-full h-11 sm:h-12 cursor-pointer items-center justify-center rounded-full bg-[#2b8cee] px-6 text-white text-sm sm:text-base font-semibold transition-all hover:bg-[#2070c0] active:scale-[0.98] disabled:bg-slate-100 disabled:text-slate-400 ${
-                  !isFormValid || loading ? 'disabled:cursor-not-allowed' : ''
-                }`}
-              >
-                {loading ? 'Saving...' : 'Continue'}
-              </button>
-
-              {/* Skip Button */}
-              <button
-                onClick={handleSkip}
-                disabled={!isFormValid || loading}
-                className={`flex w-full cursor-pointer items-center justify-center rounded-full bg-transparent py-2 text-slate-500 text-sm font-semibold hover:text-slate-800 transition-colors ${
-                  !isFormValid || loading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                Skip for now
-              </button>
-            </div>
-
-            {/* Footer Note */}
-            <div className="mt-3 sm:mt-4 text-center">
-              <p className="text-[10px] text-slate-400 leading-tight">
-                Your information is encrypted and secure
-              </p>
-            </div>
+            <button
+              onClick={handleContinue}
+              disabled={!isFormValid || loading}
+              data-onboarding-cta
+              className={`flex h-11 w-full items-center justify-center rounded-full px-6 text-sm font-semibold text-white transition-all active:scale-[0.98] sm:h-12 sm:text-base ${
+                isFormValid && !loading
+                  ? 'bg-[#3A63B8] shadow-lg shadow-[#3A63B8]/30 hover:shadow-[#3A63B8]/50'
+                  : 'cursor-not-allowed bg-slate-200 text-slate-400'
+              }`}
+            >
+              {loading ? 'Saving...' : 'Continue'}
+            </button>
           </div>
         )}
       </div>

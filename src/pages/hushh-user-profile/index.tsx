@@ -667,88 +667,93 @@ const HushhUserProfilePage: React.FC = () => {
     window.open(profileUrl, '_blank');
   };
 
-  // Input styles matching the HTML design
-  const inputClassName = "w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#111827] focus:ring-2 focus:ring-[#2B8CEE] focus:border-[#2B8CEE] outline-none transition-shadow placeholder-gray-400";
-  const selectClassName = "w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] focus:ring-2 focus:ring-[#2B8CEE] focus:border-[#2B8CEE] outline-none appearance-none pr-10";
-  const labelClassName = "block text-sm font-medium text-[#111827] mb-1.5";
+  // UI styles aligned with investor profile design system
+  const inputClassName =
+    "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-[#3A63B8] focus:ring-2 focus:ring-[#3A63B8]/20";
+  const selectClassName =
+    "w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 outline-none transition-all focus:border-[#3A63B8] focus:ring-2 focus:ring-[#3A63B8]/20";
+  const labelClassName =
+    "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-500";
+  const cardClassName =
+    "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5";
 
   return (
-    <div 
-      className="bg-white min-h-screen"
-      style={{ fontFamily: "'Inter', sans-serif" }}
+    <div
+      className="min-h-screen bg-white text-slate-900"
+      style={{
+        fontFamily:
+          "'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif",
+      }}
     >
-      {/* Main Container */}
-      <div className="max-w-md mx-auto min-h-screen flex flex-col relative pb-8">
-        
-        {/* Sticky Header */}
-        <header className="flex items-center justify-between px-4 py-4 sticky top-28 bg-white z-10 border-b border-transparent">
-          <button 
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col bg-white pb-8 lg:border-x lg:border-slate-100 lg:shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+        <header className="sticky top-24 z-20 flex items-center justify-between border-b border-slate-100 bg-white/95 px-4 py-3 backdrop-blur md:top-28 md:px-6">
+          <button
             onClick={handleBack}
-            className="p-2 -ml-2 text-[#111827] hover:bg-gray-100 rounded-full transition-colors"
+            className="-ml-2 rounded-full p-2 text-slate-800 transition-colors hover:bg-slate-100"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-lg font-semibold text-[#111827]">Investor Profile</h1>
-          <button 
+          <h1 className="text-lg font-bold text-slate-900">Investor Profile</h1>
+          <button
             onClick={handleSave}
-            className="text-[#2B8CEE] font-semibold text-base px-2 py-1 hover:bg-blue-50 rounded transition-colors"
+            className="rounded px-2 py-1 text-base font-semibold text-[#3A63B8] transition-colors hover:bg-blue-50"
           >
             Save
           </button>
         </header>
 
-        {/* Main Content */}
-        <form onSubmit={handleSubmit} className="flex-1 px-4 py-2 space-y-6 pb-40">
-          
-          {/* Welcome Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] overflow-hidden">
-            <div className="h-32 w-full relative bg-gradient-to-br from-slate-800 to-blue-900">
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-800/90 to-blue-900/90" />
-              <div className="absolute bottom-4 left-4">
-                <span className="bg-[#2B8CEE] text-white text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wide uppercase shadow-sm">
+        <form onSubmit={handleSubmit} className="flex-1 space-y-6 px-4 pb-44 pt-4 sm:px-6 lg:px-8 lg:pb-52">
+          <section className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-blue-50 to-indigo-50 px-6 py-6">
+            <div className="pointer-events-none absolute -right-12 -top-14 h-44 w-44 rounded-full bg-[#3A63B8]/10 blur-2xl" />
+            <div className="pointer-events-none absolute -left-10 -bottom-14 h-36 w-36 rounded-full bg-[#1A365D]/10 blur-2xl" />
+            <div className="relative z-10">
+              <div className="mb-3 flex items-center">
+                <span className="rounded-full border border-[#3A63B8]/20 bg-[#3A63B8]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#3A63B8]">
                   Premium Member
                 </span>
               </div>
             </div>
-            <div className="p-5">
-              <h2 className="text-xl font-bold mb-2 text-[#111827]">
+            <div className="relative z-10">
+              <h2 className="mb-1.5 text-2xl font-bold tracking-tight text-slate-900">
                 Welcome back, {form.name?.split(' ')[0] || 'Alex'}
               </h2>
-              <p className="text-sm text-[#6B7280] leading-relaxed">
+              <p className="max-w-2xl text-sm leading-relaxed text-slate-500">
                 Complete your profile to unlock personalized investment insights tailored to your financial goals.
               </p>
             </div>
-          </div>
+          </section>
 
           {/* Your Investor Profile - Share Section */}
           {profileSlug && (
-            <section className="bg-[#2B8CEE] rounded-2xl p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
+            <section className="rounded-2xl bg-gradient-to-br from-[#3A63B8] to-[#1A365D] p-5 shadow-sm">
+              <div className="mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Share2 className="w-5 h-5 text-white" />
                   <h3 className="text-lg font-semibold text-white">Your Investor Profile</h3>
                 </div>
                 <button
+                  type="button"
                   onClick={handleOpenProfile}
-                  className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                  className="rounded-lg bg-white/20 p-2 transition-colors hover:bg-white/30"
                   aria-label="Open profile"
                 >
                   <ExternalLink className="w-4 h-4 text-white" />
                 </button>
               </div>
-              <p className="text-sm text-white/90 mb-4">
+              <p className="mb-4 text-sm text-white/90">
                 Share this link to let others view your profile
               </p>
 
               {/* Profile URL Display */}
-              <div className="bg-white rounded-xl p-3 flex items-center gap-3 mb-4">
-                <Link className="w-5 h-5 text-[#2B8CEE] flex-shrink-0" />
-                <span className="text-sm text-[#374151] truncate flex-1">
+              <div className="mb-4 flex items-center gap-3 rounded-xl bg-white p-3">
+                <Link className="w-5 h-5 flex-shrink-0 text-[#3A63B8]" />
+                <span className="flex-1 truncate text-sm text-slate-700">
                   {profileUrl}
                 </span>
                 <button
+                  type="button"
                   onClick={onCopy}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+                  className="flex-shrink-0 rounded-lg p-2 transition-colors hover:bg-slate-100"
                   aria-label="Copy link"
                 >
                   {hasCopied ? (
@@ -760,39 +765,44 @@ const HushhUserProfilePage: React.FC = () => {
               </div>
 
               {/* Share via Social */}
-              <p className="text-sm text-white/90 mb-3">Share via</p>
-              <div className="flex items-center gap-3 mb-5">
+              <p className="mb-3 text-sm text-white/90">Share via</p>
+              <div className="mb-5 flex flex-wrap items-center gap-3">
                 <button
+                  type="button"
                   onClick={handleShareWhatsApp}
-                  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
                   aria-label="Share on WhatsApp"
                 >
                   <FaWhatsapp className="w-5 h-5 text-white" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleShareX}
-                  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
                   aria-label="Share on X"
                 >
                   <FaXTwitter className="w-5 h-5 text-white" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleShareEmail}
-                  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
                   aria-label="Share via Email"
                 >
                   <HiMail className="w-5 h-5 text-white" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleShareLinkedIn}
-                  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
                   aria-label="Share on LinkedIn"
                 >
                   <FaLinkedin className="w-5 h-5 text-white" />
                 </button>
                 <button
+                  type="button"
                   onClick={onCopy}
-                  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
                   aria-label="Copy link"
                 >
                   {hasCopied ? (
@@ -804,19 +814,21 @@ const HushhUserProfilePage: React.FC = () => {
               </div>
 
               {/* Wallet Pass Buttons */}
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button
+                  type="button"
                   onClick={handleAppleWalletPass}
                   disabled={isApplePassLoading}
-                  className="w-full bg-white hover:bg-gray-50 text-[#111827] font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-70"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 font-semibold text-slate-900 transition-colors hover:bg-gray-50 disabled:opacity-70"
                 >
                   <FaApple className="w-5 h-5" />
                   {isApplePassLoading ? "Generating..." : "Add to Apple Wallet"}
                 </button>
                 <button
+                  type="button"
                   onClick={handleGoogleWalletPass}
                   disabled={isGooglePassLoading}
-                  className="w-full bg-white hover:bg-gray-50 text-[#111827] font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors border border-[#E5E7EB] disabled:opacity-70"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 font-semibold text-slate-900 transition-colors hover:bg-gray-50 disabled:opacity-70"
                 >
                   <SiGooglepay className="w-5 h-5" />
                   {isGooglePassLoading ? "Generating..." : "Add to Google Wallet"}
@@ -826,21 +838,26 @@ const HushhUserProfilePage: React.FC = () => {
           )}
 
           {/* Section Title */}
-          <div>
-            <h2 className="text-2xl font-bold text-[#111827]">Your Hushh Profile</h2>
-            <div className="h-px w-full bg-[#E5E7EB] mt-4" />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Your Hushh Profile</h2>
+            <p className="text-sm text-slate-500">
+              Review and update your details to keep your investor profile complete.
+            </p>
+            <div className="h-px w-full bg-slate-200" />
           </div>
 
           {/* Personal Information Section */}
-          <section className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
-            <div className="flex items-center gap-3 mb-5">
-              <User className="w-6 h-6 text-[#2B8CEE]" />
-              <h3 className="text-lg font-semibold text-[#111827]">Personal Information</h3>
+          <section className={cardClassName}>
+            <div className="mb-5 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-[#3A63B8]">
+                <User className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>
             </div>
             <div className="space-y-4">
               <div>
                 <label className={labelClassName}>
-                  Full Name <span className="text-[#2B8CEE]">*</span>
+                  Full Name <span className="text-[#3A63B8]">*</span>
                 </label>
                 <input
                   type="text"
@@ -852,7 +869,7 @@ const HushhUserProfilePage: React.FC = () => {
               </div>
               <div>
                 <label className={labelClassName}>
-                  Email <span className="text-[#2B8CEE]">*</span>
+                  Email <span className="text-[#3A63B8]">*</span>
                 </label>
                 <input
                   type="email"
@@ -864,7 +881,7 @@ const HushhUserProfilePage: React.FC = () => {
               </div>
               <div>
                 <label className={labelClassName}>
-                  Age <span className="text-[#2B8CEE]">*</span>
+                  Age <span className="text-[#3A63B8]">*</span>
                 </label>
                 <input
                   type="number"
@@ -881,7 +898,7 @@ const HushhUserProfilePage: React.FC = () => {
                     <select 
                       value={form.phoneCountryCode}
                       onChange={(e) => handleChange("phoneCountryCode", e.target.value)}
-                      className="w-full px-3 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#111827] focus:ring-2 focus:ring-[#2B8CEE] focus:border-[#2B8CEE] outline-none appearance-none pr-8"
+                      className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 pr-8 text-sm text-slate-900 outline-none transition-all focus:border-[#3A63B8] focus:ring-2 focus:ring-[#3A63B8]/20"
                     >
                       <option value="+1">+1</option>
                       <option value="+44">+44</option>
@@ -915,10 +932,12 @@ const HushhUserProfilePage: React.FC = () => {
           </section>
 
           {/* Investment Profile Section */}
-          <section className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
-            <div className="flex items-center gap-3 mb-5">
-              <TrendingUp className="w-6 h-6 text-[#2B8CEE]" />
-              <h3 className="text-lg font-semibold text-[#111827]">Investment Profile</h3>
+          <section className={cardClassName}>
+            <div className="mb-5 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Investment Profile</h3>
             </div>
             <div className="space-y-4">
               <div>
@@ -977,7 +996,7 @@ const HushhUserProfilePage: React.FC = () => {
                     type="number"
                     value={form.initialInvestmentAmount}
                     onChange={(e) => handleChange("initialInvestmentAmount", e.target.value)}
-                    placeholder="0.00"
+                    placeholder="5000000"
                     className={`${inputClassName} pl-8`}
                   />
                 </div>
@@ -1003,13 +1022,15 @@ const HushhUserProfilePage: React.FC = () => {
           </section>
 
           {/* Legal & Residential Section */}
-          <section className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
-            <div className="flex items-center gap-3 mb-5">
-              <Shield className="w-6 h-6 text-[#2B8CEE]" />
-              <h3 className="text-lg font-semibold text-[#111827]">Legal &amp; Residential</h3>
+          <section className={cardClassName}>
+            <div className="mb-5 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                <Shield className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Legal &amp; Residential</h3>
             </div>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className={labelClassName}>Legal First Name</label>
                   <input
@@ -1092,7 +1113,7 @@ const HushhUserProfilePage: React.FC = () => {
                   className={inputClassName}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className={labelClassName}>State</label>
                   <input
@@ -1133,22 +1154,25 @@ const HushhUserProfilePage: React.FC = () => {
 
           {/* AI Generated Investor Profile Section */}
           {investorProfile && (
-            <section className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
+            <section className={cardClassName}>
+              <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Brain className="w-6 h-6 text-[#2B8CEE]" />
-                  <h3 className="text-lg font-semibold text-[#111827]">AI-Generated Investor Profile</h3>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-[#3A63B8]">
+                    <Brain className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900">AI-Generated Investor Profile</h3>
                 </div>
                 <button
+                  type="button"
                   onClick={() => navigate('/investor-profile')}
-                  className="flex items-center gap-1.5 text-[#2B8CEE] hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium"
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-[#3A63B8] transition-colors hover:bg-blue-50"
                   aria-label="Edit profile"
                 >
                   <Edit2 className="w-4 h-4" />
                   Edit
                 </button>
               </div>
-              <p className="text-sm text-[#6B7280] mb-4">
+              <p className="mb-4 text-sm text-slate-500">
                 Based on your information, our AI has analyzed your investment preferences:
               </p>
               <div className="space-y-3">
@@ -1168,15 +1192,15 @@ const HushhUserProfilePage: React.FC = () => {
                   // Get icon based on field name
                   const getIcon = () => {
                     switch (fieldName) {
-                      case "primary_goal": return <Target className="w-5 h-5 text-[#2B8CEE]" />;
-                      case "investment_horizon_years": return <Clock className="w-5 h-5 text-[#2B8CEE]" />;
-                      case "risk_tolerance": return <Gauge className="w-5 h-5 text-[#2B8CEE]" />;
-                      case "liquidity_need": return <Droplets className="w-5 h-5 text-[#2B8CEE]" />;
-                      case "experience_level": return <Briefcase className="w-5 h-5 text-[#2B8CEE]" />;
-                      case "asset_class_preference": return <Layers className="w-5 h-5 text-[#2B8CEE]" />;
-                      case "typical_ticket_size": return <Zap className="w-5 h-5 text-[#2B8CEE]" />;
-                      case "engagement_style": return <Activity className="w-5 h-5 text-[#2B8CEE]" />;
-                      default: return <TrendingUp className="w-5 h-5 text-[#2B8CEE]" />;
+                      case "primary_goal": return <Target className="w-5 h-5 text-[#3A63B8]" />;
+                      case "investment_horizon_years": return <Clock className="w-5 h-5 text-[#3A63B8]" />;
+                      case "risk_tolerance": return <Gauge className="w-5 h-5 text-[#3A63B8]" />;
+                      case "liquidity_need": return <Droplets className="w-5 h-5 text-[#3A63B8]" />;
+                      case "experience_level": return <Briefcase className="w-5 h-5 text-[#3A63B8]" />;
+                      case "asset_class_preference": return <Layers className="w-5 h-5 text-[#3A63B8]" />;
+                      case "typical_ticket_size": return <Zap className="w-5 h-5 text-[#3A63B8]" />;
+                      case "engagement_style": return <Activity className="w-5 h-5 text-[#3A63B8]" />;
+                      default: return <TrendingUp className="w-5 h-5 text-[#3A63B8]" />;
                     }
                   };
 
@@ -1207,8 +1231,9 @@ const HushhUserProfilePage: React.FC = () => {
                               </span>
                               {!isEditing && (
                                 <button
+                                  type="button"
                                   onClick={() => setEditingField(fieldName)}
-                                  className="p-1 text-[#6B7280] hover:text-[#2B8CEE] hover:bg-blue-50 rounded transition-colors"
+                                  className="rounded p-1 text-[#6B7280] transition-colors hover:bg-blue-50 hover:text-[#3A63B8]"
                                   aria-label={`Edit ${label}`}
                                 >
                                   <Edit2 className="w-3.5 h-3.5" />
@@ -1232,14 +1257,15 @@ const HushhUserProfilePage: React.FC = () => {
                                         type="checkbox"
                                         checked={currentValues.includes(option.value)}
                                         onChange={() => handleMultiSelectToggle(fieldName, option.value)}
-                                        className="w-4 h-4 rounded border-gray-300 text-[#2B8CEE] focus:ring-[#2B8CEE]"
+                                        className="h-4 w-4 rounded border-gray-300 text-[#3A63B8] focus:ring-[#3A63B8]"
                                       />
                                       <span className="text-sm text-[#374151]">{option.label}</span>
                                     </label>
                                   ))}
                                   <button
+                                    type="button"
                                     onClick={() => setEditingField(null)}
-                                    className="mt-2 px-3 py-1.5 bg-[#2B8CEE] text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                                    className="mt-2 rounded-lg bg-[#3A63B8] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2f539f]"
                                   >
                                     Done
                                   </button>
@@ -1251,7 +1277,7 @@ const HushhUserProfilePage: React.FC = () => {
                                     <select
                                       value={fieldData.value}
                                       onChange={(e) => handleUpdateAIField(fieldName, e.target.value)}
-                                      className="w-full px-3 py-2 rounded-lg border border-[#E5E7EB] bg-white text-[#111827] text-sm focus:ring-2 focus:ring-[#2B8CEE] focus:border-[#2B8CEE] outline-none appearance-none pr-8"
+                                      className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 pr-8 text-sm text-[#111827] outline-none focus:border-[#3A63B8] focus:ring-2 focus:ring-[#3A63B8]/20"
                                     >
                                       {fieldOptions.map((option) => (
                                         <option key={option.value} value={option.value}>
@@ -1262,8 +1288,9 @@ const HushhUserProfilePage: React.FC = () => {
                                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                                   </div>
                                   <button
+                                    type="button"
                                     onClick={() => setEditingField(null)}
-                                    className="px-3 py-1.5 text-[#6B7280] text-sm font-medium hover:text-[#111827] transition-colors"
+                                    className="px-3 py-1.5 text-sm font-medium text-[#6B7280] transition-colors hover:text-[#111827]"
                                   >
                                     Cancel
                                   </button>
@@ -1289,7 +1316,7 @@ const HushhUserProfilePage: React.FC = () => {
                               {/* AI Rationale */}
                               {fieldData.rationale && (
                                 <p className="text-xs text-[#6B7280] mt-2 italic">
-                                  💡 {fieldData.rationale}
+                                  AI note: {fieldData.rationale}
                                 </p>
                               )}
                             </>
@@ -1558,14 +1585,14 @@ const HushhUserProfilePage: React.FC = () => {
         {/* Fixed Footer - Hidden when main footer is visible */}
         {!isFooterVisible && (
           <div 
-            className="fixed bottom-0 left-1/2 -translate-x-1/2 z-20 w-full max-w-md rounded-t-2xl border-t border-[#E5E7EB] bg-white/95 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] backdrop-blur-xl px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:px-4 sm:pt-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
+            className="fixed bottom-0 left-1/2 z-20 w-full max-w-6xl -translate-x-1/2 border-t border-slate-200 bg-white/95 px-4 pt-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:px-6 sm:pt-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom,0px))] lg:px-8"
             data-onboarding-footer
           >
             <button
               type="submit"
               onClick={handleSave}
               disabled={loading}
-              className="w-full bg-[#2B8CEE] hover:bg-blue-600 text-white font-semibold rounded-xl shadow-md shadow-blue-500/20 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed py-3 px-5 sm:py-3.5 sm:px-6 text-sm sm:text-base"
+              className="w-full rounded-xl bg-[#3A63B8] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition-all duration-200 active:scale-[0.98] hover:bg-[#2f539f] disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-3.5 sm:text-base"
             >
               {loading 
                 ? "Generating..." 
@@ -1576,7 +1603,7 @@ const HushhUserProfilePage: React.FC = () => {
                     : "Generate Investor Profile"
               }
             </button>
-            <p className="text-[11px] sm:text-xs text-[#6B7280] text-center mt-2 sm:mt-3 leading-snug px-1 sm:px-2">
+            <p className="mt-2 px-1 text-center text-[11px] leading-snug text-slate-500 sm:mt-3 sm:px-2 sm:text-xs">
               {investorProfile 
                 ? "Update your AI-generated investor profile."
                 : hasOnboardingData
@@ -1587,8 +1614,9 @@ const HushhUserProfilePage: React.FC = () => {
             
             {/* Go to Home Button */}
             <button
+              type="button"
               onClick={() => navigate('/')}
-              className="flex items-center justify-center gap-2 w-full mt-2 sm:mt-3 py-2 sm:py-2.5 text-[#2B8CEE] hover:bg-blue-50 rounded-xl transition-colors font-medium text-sm"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-2 text-sm font-medium text-[#3A63B8] transition-colors hover:bg-blue-50 sm:mt-3 sm:py-2.5"
             >
               <Home className="w-4 h-4" />
               Go to Home

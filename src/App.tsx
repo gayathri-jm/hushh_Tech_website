@@ -120,9 +120,8 @@ const useLayoutVisibility = () => {
   const isOnboarding = location.pathname.startsWith('/onboarding');
 
   return {
-    // Onboarding is an immersive flow with its own in-shell header/back UX.
-    // Hiding the global navbar avoids double headers and fixes mobile viewport sizing.
-    showNavbar: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isOnboarding,
+    // Keep the global header visible across onboarding/verification as requested.
+    showNavbar: !isHushhAI && !isHushhAgent && !isKai && !isStudio,
     showFooter: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isOnboarding,
     showMobileNav: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isOnboarding,
   };

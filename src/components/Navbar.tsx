@@ -63,6 +63,7 @@ export default function Navbar() {
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const toast = useToast();
   const isMobile = useBreakpointValue({ base: true, lg: false });
+  const isDesktop = isMobile === false;
 
   // Fetch real-time stock quotes (refreshes every 2 minutes for 27 stocks)
   const { quotes, loading: quotesLoading, lastUpdated } = useStockQuotes(120000);
@@ -158,6 +159,16 @@ export default function Navbar() {
 
   const isAuthenticated = !!session;
 
+  const primaryNavLinks = [
+    { path: "/", label: t('nav.home') },
+    { path: "/about/leadership", label: t('nav.ourPhilosophy') },
+    { path: "/discover-fund-a", label: t('nav.fundA') },
+    { path: "/community", label: t('nav.community') },
+    { path: "/a2a-playground", label: t('nav.kycStudio') },
+    { path: "/contact", label: t('nav.contact') },
+    { path: "/faq", label: t('nav.faq') },
+  ];
+
   const toggleDrawer = () => setIsOpen((prev) => !prev);
   const handleLinkClick = (path: string) => {
     navigate(path);
@@ -218,7 +229,7 @@ export default function Navbar() {
       {/* Fixed Header with Navigation + Ticker - Light Theme */}
       <header className="fixed w-full z-[999] top-0">
         {/* Main Navigation Bar - Soft Light Background */}
-        <nav className="flex w-full items-center justify-between bg-[#F8F9FA] px-4 h-16 border-b border-gray-200 transition-colors duration-300">
+        <nav className="flex w-full items-center justify-between bg-[#F8F9FA] px-4 lg:px-8 h-16 border-b border-gray-200 transition-colors duration-300">
           {/* Left: Brand Lockup */}
           <Link to="/" className="flex items-center gap-3">
             {/* Hushh Logo Image in Circle with subtle gradient */}
@@ -236,19 +247,70 @@ export default function Navbar() {
             </div>
           </Link>
 
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-1">
+            {primaryNavLinks.map(({ path, label }) => {
+              const active = isActive(path);
+              return (
+                <button
+                  key={path}
+                  onClick={() => handleLinkClick(path)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                    active
+                      ? 'bg-[#2F80ED]/10 text-[#1f6cc7]'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Right: Utilities */}
           <div className="flex items-center gap-3">
             {/* Language Selector */}
             <LanguageSwitcher variant="light" />
-            
-            {/* Hamburger Menu - Blue Primary */}
-            <button
-              onClick={toggleDrawer}
-              className="flex items-center justify-center w-11 h-11 rounded-full bg-[#2F80ED] text-white active:scale-95 transition-transform shadow-lg shadow-blue-500/30 hover:bg-blue-600"
-              aria-label="Toggle menu"
-            >
-              <FiMenu className="w-5 h-5" />
-            </button>
+
+            {/* Desktop Utility Actions */}
+            {isDesktop && (
+              <>
+                {isAuthenticated ? (
+                  <>
+                    <button
+                      onClick={() => navigate('/hushh-user-profile')}
+                      className="hidden xl:inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      {t('nav.viewProfile')}
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="inline-flex items-center justify-center rounded-full bg-[#2F80ED] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1f6cc7] transition-colors"
+                    >
+                      {t('nav.logout')}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => navigate('/Login')}
+                    className="inline-flex items-center justify-center rounded-full bg-[#2F80ED] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1f6cc7] transition-colors"
+                  >
+                    {t('nav.login')}
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* Mobile Hamburger */}
+            {!isDesktop && (
+              <button
+                onClick={toggleDrawer}
+                className="flex items-center justify-center w-11 h-11 rounded-full bg-[#2F80ED] text-white active:scale-95 transition-transform shadow-lg shadow-blue-500/30 hover:bg-blue-600"
+                aria-label="Toggle menu"
+              >
+                <FiMenu className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </nav>
 

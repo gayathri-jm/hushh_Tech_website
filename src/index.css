@@ -356,6 +356,8 @@ html {
   background:
     radial-gradient(120% 55% at 50% -20%, rgba(43, 140, 238, 0.18), transparent 60%),
     linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .onboarding-body {
@@ -363,16 +365,28 @@ html {
   color: #0f172a;
 }
 
+/* Step 1 uses page-level scrolling (no .onboarding-shell main scroller), so allow scroll there. */
+html.onboarding-step1-scroll,
+body.onboarding-step1-scroll {
+  height: auto !important;
+  min-height: 100dvh;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
 .onboarding-shell {
   --onboarding-primary: #2b8cee;
   --onboarding-primary-deep: #2070c0;
+  --onboarding-shell-max-width: 500px;
+  --onboarding-top-space: 7rem;
   --onboarding-footer-space: calc(10rem + env(safe-area-inset-bottom, 0px));
   --onboarding-border-color: rgba(15, 23, 42, 0.08);
 
   position: relative;
-  min-height: 100dvh !important;
-  height: 100dvh;
-  width: min(100%, 500px);
+  min-height: calc(100dvh - var(--onboarding-top-space)) !important;
+  height: calc(100dvh - var(--onboarding-top-space));
+  width: min(100%, var(--onboarding-shell-max-width));
+  max-width: var(--onboarding-shell-max-width);
   overflow: hidden !important;
   overscroll-behavior: none;
   border: 1px solid var(--onboarding-border-color);
@@ -477,7 +491,8 @@ html {
   left: 50% !important;
   right: auto !important;
   transform: translateX(-50%);
-  width: min(100%, 500px);
+  width: min(100%, var(--onboarding-shell-max-width));
+  max-width: var(--onboarding-shell-max-width) !important;
   border-top: 1px solid rgba(148, 163, 184, 0.24);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 251, 255, 0.98) 100%) !important;
   backdrop-filter: blur(14px);
@@ -522,6 +537,19 @@ html {
   .onboarding-shell [data-onboarding-footer].flex.flex-col,
   .onboarding-shell [data-onboarding-footer] .flex.flex-col {
     gap: 0.55rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .onboarding-shell {
+    --onboarding-shell-max-width: 980px;
+    border-radius: 24px;
+    box-shadow: 0 26px 64px rgba(15, 23, 42, 0.14);
+  }
+
+  .onboarding-shell > header {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
   }
 }
 

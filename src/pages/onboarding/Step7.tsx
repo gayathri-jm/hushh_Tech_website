@@ -107,84 +107,119 @@ export default function OnboardingStep7() {
     navigate('/onboarding/step-5');
   };
 
+  const handleSkip = async () => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      if (config.supabaseClient) {
+        const { data: { user } } = await config.supabaseClient.auth.getUser();
+        if (user) {
+          await upsertOnboardingData(user.id, { current_step: 7 });
+        }
+      }
+      navigate('/onboarding/step-8');
+    } catch {
+      navigate('/onboarding/step-8');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const isValid = firstName.trim() && lastName.trim();
 
   return (
-    <div 
-      className="bg-slate-50 min-h-screen"
+    <div
+      className="min-h-screen bg-slate-50"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
       <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
-        
         {/* Sticky Header */}
-        <header className="flex items-center px-4 pt-6 pb-4 bg-white/95 backdrop-blur-sm sticky top-0 z-10">
-          <button 
+        <header className="sticky top-0 z-20 flex items-center justify-between bg-white/90 px-4 pt-4 pb-2 backdrop-blur-sm sm:px-6 sm:pt-5">
+          <button
             onClick={handleBack}
-            className="flex items-center gap-1 text-slate-900 hover:text-[#2b8cee] transition-colors"
+            aria-label="Go back"
+            className="flex size-10 items-center justify-center rounded-full text-slate-900 transition-colors hover:bg-slate-100"
           >
             <BackIcon />
-            <span className="text-base font-bold tracking-tight">Back</span>
           </button>
-          <div className="flex-1" />
+          <button
+            type="button"
+            onClick={handleSkip}
+            disabled={isLoading}
+            className="text-sm font-semibold tracking-wide text-slate-500 transition-colors hover:text-[#3A63B8] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            SKIP
+          </button>
         </header>
 
-        <OnboardingStepProgress currentStep={7} />
+        <OnboardingStepProgress currentStep={7} totalSteps={12} displayStep={6} />
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col px-4 sm:px-6 pb-40 sm:pb-48">
+        <main className="flex-1 overflow-y-auto px-4 pb-40 sm:px-6 sm:pb-48">
           {/* Header Section - Center Aligned */}
-          <div className="mb-8 text-center">
-            <h1 className="text-slate-900 text-[22px] font-bold leading-tight tracking-tight mb-3">
+          <div className="mb-10 mt-2 text-center">
+            <h1 className="mb-3 text-3xl font-bold text-slate-900">
               Enter your full legal name
             </h1>
-            <p className="text-slate-500 text-[14px] font-normal leading-relaxed">
+            <p className="mx-auto max-w-sm text-base leading-relaxed text-slate-500">
               We are required to collect this info for verification.
             </p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {error}
             </div>
           )}
 
           {/* Form Fields */}
-          <div className="flex flex-col gap-6 w-full">
+          <form className="space-y-8">
             {/* First Name Field */}
-            <div className="flex flex-col gap-2">
-              <label className="text-slate-900 text-base font-medium leading-normal pl-1">
+            <div className="space-y-2">
+              <label className="block text-base font-semibold text-slate-900">
                 Legal first name
               </label>
               <input
                 type="text"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="e.g. Jane"
-                className="w-full h-14 px-5 rounded-full border border-gray-200 bg-white text-slate-900 placeholder:text-slate-400 text-base font-normal focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
+                onChange={(e) => {
+                  setFirstName(e.target.value);
+                  if (error) setError(null);
+                }}
+                placeholder="JHUMMA"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[#3A63B8]"
+                autoComplete="given-name"
               />
             </div>
 
             {/* Last Name Field */}
-            <div className="flex flex-col gap-2">
-              <label className="text-slate-900 text-base font-medium leading-normal pl-1">
+            <div className="space-y-2">
+              <label className="block text-base font-semibold text-slate-900">
                 Legal last name
               </label>
               <input
                 type="text"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="e.g. Doe"
-                className="w-full h-14 px-5 rounded-full border border-gray-200 bg-white text-slate-900 placeholder:text-slate-400 text-base font-normal focus:outline-none focus:ring-2 focus:ring-[#2b8cee]/20 focus:border-[#2b8cee] transition-all"
+                onChange={(e) => {
+                  setLastName(e.target.value);
+                  if (error) setError(null);
+                }}
+                placeholder="KUMARI"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-[#3A63B8]"
+                autoComplete="family-name"
               />
             </div>
-          </div>
+          </form>
         </main>
 
         {/* Fixed Footer - Hidden when main footer is visible */}
         {!isFooterVisible && (
           <div
-            className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto border-t border-slate-100 bg-white/90 backdrop-blur-md px-4 sm:px-6 pt-4 sm:pt-5 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-3 sm:gap-4"
+            className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto border-t border-slate-100 bg-white/90 backdrop-blur-md px-4 sm:px-6 pt-4 sm:pt-5 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
             data-onboarding-footer
           >
             {/* Continue Button */}
@@ -195,20 +230,12 @@ export default function OnboardingStep7() {
               className={`
                 flex w-full cursor-pointer items-center justify-center rounded-full h-11 sm:h-12 px-6 text-sm sm:text-base font-semibold transition-all active:scale-[0.98]
                 ${isValid && !isLoading
-                  ? 'bg-[#2b8cee] hover:bg-[#2070c0] text-white shadow-lg shadow-[#2b8cee]/20'
-                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  ? 'bg-[#3A63B8] text-white shadow-lg shadow-blue-500/20 hover:bg-[#2e4f94]'
+                  : 'cursor-not-allowed bg-slate-200 text-slate-400'
                 }
               `}
             >
               {isLoading ? 'Saving...' : 'Continue'}
-            </button>
-            
-            {/* Back Button */}
-            <button
-              onClick={handleBack}
-              className="flex w-full cursor-pointer items-center justify-center rounded-full bg-transparent py-2 text-slate-500 text-sm font-semibold hover:text-slate-800 transition-colors"
-            >
-              Back
             </button>
           </div>
         )}

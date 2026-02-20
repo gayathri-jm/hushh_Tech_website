@@ -3,6 +3,7 @@
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
+import type { ReactNode } from 'react';
 
 interface Option {
   value: string;
@@ -12,6 +13,7 @@ interface Option {
 interface SearchableSelectProps {
   id: string;
   label: string;
+  labelIcon?: ReactNode;
   value: string;
   options: Option[];
   onChange: (value: string) => void;
@@ -27,6 +29,7 @@ interface SearchableSelectProps {
 export function SearchableSelect({
   id,
   label,
+  labelIcon,
   value,
   options,
   onChange,
@@ -111,7 +114,10 @@ export function SearchableSelect({
   if (loading) {
     return (
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-slate-900">{label}</label>
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+          {labelIcon && <span className="text-[#3A63B8]">{labelIcon}</span>}
+          <span>{label}</span>
+        </label>
         <div className="flex h-12 w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 text-base text-slate-400">
           <svg className="h-4 w-4 animate-spin text-slate-400" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -126,7 +132,10 @@ export function SearchableSelect({
   if (loadError) {
     return (
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-slate-900">{label}</label>
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+          {labelIcon && <span className="text-[#3A63B8]">{labelIcon}</span>}
+          <span>{label}</span>
+        </label>
         <div className="flex w-full items-center justify-between rounded-xl border border-red-200 bg-red-50 p-3">
           <span className="text-sm text-red-600">Failed to load</span>
           {onRetry && (
@@ -148,8 +157,9 @@ export function SearchableSelect({
 
   return (
     <div className="relative space-y-2" ref={containerRef}>
-      <label className="block text-sm font-semibold text-slate-900" htmlFor={id}>
-        {label}
+      <label className="flex items-center gap-2 text-sm font-semibold text-slate-900" htmlFor={id}>
+        {labelIcon && <span className="text-[#3A63B8]">{labelIcon}</span>}
+        <span>{label}</span>
       </label>
 
       <div className="relative">

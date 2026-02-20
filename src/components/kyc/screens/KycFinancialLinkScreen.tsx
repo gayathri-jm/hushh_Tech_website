@@ -1,13 +1,8 @@
 /**
- * KycFinancialLinkScreen — Pre-KYC Financial Verification
- * 
- * iOS-first design. White background, black text, grey icons.
- * Bright primary color accents (blue/teal) matching sign-nda style.
- * 
- * Links user's bank via Plaid and fetches 3 data points:
- * 1. Balance  2. Assets  3. Investments
- * 
- * User can proceed if at least 1 product is successfully fetched.
+ * KycFinancialLinkScreen - Pre-KYC Financial Verification
+ *
+ * Design refreshed to match onboarding UI guidelines while keeping all
+ * financial-link functionality unchanged.
  */
 'use client';
 
@@ -22,7 +17,6 @@ import {
   Spinner,
   Badge,
 } from '@chakra-ui/react';
-import { keyframes } from '@emotion/react';
 import { usePlaidLinkHook } from '../../../services/plaid/usePlaidLink';
 import {
   formatCurrency,
@@ -30,280 +24,171 @@ import {
 } from '../../../services/plaid/plaidService';
 import type { FinancialVerificationResult } from '../../../types/kyc';
 
-// =====================================================
-// Design Tokens — Apple-inspired
-// =====================================================
-
 const COLORS = {
-  primary: '#2F80ED',
-  primaryHover: '#2570D4',
-  primaryLight: '#EBF2FD',
-  accent: '#2F80ED',
-  accentLight: '#EBF2FD',
-  bg: '#FFFFFF',
-  bgSubtle: '#FAFAFA',
-  textPrimary: '#000000',
-  textSecondary: '#6B7280',
-  textTertiary: '#9CA3AF',
-  border: '#E5E7EB',
-  borderLight: '#F3F4F6',
-  cardBg: '#FFFFFF',
-  cardBgHover: '#F9FAFB',
-  success: '#22C55E',
-  successBg: '#F0FDF4',
-  successBorder: '#BBF7D0',
-  error: '#EF4444',
-  errorBg: '#FEF2F2',
-  errorBorder: '#FECACA',
-  pending: '#F59E0B',
-  pendingBg: '#FFFBEB',
-  iconBg: '#F3F4F6',
-  green: '#22C55E',
+  primary: '#3A63B8',
+  primaryHover: '#2e4f94',
+  textMain: '#1E293B',
+  textSub: '#64748B',
+  textMuted: '#94A3B8',
+  surface: '#FFFFFF',
+  surfaceSoft: '#F8FAFC',
+  border: '#E2E8F0',
+  success: '#16A34A',
+  warning: '#D97706',
+  error: '#DC2626',
+  iconBlueBg: '#E3F2FD',
+  iconGreenBg: '#E8F5E9',
+  iconPurpleBg: '#F3E5F5',
+  iconBlue: '#1E88E5',
+  iconGreen: '#43A047',
+  iconPurple: '#8E24AA',
 };
 
-// =====================================================
-// Props
-// =====================================================
-
 export interface KycFinancialLinkScreenProps {
-  /** User ID for Plaid Link */
   userId: string;
-  /** User email (optional, improves Plaid Link UX) */
   userEmail?: string;
-  /** Called with financial verification result */
   onContinue: (result: FinancialVerificationResult) => void;
-  /** Called when user skips financial verification */
   onSkip?: () => void;
-  /** Bank name to display */
   bankName?: string;
 }
 
-// =====================================================
-// Animations — subtle, Apple-like
-// =====================================================
-
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-// =====================================================
-// Icons — clean gray SVGs (Apple-style)
-// =====================================================
-
-/** Wallet icon for Balance */
-const BalanceIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2" y="6" width="20" height="14" rx="3" stroke="#8E8E93" strokeWidth="1.5" />
-    <path d="M2 10h20" stroke="#8E8E93" strokeWidth="1.5" />
-    <circle cx="17" cy="15" r="1.5" fill="#8E8E93" />
+const WalletIcon = ({ color }: { color: string }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2.5" y="6.5" width="19" height="13" rx="3" stroke={color} strokeWidth="1.8" />
+    <path d="M2.5 10.5H21.5" stroke={color} strokeWidth="1.8" />
+    <circle cx="16.5" cy="14.5" r="1.5" fill={color} />
   </svg>
 );
 
-/** Chart icon for Assets */
-const AssetsIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="3" y="3" width="18" height="18" rx="3" stroke="#8E8E93" strokeWidth="1.5" />
-    <path d="M7 17V13" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M12 17V9" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M17 17V11" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" />
+const AssetsIcon = ({ color }: { color: string }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3.5" y="3.5" width="17" height="17" rx="3" stroke={color} strokeWidth="1.8" />
+    <path d="M8 16.5V12.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M12 16.5V9.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M16 16.5V11.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
   </svg>
 );
 
-/** Trending icon for Investments */
-const InvestmentsIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M3 17l5-5 4 4 9-9" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M17 7h4v4" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+const InvestmentsIcon = ({ color }: { color: string }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3.5 16.5L8.5 11.5L12.5 15.5L20.5 7.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16.5 7.5H20.5V11.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
+const LockIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="11" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="2" />
+    <path d="M8 11V8C8 5.8 9.8 4 12 4C14.2 4 16 5.8 16 8V11" stroke="currentColor" strokeWidth="2" />
+  </svg>
+);
 
-// =====================================================
-// Status check icon
-// =====================================================
+const ArrowRightIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M13 6L19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
-const StatusIndicator: React.FC<{ status: ProductFetchStatus }> = ({ status }) => {
-  if (status === 'loading') {
-    return <Spinner size="xs" color={COLORS.textSecondary} speed="0.8s" />;
-  }
-
-  if (status === 'success') {
-    return (
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="10" fill={COLORS.success} />
-        <path d="M6 10l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    );
-  }
-
-  if (status === 'pending') {
-    return (
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke={COLORS.pending} strokeWidth="1.5" />
-        <path d="M10 6v4l2.5 2.5" stroke={COLORS.pending} strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  if (status === 'error') {
-    return (
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="10" fill={COLORS.error} />
-        <path d="M7 7l6 6M13 7l-6 6" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  if (status === 'unavailable') {
-    return (
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke={COLORS.textTertiary} strokeWidth="1.5" />
-        <path d="M7 10h6" stroke={COLORS.textTertiary} strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  // idle — no icon shown (avoids radio-button confusion)
-  return null;
+const STATUS_COLORS: Record<ProductFetchStatus, string> = {
+  idle: COLORS.textMuted,
+  loading: COLORS.textSub,
+  success: COLORS.success,
+  pending: COLORS.warning,
+  unavailable: COLORS.textMuted,
+  error: COLORS.error,
 };
 
-// =====================================================
-// Product Card — clean, minimal
-// =====================================================
+const resolveStatusText = ({
+  status,
+  mainValue,
+  unavailableMessage,
+  errorMessage,
+}: {
+  status: ProductFetchStatus;
+  mainValue?: string;
+  unavailableMessage?: string;
+  errorMessage?: string;
+}) => {
+  switch (status) {
+    case 'loading':
+      return 'Fetching...';
+    case 'success':
+      return mainValue || 'Verified';
+    case 'pending':
+      return 'Generating report...';
+    case 'unavailable':
+      return unavailableMessage || 'Not available';
+    case 'error':
+      return errorMessage || 'Failed to fetch';
+    default:
+      return 'Auto-fetched on connect';
+  }
+};
 
 const ProductCard: React.FC<{
   title: string;
   icon: React.ReactNode;
+  iconBg: string;
   status: ProductFetchStatus;
   mainValue?: string;
-  subtitle?: string;
   unavailableMessage?: string;
   errorMessage?: string;
-  index: number;
-}> = ({ title, icon, status, mainValue, subtitle, unavailableMessage, errorMessage, index }) => {
-  // Status text
-  const statusText = useMemo(() => {
-    switch (status) {
-      case 'loading': return 'Fetching...';
-      case 'success': return mainValue || 'Verified';
-      case 'pending': return 'Generating report...';
-      case 'unavailable': return unavailableMessage || 'Not available';
-      case 'error': return errorMessage || 'Failed to fetch';
-      default: return 'Auto-fetched on connect';
-    }
-  }, [status, mainValue, unavailableMessage, errorMessage]);
-
-  // Status text color
-  const statusColor = useMemo(() => {
-    switch (status) {
-      case 'success': return COLORS.success;
-      case 'error': return COLORS.error;
-      case 'pending': return COLORS.pending;
-      case 'loading': return COLORS.textSecondary;
-      default: return COLORS.textTertiary;
-    }
-  }, [status]);
-
-  // Left accent color per status
-  const accentColor = useMemo(() => {
-    switch (status) {
-      case 'success': return COLORS.success;
-      case 'error': return COLORS.error;
-      case 'pending': return COLORS.pending;
-      case 'loading': return COLORS.primary;
-      default: return COLORS.border;
-    }
-  }, [status]);
+}> = ({ title, icon, iconBg, status, mainValue, unavailableMessage, errorMessage }) => {
+  const statusText = useMemo(
+    () =>
+      resolveStatusText({
+        status,
+        mainValue,
+        unavailableMessage,
+        errorMessage,
+      }),
+    [status, mainValue, unavailableMessage, errorMessage],
+  );
 
   return (
     <Flex
       w="100%"
-      bg={COLORS.cardBg}
-      borderRadius="16px"
-      border="1px solid"
-      borderColor={status === 'success' ? COLORS.successBorder : COLORS.border}
-      p={4}
       align="center"
-      gap={3}
-      transition="all 0.3s ease"
-      animation={status !== 'idle' ? `${fadeIn} 0.4s ease ${index * 0.1}s both` : undefined}
-      _hover={{ bg: COLORS.cardBgHover, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-      boxShadow="0 1px 3px rgba(0,0,0,0.02)"
-      position="relative"
-      overflow="hidden"
+      gap={4}
+      p={3}
+      borderRadius="16px"
+      bg={COLORS.surface}
+      border="1px solid"
+      borderColor={COLORS.border}
+      boxShadow="0 2px 10px rgba(0,0,0,0.03)"
     >
-      {/* Left accent bar */}
-      <Box
-        position="absolute"
-        left={0}
-        top="20%"
-        bottom="20%"
-        w="3px"
-        borderRadius="0 4px 4px 0"
-        bg={accentColor}
-        transition="all 0.3s ease"
-      />
-
-      {/* Icon container */}
-      <Box
+      <Flex
         w="44px"
         h="44px"
         borderRadius="12px"
-        bg={status === 'success' ? COLORS.successBg : COLORS.iconBg}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
+        bg={iconBg}
+        align="center"
+        justify="center"
         flexShrink={0}
-        ml={1}
-        transition="background 0.3s ease"
       >
         {icon}
-      </Box>
+      </Flex>
 
-      {/* Text content */}
-      <Box flex="1" minW={0}>
-        <Text
-          fontSize="15px"
-          fontWeight="600"
-          color={COLORS.textPrimary}
-          lineHeight="1.3"
-        >
+      <Box minW={0} flex={1}>
+        <Text fontSize="16px" fontWeight="600" color={COLORS.textMain} lineHeight="1.3">
           {title}
         </Text>
         <Text
-          fontSize="13px"
-          fontWeight="400"
-          color={statusColor}
           mt="2px"
-          lineHeight="1.4"
+          fontSize="12px"
+          color={STATUS_COLORS[status]}
+          fontWeight={status === 'idle' ? '500' : '600'}
           noOfLines={1}
         >
           {statusText}
         </Text>
-        {status === 'success' && subtitle && (
-          <Text
-            fontSize="12px"
-            color={COLORS.textTertiary}
-            mt="1px"
-            noOfLines={1}
-          >
-            {subtitle}
-          </Text>
-        )}
       </Box>
 
-      {/* Right status indicator */}
-      <Box flexShrink={0}>
-        <StatusIndicator status={status} />
-      </Box>
+      {status === 'loading' && <Spinner size="sm" color={COLORS.primary} thickness="3px" />}
     </Flex>
   );
 };
-
-// =====================================================
-// Main Component
-// =====================================================
 
 const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
   userId,
@@ -314,69 +199,60 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
 }) => {
   const plaid = usePlaidLinkHook(userId, userEmail);
 
-  // Display values for each product
   const balanceDisplay = useMemo(() => {
     const data = plaid.financialData?.balance?.data;
-    if (!data) return { mainValue: undefined, subtitle: undefined };
+    if (!data) return { mainValue: undefined };
 
-    // Raw Plaid response has `accounts[]` array — compute totals from it
     const accounts = data.accounts || [];
-    const accountCount = accounts.length;
     const totalBalance = accounts.reduce(
-      (sum: number, acc: any) => sum + (acc.balances?.current || 0), 0
+      (sum: number, acc: any) => sum + (acc.balances?.current || 0),
+      0,
     );
     const currency = accounts[0]?.balances?.iso_currency_code || 'USD';
 
     return {
       mainValue: formatCurrency(totalBalance, currency),
-      subtitle: `${accountCount} account${accountCount !== 1 ? 's' : ''} linked`,
     };
   }, [plaid.financialData]);
 
   const assetsDisplay = useMemo(() => {
     const data = plaid.financialData?.assets?.data;
-    if (!data) return { mainValue: undefined, subtitle: undefined };
-    if (data.status === 'pending') return { mainValue: undefined, subtitle: undefined };
-    const totalAccounts = data.items?.reduce(
-      (sum: number, item: any) => sum + (item.accounts?.length || 0), 0
-    ) || 0;
+    if (!data) return { mainValue: undefined };
+    if (data.status === 'pending') return { mainValue: undefined };
+
     return {
       mainValue: 'Report generated',
-      subtitle: `${data.days_requested} days · ${totalAccounts} account${totalAccounts !== 1 ? 's' : ''}`,
     };
   }, [plaid.financialData]);
 
   const investmentsDisplay = useMemo(() => {
     const data = plaid.financialData?.investments?.data;
-    if (!data) return { mainValue: undefined, subtitle: undefined };
+    if (!data) return { mainValue: undefined };
 
-    // Raw Plaid response has `holdings[]` and `securities[]` arrays
     const holdings = data.holdings || [];
-    const holdingsCount = holdings.length;
     const totalValue = holdings.reduce(
-      (sum: number, h: any) => sum + (h.institution_value || 0), 0
+      (sum: number, holding: any) => sum + (holding.institution_value || 0),
+      0,
     );
     const currency = holdings[0]?.iso_currency_code || 'USD';
 
     return {
       mainValue: formatCurrency(totalValue, currency),
-      subtitle: `${holdingsCount} holding${holdingsCount !== 1 ? 's' : ''} found`,
     };
   }, [plaid.financialData]);
 
-  // Header text
   const headerTitle = useMemo(() => {
     if (plaid.step === 'done') {
-      if (plaid.productsAvailable === 3) return 'Complete Profile';
-      if (plaid.productsAvailable > 0) return 'Profile Verified';
-      return 'Unable to Verify';
+      if (plaid.productsAvailable === 3) return 'Financial Verification';
+      if (plaid.productsAvailable > 0) return 'Financial Verification';
+      return 'Financial Verification';
     }
     return 'Financial Verification';
   }, [plaid.step, plaid.productsAvailable]);
 
   const headerSubtitle = useMemo(() => {
     if (plaid.step === 'done' && plaid.institution) {
-      return `Connected to ${plaid.institution.name}`;
+      return `Connected to ${plaid.institution.name}. You can continue to the next step.`;
     }
     return "We'll securely check your financial profile before starting KYC verification.";
   }, [plaid.step, plaid.institution]);
@@ -384,7 +260,6 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
   const isProcessing = ['creating_token', 'exchanging', 'fetching'].includes(plaid.step);
   const isInitializing = plaid.step === 'idle' || plaid.step === 'creating_token';
 
-  // Info message after results
   const infoMessage = useMemo(() => {
     if (plaid.step !== 'done') return null;
     if (plaid.productsAvailable === 3) return null;
@@ -394,7 +269,6 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
     return 'Something went wrong. Please try again or link a different account.';
   }, [plaid.step, plaid.productsAvailable]);
 
-  // Button text
   const buttonText = useMemo(() => {
     if (plaid.step === 'idle') return 'Preparing...';
     if (plaid.step === 'creating_token') return 'Preparing...';
@@ -406,7 +280,18 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
     return 'Link Bank Account';
   }, [plaid.step, plaid.canProceed]);
 
-  // Handle button click
+  const buttonBg = useMemo(() => {
+    if (plaid.step === 'done' && plaid.canProceed) return COLORS.success;
+    if (plaid.step === 'error' || (plaid.step === 'done' && !plaid.canProceed)) return COLORS.error;
+    return COLORS.primary;
+  }, [plaid.step, plaid.canProceed]);
+
+  const buttonHoverBg = useMemo(() => {
+    if (plaid.step === 'done' && plaid.canProceed) return '#15803D';
+    if (plaid.step === 'error' || (plaid.step === 'done' && !plaid.canProceed)) return '#B91C1C';
+    return COLORS.primaryHover;
+  }, [plaid.step, plaid.canProceed]);
+
   const handleButtonClick = () => {
     if (plaid.step === 'done' && plaid.canProceed) {
       const result: FinancialVerificationResult = {
@@ -433,355 +318,275 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
     }
   };
 
-  // Button bg color based on state — matches KYC flow gradient
-  const buttonBg = useMemo(() => {
-    if (plaid.step === 'done' && plaid.canProceed) return COLORS.success;
-    if (plaid.step === 'error' || (plaid.step === 'done' && !plaid.canProceed)) return COLORS.error;
-    return COLORS.primary;
-  }, [plaid.step, plaid.canProceed]);
-
-  const buttonHoverBg = useMemo(() => {
-    if (plaid.step === 'done' && plaid.canProceed) return '#2DB84E';
-    if (plaid.step === 'error' || (plaid.step === 'done' && !plaid.canProceed)) return '#E5342B';
-    return COLORS.primaryHover;
-  }, [plaid.step, plaid.canProceed]);
-
   return (
     <Box
       className="onboarding-shell"
-      minH="100dvh"
-      h="100dvh"
-      bg={COLORS.bg}
+      minH="calc(100dvh - var(--onboarding-top-space, 7rem))"
+      h="calc(100dvh - var(--onboarding-top-space, 7rem))"
       display="flex"
       flexDirection="column"
+      bg={COLORS.surface}
       position="relative"
+      sx={{ '--onboarding-footer-space': '0px' }}
     >
-      {/* Scrollable Content */}
       <Box
         as="main"
-        flex="1"
+        flex="0 0 auto"
         minH={0}
-        overflowY="auto"
+        overflowY="hidden"
         overflowX="hidden"
-        px={{ base: 4, md: 5 }}
-        pt={{ base: 8, md: 10 }}
+        px={{ base: 4, md: 6 }}
+        pt={{ base: 4, md: 5 }}
       >
         <VStack
-          spacing={0}
-          align="center"
-          maxW="390px"
-          mx="auto"
           w="100%"
+          maxW={{ base: '460px', md: '560px', lg: '640px' }}
+          mx="auto"
+          spacing={0}
+          align="stretch"
+          pb={2}
         >
-        {/* Icon Badge */}
-        <Flex
-          w="64px"
-          h="64px"
-          borderRadius="18px"
-          bg={COLORS.primary}
-          align="center"
-          justify="center"
-          mb={4}
-          boxShadow={`0 6px 20px ${COLORS.primary}30`}
-        >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 5H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M3 10h18" stroke="white" strokeWidth="1.8" />
-            <circle cx="16" cy="14.5" r="1.5" fill="white" />
-          </svg>
-        </Flex>
+          <Flex justify="center" mb={4}>
+            <Box position="relative">
+              <Box
+                position="absolute"
+                inset="-10px"
+                borderRadius="full"
+                bg={`${COLORS.primary}30`}
+                filter="blur(16px)"
+              />
+              <Flex
+                position="relative"
+                w="56px"
+                h="56px"
+                borderRadius="16px"
+                bg={COLORS.primary}
+                align="center"
+                justify="center"
+                boxShadow="0 12px 28px rgba(58, 99, 184, 0.32)"
+              >
+                <WalletIcon color="#FFFFFF" />
+              </Flex>
+            </Box>
+          </Flex>
 
-        {/* Step badge */}
-        <Badge
-          bg={COLORS.primaryLight}
-          color={COLORS.primary}
-          px={3}
-          py={1}
-          borderRadius="full"
-          fontSize="10px"
-          fontWeight="700"
-          textTransform="uppercase"
-          letterSpacing="0.06em"
-          mb={3}
-        >
-          Pre-KYC Step
-        </Badge>
+          <Flex justify="center" mb={3}>
+            <Badge
+              px={3}
+              py={1}
+              borderRadius="full"
+              bg="#EFF6FF"
+              color={COLORS.primary}
+              border="1px solid #DBEAFE"
+              fontSize="10px"
+              fontWeight="700"
+              letterSpacing="0.08em"
+              textTransform="uppercase"
+            >
+              Pre-KYC Step
+            </Badge>
+          </Flex>
 
-        {/* Title */}
-        <Heading
-          as="h1"
-          fontSize="28px"
-          fontWeight="700"
-          color={COLORS.textPrimary}
-          textAlign="center"
-          letterSpacing="-0.5px"
-          lineHeight="1.15"
-          mb={2}
-        >
-          {headerTitle}
-        </Heading>
+          <Heading
+            as="h1"
+            textAlign="center"
+            fontSize={{ base: '24px', md: '30px' }}
+            lineHeight="1.12"
+            letterSpacing="-0.02em"
+            color={COLORS.textMain}
+          >
+            {headerTitle}
+          </Heading>
 
-        {/* Subtitle */}
-        <Text
-          fontSize="15px"
-          color={COLORS.textSecondary}
-          textAlign="center"
-          lineHeight="1.5"
-          px={2}
-          mb={4}
-        >
-          {headerSubtitle}
-        </Text>
-
-        {/* Security badge — prominent pill */}
-        <Flex
-          align="center"
-          gap={2}
-          mb={6}
-          px={4}
-          py={2.5}
-          borderRadius="full"
-          bg={COLORS.accentLight}
-          border="1px solid"
-          borderColor={`${COLORS.accent}30`}
-        >
-          <Box w="7px" h="7px" borderRadius="full" bg={COLORS.green} />
-          <Text fontSize="12px" color={COLORS.textSecondary} fontWeight="600">
-            256-bit encryption · Powered by Plaid
+          <Text
+            textAlign="center"
+            color={COLORS.textSub}
+            fontSize={{ base: '14px', md: '15px' }}
+            lineHeight="1.6"
+            mt={2}
+            mb={4}
+            px={{ base: 2, md: 6 }}
+          >
+            {headerSubtitle}
           </Text>
-        </Flex>
 
-        {/* Gradient divider */}
-        <Box w="100%" h="2px" bg={`linear-gradient(90deg, transparent, ${COLORS.primary}40, ${COLORS.accent}40, transparent)`} borderRadius="full" mb={6} />
-
-        {/* Product Cards */}
-        <VStack spacing={3} w="100%" mb={6}>
-          <ProductCard
-            title="Balance"
-            icon={<BalanceIcon />}
-            status={plaid.balanceStatus}
-            mainValue={balanceDisplay.mainValue}
-            subtitle={balanceDisplay.subtitle}
-            unavailableMessage="Not available for this institution"
-            errorMessage={plaid.financialData?.balance?.error || 'Failed to fetch'}
-            index={0}
-          />
-
-          <ProductCard
-            title="Assets"
-            icon={<AssetsIcon />}
-            status={plaid.assetsStatus}
-            mainValue={assetsDisplay.mainValue}
-            subtitle={assetsDisplay.subtitle}
-            unavailableMessage="Not supported by this institution"
-            errorMessage={plaid.financialData?.assets?.error || 'Failed to fetch'}
-            index={1}
-          />
-
-          <ProductCard
-            title="Investments"
-            icon={<InvestmentsIcon />}
-            status={plaid.investmentsStatus}
-            mainValue={investmentsDisplay.mainValue}
-            subtitle={investmentsDisplay.subtitle}
-            unavailableMessage="No investment accounts found"
-            errorMessage={plaid.financialData?.investments?.error || 'Failed to fetch'}
-            index={2}
-          />
-        </VStack>
-
-        {/* Info Message */}
-        {infoMessage && (
-          <Box
-            w="100%"
-            borderRadius="12px"
-            bg={COLORS.borderLight}
-            p={4}
-            mb={4}
-            animation={`${fadeIn} 0.4s ease 0.3s both`}
-          >
-            <Text
-              fontSize="13px"
-              color={COLORS.textSecondary}
-              textAlign="center"
-              lineHeight="1.5"
+          <Flex justify="center" mb={4}>
+            <Flex
+              align="center"
+              gap={2}
+              px={4}
+              py={2}
+              borderRadius="full"
+              bg={COLORS.surfaceSoft}
+              border="1px solid"
+              borderColor={COLORS.border}
             >
-              {infoMessage}
-            </Text>
-          </Box>
-        )}
+              <Box
+                w="8px"
+                h="8px"
+                borderRadius="full"
+                bg={COLORS.success}
+                boxShadow="0 0 8px rgba(22, 163, 74, 0.4)"
+              />
+              <Text fontSize="10px" color={COLORS.textSub} fontWeight="500">
+                256-bit encryption | Powered by Plaid
+              </Text>
+            </Flex>
+          </Flex>
 
-        {/* Error Message */}
-        {plaid.error && plaid.step === 'error' && (
-          <Box
-            w="100%"
-            borderRadius="12px"
-            bg={COLORS.errorBg}
-            border="1px solid"
-            borderColor="#FFD5D2"
-            p={4}
-            mb={4}
-          >
-            <Text
-              fontSize="13px"
-              color={COLORS.error}
-              textAlign="center"
-              lineHeight="1.5"
+          <VStack spacing={3} w="100%">
+            <ProductCard
+              title="Balance"
+              icon={<WalletIcon color={COLORS.iconBlue} />}
+              iconBg={COLORS.iconBlueBg}
+              status={plaid.balanceStatus}
+              mainValue={balanceDisplay.mainValue}
+              unavailableMessage="Not available for this institution"
+              errorMessage={plaid.financialData?.balance?.error || 'Failed to fetch'}
+            />
+
+            <ProductCard
+              title="Assets"
+              icon={<AssetsIcon color={COLORS.iconGreen} />}
+              iconBg={COLORS.iconGreenBg}
+              status={plaid.assetsStatus}
+              mainValue={assetsDisplay.mainValue}
+              unavailableMessage="Not supported by this institution"
+              errorMessage={plaid.financialData?.assets?.error || 'Failed to fetch'}
+            />
+
+            <ProductCard
+              title="Investments"
+              icon={<InvestmentsIcon color={COLORS.iconPurple} />}
+              iconBg={COLORS.iconPurpleBg}
+              status={plaid.investmentsStatus}
+              mainValue={investmentsDisplay.mainValue}
+              unavailableMessage="No investment accounts found"
+              errorMessage={plaid.financialData?.investments?.error || 'Failed to fetch'}
+            />
+          </VStack>
+
+          {infoMessage && (
+            <Box
+              mt={3}
+              p={3}
+              borderRadius="14px"
+              bg={COLORS.surfaceSoft}
+              border="1px solid"
+              borderColor={COLORS.border}
             >
-              {plaid.error}
-            </Text>
-          </Box>
-        )}
+              <Text textAlign="center" fontSize="13px" color={COLORS.textSub} lineHeight="1.5">
+                {infoMessage}
+              </Text>
+            </Box>
+          )}
 
+          {plaid.error && plaid.step === 'error' && (
+            <Box
+              mt={3}
+              p={3}
+              borderRadius="14px"
+              bg="#FEF2F2"
+              border="1px solid #FECACA"
+            >
+              <Text textAlign="center" fontSize="13px" color={COLORS.error} lineHeight="1.5">
+                {plaid.error}
+              </Text>
+            </Box>
+          )}
         </VStack>
       </Box>
 
-      {/* Sticky Bottom CTA — fixed, centered, connected to footer */}
       <Box
-        position="fixed"
-        bottom={0}
-        left={0}
-        right={0}
-        w="100%"
-        maxW="500px"
-        mx="auto"
+        mt={2}
+        position="relative"
         bg="rgba(255,255,255,0.95)"
         backdropFilter="blur(20px)"
         sx={{ WebkitBackdropFilter: 'blur(20px)' }}
         borderTop="1px solid"
         borderColor={COLORS.border}
-        px={{ base: 4, md: 5 }}
-        pt={4}
-        pb={6}
+        px={{ base: 4, md: 6 }}
+        pt={3}
+        pb={4}
         zIndex={50}
-        boxShadow="0 -4px 20px rgba(0,0,0,0.03)"
-        data-onboarding-footer=""
       >
-        <Box w="100%">
-        {/* "Continue to KYC" — CTA */}
-        {plaid.step === 'done' && plaid.canProceed && (
-          <Button
-            w="100%"
-            data-onboarding-cta
-            size="lg"
-            bg={COLORS.primary}
-            color="white"
-            borderRadius="14px"
-            h="54px"
-            fontSize="16px"
-            fontWeight="600"
-            _hover={{
-              transform: 'translateY(-1px)',
-              boxShadow: `0 6px 20px ${COLORS.primary}35`,
-            }}
-            _active={{ transform: 'translateY(0)' }}
-            transition="all 0.2s ease"
-            onClick={handleButtonClick}
-            aria-label="Continue to KYC Step 1"
-            tabIndex={0}
-            animation={`${fadeIn} 0.4s ease both`}
-            boxShadow={`0 3px 12px ${COLORS.primary}25`}
-          >
-            Continue to KYC →
-          </Button>
-        )}
-
-        {/* Link / Retry / Loading button */}
-        {!(plaid.step === 'done' && plaid.canProceed) && (
+        <Box w="100%" maxW={{ base: '460px', md: '560px', lg: '640px' }} mx="auto">
           <Button
             w="100%"
             data-onboarding-cta
             size="lg"
             bg={buttonBg}
             color="white"
-            borderRadius="14px"
+            borderRadius="16px"
             h="54px"
             fontSize="16px"
             fontWeight="600"
             isDisabled={isInitializing || isProcessing}
             isLoading={isInitializing || isProcessing}
             loadingText={buttonText}
+            leftIcon={isInitializing || isProcessing ? undefined : <LockIcon />}
             _hover={{
+              bg: buttonHoverBg,
               transform: 'translateY(-1px)',
-              boxShadow: `0 6px 20px ${COLORS.primary}30`,
+              boxShadow: '0 10px 32px rgba(58, 99, 184, 0.28)',
             }}
             _active={{ transform: 'translateY(0)' }}
             _disabled={{
-              bg: COLORS.border,
-              color: COLORS.textTertiary,
+              bg: '#CBD5E1',
+              color: '#94A3B8',
               cursor: 'not-allowed',
               boxShadow: 'none',
             }}
             transition="all 0.2s ease"
             onClick={handleButtonClick}
             aria-label={buttonText}
-            tabIndex={0}
           >
             {buttonText}
           </Button>
-        )}
 
-        {/* Secondary action — link different account */}
-        {(plaid.step === 'done' || plaid.step === 'error') && (
-          <Button
-            w="100%"
-            mt={2}
-            size="md"
-            variant="ghost"
-            color={COLORS.textSecondary}
-            fontWeight="400"
-            fontSize="14px"
-            onClick={plaid.retry}
-            borderRadius="14px"
-            _hover={{
-              color: COLORS.textPrimary,
-              bg: COLORS.borderLight,
-            }}
-            tabIndex={0}
-            aria-label={
-              plaid.step === 'done' && plaid.canProceed
-                ? 'Link a different account'
-                : 'Try a different account'
-            }
+          {(plaid.step === 'done' || plaid.step === 'error') && (
+            <Button
+              mt={2}
+              w="100%"
+              variant="ghost"
+              size="sm"
+              color={COLORS.textSub}
+              fontWeight="500"
+              _hover={{ bg: COLORS.surfaceSoft, color: COLORS.textMain }}
+              onClick={plaid.retry}
+            >
+              {plaid.step === 'done' && plaid.canProceed ? 'Link a different account' : 'Try a different account'}
+            </Button>
+          )}
+
+          <Text
+            mt={3}
+            textAlign="center"
+            fontSize="10px"
+            color={COLORS.textMuted}
+            textTransform="uppercase"
+            letterSpacing="0.08em"
+            fontWeight="600"
           >
-            {plaid.step === 'done' && plaid.canProceed
-              ? 'Link a different account'
-              : 'Try a different account'}
-          </Button>
-        )}
+            {bankName} x Hushh Financial Verification
+          </Text>
 
-        {/* Footer text */}
-        <Text
-          textAlign="center"
-          fontSize="12px"
-          color={COLORS.textTertiary}
-          mt={2}
-        >
-          {bankName} × Hushh Financial Verification
-        </Text>
-
-        {/* Skip for now */}
-        {onSkip && (
-          <Button
-            w="100%"
-            mt={1}
-            size="sm"
-            variant="ghost"
-            color={COLORS.textTertiary}
-            fontWeight="400"
-            fontSize="14px"
-            onClick={onSkip}
-            borderRadius="12px"
-            _hover={{
-              color: COLORS.textPrimary,
-              bg: COLORS.borderLight,
-            }}
-            tabIndex={0}
-            aria-label="Skip financial verification for now"
-          >
-            Skip for now →
-          </Button>
-        )}
+          {onSkip && (
+            <Button
+              mt={2}
+              w="100%"
+              size="sm"
+              variant="ghost"
+              color={COLORS.textSub}
+              fontWeight="500"
+              rightIcon={<ArrowRightIcon />}
+              _hover={{ color: COLORS.textMain, bg: COLORS.surfaceSoft }}
+              onClick={onSkip}
+              aria-label="Skip financial verification for now"
+            >
+              Skip for now
+            </Button>
+          )}
         </Box>
       </Box>
     </Box>
