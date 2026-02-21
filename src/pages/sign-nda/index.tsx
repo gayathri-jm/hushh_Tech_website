@@ -1,11 +1,11 @@
 /**
  * Sign NDA Page
  * 
- * Clean white background with black text and bright primary accent colors.
- * Modern, professional design with vibrant blue/teal accents.
+ * iOS-first design: white background, black text, system blue (#007AFF) accent.
+ * Production-level auth lifecycle with active session monitoring.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -21,491 +21,427 @@ import {
   Container,
   useToast,
   HStack,
-  Icon,
-  Badge,
   Flex,
+  Spinner,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
-import { FaFileSignature, FaShieldAlt, FaCheckCircle, FaLock, FaUserCheck } from 'react-icons/fa';
 import config from '../../resources/config/config';
 import { signNDA, sendNDANotification, generateNDAPdf, uploadSignedNDA } from '../../services/nda/ndaService';
 
 const MotionBox = motion(Box);
 
-/* Bright primary color palette */
+/* iOS system colors */
 const COLORS = {
-  primary: '#0066FF',
-  primaryHover: '#0052CC',
-  primaryLight: '#E6F0FF',
-  accent: '#00C9A7',
-  accentLight: '#E6FFF9',
-  warning: '#FF6B35',
-  text: '#111111',
-  textSecondary: '#4A4A4A',
-  textMuted: '#71717A',
-  border: '#E4E4E7',
+  primary: '#2F80ED',
+  primaryHover: '#2570D3',
+  text: '#000000',
+  textSecondary: '#3C3C43',
+  textTertiary: '#8E8E93',
+  separator: '#C6C6C8',
+  separatorLight: '#E5E5EA',
   bg: '#FFFFFF',
-  bgSubtle: '#FAFAFA',
-  success: '#22C55E',
+  bgGrouped: '#F2F2F7',
+  success: '#34C759',
+  destructive: '#FF3B30',
 };
 
 const SignNDAPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
-  
+  const isMountedRef = useRef(true);
+
+  const [isLoading, setIsLoading] = useState(true);
   const [signerName, setSignerName] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  
+
   const [nameError, setNameError] = useState('');
   const [termsError, setTermsError] = useState('');
 
+  // Cleanup on unmount — prevents setState on unmounted component
   useEffect(() => {
-    const getSession = async () => {
-      if (!config.supabaseClient) return;
-      
-      const { data: { session } } = await config.supabaseClient.auth.getSession();
-      if (session?.user) {
-        setUserId(session.user.id);
-        setUserEmail(session.user.email || null);
-        
-        const fullName = session.user.user_metadata?.full_name || 
-                        session.user.user_metadata?.name || '';
-        if (fullName) setSignerName(fullName);
-      } else {
-        navigate('/Login', { replace: true });
+    return () => { isMountedRef.current = false; };
+  }, []);
+
+  // Auth lifecycle: validate session + listen for changes
+  useEffect(() => {
+    if (!config.supabaseClient) {
+      if (isMountedRef.current) setIsLoading(false);
+      return;
+    }
+
+    // Use onAuthStateChange as the single source of truth.
+    // It fires immediately with the current session on mount,
+    // and again whenever the session changes (login, logout, token refresh).
+    const {
+      data: { subscription },
+    } = config.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      if (!isMountedRef.current) return;
+
+      if (!session?.user) {
+        // No valid session — redirect to login
+        navigate('/login', { replace: true });
+        return;
       }
-    };
-    
-    getSession();
+
+      // Valid session — populate user info
+      setUserId(session.user.id);
+      setUserEmail(session.user.email || null);
+
+      const fullName =
+        session.user.user_metadata?.full_name ||
+        session.user.user_metadata?.name || '';
+      if (fullName && !signerName) {
+        setSignerName(fullName);
+      }
+
+      setIsLoading(false);
+    });
+
+    return () => subscription?.unsubscribe();
   }, [navigate]);
 
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     let isValid = true;
-    
-    if (!signerName.trim()) {
+
+    const trimmedName = signerName.trim();
+    if (!trimmedName) {
       setNameError('Please enter your full legal name');
       isValid = false;
-    } else if (signerName.trim().length < 2) {
+    } else if (trimmedName.length < 2) {
       setNameError('Name must be at least 2 characters');
       isValid = false;
     } else {
       setNameError('');
     }
-    
+
     if (!agreedToTerms) {
       setTermsError('You must agree to the NDA terms');
       isValid = false;
     } else {
       setTermsError('');
     }
-    
-    return isValid;
-  };
 
-  const handleSignNDA = async () => {
+    return isValid;
+  }, [signerName, agreedToTerms]);
+
+  const handleSignNDA = useCallback(async () => {
     if (!validateForm()) return;
-    if (!userId) {
+    if (isSubmitting) return;
+
+    // Re-validate session right before signing
+    if (!config.supabaseClient || !userId) {
       toast({
-        title: 'Error',
-        description: 'User session not found. Please log in again.',
+        title: 'Session expired',
+        description: 'Please log in again.',
         status: 'error',
-        duration: 5000,
+        duration: 4000,
         isClosable: true,
       });
+      navigate('/login', { replace: true });
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
-      let accessToken = '';
+      // Re-fetch session to ensure token is fresh
+      const { data: { session } } = await config.supabaseClient.auth.getSession();
+      if (!session) {
+        toast({
+          title: 'Session expired',
+          description: 'Your session has expired. Please log in again.',
+          status: 'error',
+          duration: 4000,
+          isClosable: true,
+        });
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      const accessToken = session.access_token;
+      const trimmedName = signerName.trim();
       let generatedPdfUrl: string | undefined;
       let pdfBlob: Blob | undefined;
-      
+
+      // PDF generation — non-blocking, failure doesn't stop NDA signing
       try {
-        if (config.supabaseClient) {
-          const { data: { session } } = await config.supabaseClient.auth.getSession();
-          accessToken = session?.access_token || '';
-        }
-        
         if (accessToken) {
           const pdfResult = await generateNDAPdf(
             {
-              signerName: signerName.trim(),
+              signerName: trimmedName,
               signerEmail: userEmail || 'unknown@email.com',
               signedAt: new Date().toISOString(),
               ndaVersion: 'v1.0',
-              userId: userId,
+              userId,
             },
             accessToken
           );
-          
+
           if (pdfResult.success && pdfResult.blob) {
             pdfBlob = pdfResult.blob;
             const uploadResult = await uploadSignedNDA(userId, pdfResult.blob);
             if (uploadResult.success && uploadResult.url) {
               generatedPdfUrl = uploadResult.url;
-              setPdfUrl(generatedPdfUrl);
             }
           }
         }
       } catch (pdfError) {
-        console.warn('PDF generation/upload failed, continuing without PDF:', pdfError);
+        console.warn('[SignNDA] PDF generation/upload failed, continuing:', pdfError);
       }
-      
-      const result = await signNDA(signerName.trim(), 'v1.0', generatedPdfUrl);
-      
+
+      // Sign NDA via Supabase RPC
+      const result = await signNDA(trimmedName, 'v1.0', generatedPdfUrl);
+
+      if (!isMountedRef.current) return;
+
       if (result.success) {
-        try {
-          await sendNDANotification(
-            signerName.trim(),
-            userEmail || 'unknown@email.com',
-            result.signedAt || new Date().toISOString(),
-            result.ndaVersion || 'v1.0',
-            generatedPdfUrl,
-            pdfBlob,
-            userId
-          );
-        } catch (notificationError) {
-          console.error('Failed to send NDA notification:', notificationError);
-        }
-        
+        // Send notification — fire and forget, don't block user
+        sendNDANotification(
+          trimmedName,
+          userEmail || 'unknown@email.com',
+          result.signedAt || new Date().toISOString(),
+          result.ndaVersion || 'v1.0',
+          generatedPdfUrl,
+          pdfBlob,
+          userId
+        ).catch((err) => console.error('[SignNDA] Notification failed:', err));
+
         toast({
           title: 'NDA Signed Successfully',
           description: 'Thank you for signing the Non-Disclosure Agreement.',
           status: 'success',
-          duration: 5000,
+          duration: 4000,
           isClosable: true,
         });
-        
+
         const redirectTo = sessionStorage.getItem('nda_redirect_after') || '/';
         sessionStorage.removeItem('nda_redirect_after');
         navigate(redirectTo, { replace: true });
       } else {
         toast({
           title: 'Error Signing NDA',
-          description: result.error || 'An error occurred while signing the NDA.',
+          description: result.error || 'An error occurred. Please try again.',
           status: 'error',
           duration: 5000,
           isClosable: true,
         });
       }
     } catch (error) {
-      console.error('Error signing NDA:', error);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      console.error('[SignNDA] Unexpected error:', error);
+      if (isMountedRef.current) {
+        toast({
+          title: 'Error',
+          description: 'An unexpected error occurred. Please try again.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
-      setIsSubmitting(false);
+      if (isMountedRef.current) setIsSubmitting(false);
     }
-  };
+  }, [validateForm, isSubmitting, userId, userEmail, signerName, navigate, toast]);
+
+  // Don't flash UI while checking auth
+  if (isLoading) {
+    return (
+      <Flex minH="100dvh" bg={COLORS.bg} align="center" justify="center">
+        <Spinner size="lg" color={COLORS.primary} />
+      </Flex>
+    );
+  }
 
   return (
-    <Box minH="100dvh" bg={COLORS.bg}>
-      {/* Hero Header - White bg with bright accent */}
+    <Box
+      minH="100dvh"
+      bg={COLORS.bg}
+      sx={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif' }}
+    >
+      {/* Header */}
       <Box
         bg={COLORS.bg}
-        pt={{ base: 6, md: 16 }}
-        pb={{ base: 8, md: 12 }}
+        pt={{ base: 6, md: 14 }}
+        pb={{ base: 6, md: 10 }}
         px={4}
-        borderBottom="1px solid"
-        borderColor={COLORS.border}
-        position="relative"
-        overflow="hidden"
+        borderBottom="0.5px solid"
+        borderColor={COLORS.separatorLight}
       >
-        {/* Subtle decorative gradient blob */}
-        <Box
-          position="absolute"
-          top="-80px"
-          right="-80px"
-          w="300px"
-          h="300px"
-          borderRadius="full"
-          bg={`linear-gradient(135deg, ${COLORS.primaryLight}, ${COLORS.accentLight})`}
-          opacity={0.6}
-          filter="blur(60px)"
-          pointerEvents="none"
-        />
-        <Box
-          position="absolute"
-          bottom="-60px"
-          left="-60px"
-          w="200px"
-          h="200px"
-          borderRadius="full"
-          bg={COLORS.primaryLight}
-          opacity={0.4}
-          filter="blur(50px)"
-          pointerEvents="none"
-        />
-
-        <Container maxW="container.md" position="relative" zIndex={1}>
-          <VStack spacing={4} textAlign="center">
-            {/* Icon with bright gradient background */}
+        <Container maxW="container.md">
+          <VStack spacing={3} textAlign="center">
+            {/* Icon */}
             <Flex
-              w="72px"
-              h="72px"
-              borderRadius="20px"
-              bg={`linear-gradient(135deg, ${COLORS.primary}, ${COLORS.accent})`}
+              w="64px"
+              h="64px"
+              borderRadius="16px"
+              bg={COLORS.primary}
               align="center"
               justify="center"
-              boxShadow={`0 8px 24px ${COLORS.primary}33`}
             >
-              <Icon as={FaFileSignature} boxSize={8} color="white" />
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
             </Flex>
-
-            <Badge
-              bg={COLORS.primaryLight}
-              color={COLORS.primary}
-              px={3}
-              py={1}
-              borderRadius="full"
-              fontSize="xs"
-              fontWeight="600"
-              textTransform="uppercase"
-              letterSpacing="0.05em"
-            >
-              Secure Document
-            </Badge>
 
             <Heading
               as="h1"
-              fontSize={{ base: '2xl', md: '3xl' }}
+              fontSize={{ base: '28px', md: '34px' }}
               color={COLORS.text}
               fontWeight="700"
               letterSpacing="-0.02em"
-              lineHeight="1.2"
+              lineHeight="1.15"
             >
               Non-Disclosure Agreement
             </Heading>
 
             <Text
-              color={COLORS.textMuted}
-              fontSize={{ base: 'sm', md: 'md' }}
+              color={COLORS.textTertiary}
+              fontSize={{ base: '15px', md: '16px' }}
               maxW="md"
-              lineHeight="1.6"
+              lineHeight="1.5"
             >
-              Review and sign our NDA to access confidential platform information 
-              and investment materials.
+              Review and sign to access confidential investment materials.
             </Text>
           </VStack>
         </Container>
       </Box>
 
-      {/* Content Area */}
-      <Container maxW="container.md" py={{ base: 6, md: 10 }} px={4}>
+      {/* Content */}
+      <Container maxW="container.md" py={{ base: 5, md: 8 }} px={4}>
         <MotionBox
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
         >
-          {/* Trust Indicators */}
-          <Flex
-            gap={{ base: 3, md: 4 }}
-            mb={8}
-            direction={{ base: 'column', sm: 'row' }}
+          {/* Security note */}
+          <HStack
+            spacing={2}
+            bg={COLORS.bgGrouped}
+            px={4}
+            py={3}
+            borderRadius="12px"
+            mb={6}
           >
-            {[
-              { icon: FaShieldAlt, label: 'Encrypted & Secure', color: COLORS.primary },
-              { icon: FaUserCheck, label: 'Legally Binding', color: COLORS.accent },
-              { icon: FaLock, label: 'GDPR Compliant', color: COLORS.warning },
-            ].map((item) => (
-              <HStack
-                key={item.label}
-                flex={1}
-                bg={COLORS.bgSubtle}
-                border="1px solid"
-                borderColor={COLORS.border}
-                borderRadius="xl"
-                p={3}
-                spacing={3}
-              >
-                <Flex
-                  w="36px"
-                  h="36px"
-                  borderRadius="10px"
-                  bg={`${item.color}12`}
-                  align="center"
-                  justify="center"
-                  flexShrink={0}
-                >
-                  <Icon as={item.icon} color={item.color} boxSize={4} />
-                </Flex>
-                <Text color={COLORS.textSecondary} fontSize="xs" fontWeight="600">
-                  {item.label}
-                </Text>
-              </HStack>
-            ))}
-          </Flex>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={COLORS.textTertiary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <Text color={COLORS.textTertiary} fontSize="13px" fontWeight="500">
+              Encrypted &amp; legally binding · GDPR compliant
+            </Text>
+          </HStack>
 
           {/* NDA Document Card */}
           <Box
             bg={COLORS.bg}
-            borderRadius="2xl"
-            border="1px solid"
-            borderColor={COLORS.border}
+            borderRadius="16px"
+            border="0.5px solid"
+            borderColor={COLORS.separatorLight}
             overflow="hidden"
             mb={6}
-            boxShadow="0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)"
           >
-            {/* Card Header */}
-            <Box
-              bg={COLORS.bgSubtle}
-              px={{ base: 5, md: 8 }}
-              py={4}
-              borderBottom="1px solid"
-              borderColor={COLORS.border}
-            >
-              <HStack justify="space-between" align="center">
-                <HStack spacing={3}>
-                  <Box w="3px" h="20px" borderRadius="full" bg={COLORS.primary} />
-                  <Text color={COLORS.text} fontWeight="700" fontSize="sm" textTransform="uppercase" letterSpacing="0.04em">
-                    Agreement Terms
-                  </Text>
-                </HStack>
-                <Badge
-                  bg={`${COLORS.success}15`}
-                  color={COLORS.success}
-                  px={2}
-                  py={0.5}
-                  borderRadius="md"
-                  fontSize="xs"
-                  fontWeight="600"
-                >
-                  v1.0
-                </Badge>
-              </HStack>
+            {/* Section header — iOS grouped style */}
+            <Box px={{ base: 5, md: 6 }} pt={5} pb={2}>
+              <Text
+                color={COLORS.textTertiary}
+                fontSize="13px"
+                fontWeight="600"
+                textTransform="uppercase"
+                letterSpacing="0.02em"
+              >
+                Agreement Terms
+              </Text>
             </Box>
 
-            <Box px={{ base: 5, md: 8 }} py={6}>
-              <VStack align="stretch" spacing={6}>
-                {/* NDA Terms - Scrollable */}
+            <Box px={{ base: 5, md: 6 }} pb={6}>
+              <VStack align="stretch" spacing={5}>
+                {/* NDA Terms — Scrollable */}
                 <Box
                   maxH="320px"
                   overflowY="auto"
-                  bg={COLORS.bgSubtle}
-                  p={{ base: 4, md: 6 }}
-                  borderRadius="xl"
-                  border="1px solid"
-                  borderColor={COLORS.border}
+                  bg={COLORS.bgGrouped}
+                  p={{ base: 4, md: 5 }}
+                  borderRadius="12px"
                   css={{
-                    '&::-webkit-scrollbar': { width: '5px' },
+                    '&::-webkit-scrollbar': { width: '4px' },
                     '&::-webkit-scrollbar-track': { background: 'transparent' },
-                    '&::-webkit-scrollbar-thumb': { 
-                      background: COLORS.border, 
-                      borderRadius: '10px' 
-                    },
-                    '&::-webkit-scrollbar-thumb:hover': { 
-                      background: '#C4C4C4' 
+                    '&::-webkit-scrollbar-thumb': {
+                      background: COLORS.separator,
+                      borderRadius: '10px',
                     },
                   }}
                 >
                   <VStack align="stretch" spacing={5}>
-                    <Heading size="sm" color={COLORS.text} fontWeight="700">
+                    <Heading size="sm" color={COLORS.text} fontWeight="700" fontSize="15px">
                       MUTUAL NON-DISCLOSURE AGREEMENT
                     </Heading>
-                    
-                    <Text color={COLORS.textSecondary} fontSize="sm" lineHeight="1.7">
-                      This Non-Disclosure Agreement (&quot;Agreement&quot;) is entered into between 
+
+                    <Text color={COLORS.textSecondary} fontSize="14px" lineHeight="1.65">
+                      This Non-Disclosure Agreement (&quot;Agreement&quot;) is entered into between
                       Hushh Technologies LLC (&quot;Hushh&quot;) and the undersigned party (&quot;Recipient&quot;).
                     </Text>
-                    
-                    <Box>
-                      <Text color={COLORS.primary} fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="0.06em" mb={1.5}>
-                        1. Definition of Confidential Information
-                      </Text>
-                      <Text color={COLORS.textSecondary} fontSize="sm" lineHeight="1.7">
-                        &quot;Confidential Information&quot; means any non-public information disclosed by Hushh 
-                        to the Recipient, including but not limited to: business strategies, financial 
-                        information, investment strategies, fund performance data, technical specifications, 
-                        proprietary algorithms, AI models, trade secrets, and any other information marked 
-                        as confidential or that reasonably should be understood to be confidential.
-                      </Text>
-                    </Box>
-                    
-                    <Box>
-                      <Text color={COLORS.primary} fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="0.06em" mb={1.5}>
-                        2. Obligations of the Recipient
-                      </Text>
-                      <Text color={COLORS.textSecondary} fontSize="sm" lineHeight="1.7">
-                        The Recipient agrees to: (a) hold Confidential Information in strict confidence; 
-                        (b) not disclose Confidential Information to any third party without prior written 
-                        consent; (c) use Confidential Information solely for evaluating a potential 
-                        relationship with Hushh; (d) take reasonable measures to protect the confidentiality 
-                        of such information.
-                      </Text>
-                    </Box>
-                    
-                    <Box>
-                      <Text color={COLORS.primary} fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="0.06em" mb={1.5}>
-                        3. Exceptions
-                      </Text>
-                      <Text color={COLORS.textSecondary} fontSize="sm" lineHeight="1.7">
-                        This Agreement does not apply to information that: (a) is or becomes publicly 
-                        available through no fault of the Recipient; (b) was known to the Recipient 
-                        prior to disclosure; (c) is independently developed by the Recipient; (d) is 
-                        disclosed pursuant to a court order or legal requirement.
-                      </Text>
-                    </Box>
-                    
-                    <Box>
-                      <Text color={COLORS.primary} fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="0.06em" mb={1.5}>
-                        4. Term and Termination
-                      </Text>
-                      <Text color={COLORS.textSecondary} fontSize="sm" lineHeight="1.7">
-                        This Agreement shall remain in effect for a period of three (3) years from 
-                        the date of execution. The obligations of confidentiality shall survive the 
-                        termination of this Agreement.
-                      </Text>
-                    </Box>
-                    
-                    <Box>
-                      <Text color={COLORS.primary} fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="0.06em" mb={1.5}>
-                        5. Governing Law
-                      </Text>
-                      <Text color={COLORS.textSecondary} fontSize="sm" lineHeight="1.7">
-                        This Agreement shall be governed by the laws of the State of Delaware, 
-                        United States of America, without regard to its conflict of laws principles.
-                      </Text>
-                    </Box>
-                    
-                    <Box>
-                      <Text color={COLORS.primary} fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="0.06em" mb={1.5}>
-                        6. Acknowledgment
-                      </Text>
-                      <Text color={COLORS.textSecondary} fontSize="sm" lineHeight="1.7">
-                        By signing below, the Recipient acknowledges that they have read, understood, 
-                        and agree to be bound by the terms of this Non-Disclosure Agreement. The Recipient 
-                        further acknowledges that any breach of this Agreement may result in irreparable 
-                        harm to Hushh and that Hushh shall be entitled to seek injunctive relief in 
-                        addition to any other remedies available at law.
-                      </Text>
-                    </Box>
+
+                    {[
+                      {
+                        title: '1. Definition of Confidential Information',
+                        body: '"Confidential Information" means any non-public information disclosed by Hushh to the Recipient, including but not limited to: business strategies, financial information, investment strategies, fund performance data, technical specifications, proprietary algorithms, AI models, trade secrets, and any other information marked as confidential or that reasonably should be understood to be confidential.',
+                      },
+                      {
+                        title: '2. Obligations of the Recipient',
+                        body: 'The Recipient agrees to: (a) hold Confidential Information in strict confidence; (b) not disclose Confidential Information to any third party without prior written consent; (c) use Confidential Information solely for evaluating a potential relationship with Hushh; (d) take reasonable measures to protect the confidentiality of such information.',
+                      },
+                      {
+                        title: '3. Exceptions',
+                        body: 'This Agreement does not apply to information that: (a) is or becomes publicly available through no fault of the Recipient; (b) was known to the Recipient prior to disclosure; (c) is independently developed by the Recipient; (d) is disclosed pursuant to a court order or legal requirement.',
+                      },
+                      {
+                        title: '4. Term and Termination',
+                        body: 'This Agreement shall remain in effect for a period of three (3) years from the date of execution. The obligations of confidentiality shall survive the termination of this Agreement.',
+                      },
+                      {
+                        title: '5. Governing Law',
+                        body: 'This Agreement shall be governed by the laws of the State of Delaware, United States of America, without regard to its conflict of laws principles.',
+                      },
+                      {
+                        title: '6. Acknowledgment',
+                        body: 'By signing below, the Recipient acknowledges that they have read, understood, and agree to be bound by the terms of this Non-Disclosure Agreement. The Recipient further acknowledges that any breach of this Agreement may result in irreparable harm to Hushh and that Hushh shall be entitled to seek injunctive relief in addition to any other remedies available at law.',
+                      },
+                    ].map((section) => (
+                      <Box key={section.title}>
+                        <Text color={COLORS.primary} fontSize="12px" fontWeight="700" textTransform="uppercase" letterSpacing="0.04em" mb={1}>
+                          {section.title}
+                        </Text>
+                        <Text color={COLORS.textSecondary} fontSize="14px" lineHeight="1.65">
+                          {section.body}
+                        </Text>
+                      </Box>
+                    ))}
                   </VStack>
                 </Box>
 
-                {/* Divider with accent */}
-                <Box h="2px" bg={`linear-gradient(90deg, ${COLORS.primary}, ${COLORS.accent}, transparent)`} borderRadius="full" />
+                {/* Separator */}
+                <Box h="0.5px" bg={COLORS.separatorLight} />
 
-                {/* Signature Section */}
-                <VStack align="stretch" spacing={5}>
-                  <HStack spacing={3}>
-                    <Box w="3px" h="20px" borderRadius="full" bg={COLORS.accent} />
-                    <Text color={COLORS.text} fontWeight="700" fontSize="sm" textTransform="uppercase" letterSpacing="0.04em">
-                      Digital Signature
-                    </Text>
-                  </HStack>
-                  
+                {/* Digital Signature Section */}
+                <VStack align="stretch" spacing={4}>
+                  <Text
+                    color={COLORS.textTertiary}
+                    fontSize="13px"
+                    fontWeight="600"
+                    textTransform="uppercase"
+                    letterSpacing="0.02em"
+                  >
+                    Digital Signature
+                  </Text>
+
                   <FormControl isInvalid={!!nameError}>
-                    <FormLabel color={COLORS.textSecondary} fontSize="sm" fontWeight="600">
+                    <FormLabel color={COLORS.textSecondary} fontSize="14px" fontWeight="600">
                       Full Legal Name
                     </FormLabel>
                     <Input
@@ -516,30 +452,29 @@ const SignNDAPage: React.FC = () => {
                       }}
                       placeholder="Enter your full legal name"
                       bg={COLORS.bg}
-                      border="2px solid"
-                      borderColor={COLORS.border}
+                      border="1px solid"
+                      borderColor={COLORS.separatorLight}
                       color={COLORS.text}
-                      _placeholder={{ color: '#B4B4B4' }}
-                      _hover={{ borderColor: COLORS.primary }}
-                      _focus={{ 
-                        borderColor: COLORS.primary, 
-                        boxShadow: `0 0 0 3px ${COLORS.primary}20` 
+                      _placeholder={{ color: COLORS.separator }}
+                      _hover={{ borderColor: COLORS.separator }}
+                      _focus={{
+                        borderColor: COLORS.primary,
+                        boxShadow: `0 0 0 3px ${COLORS.primary}20`,
                       }}
                       size="lg"
-                      fontFamily="'Caveat', cursive, system-ui"
-                      fontSize="xl"
-                      borderRadius="xl"
-                      h="56px"
+                      fontSize="17px"
+                      borderRadius="12px"
+                      h="50px"
                     />
                     <FormErrorMessage>{nameError}</FormErrorMessage>
                   </FormControl>
 
                   <FormControl isInvalid={!!termsError}>
                     <Box
-                      bg={agreedToTerms ? `${COLORS.primary}08` : COLORS.bgSubtle}
-                      border="1px solid"
-                      borderColor={agreedToTerms ? `${COLORS.primary}40` : COLORS.border}
-                      borderRadius="xl"
+                      bg={agreedToTerms ? `${COLORS.primary}08` : COLORS.bgGrouped}
+                      border="0.5px solid"
+                      borderColor={agreedToTerms ? `${COLORS.primary}40` : COLORS.separatorLight}
+                      borderRadius="12px"
                       p={4}
                       transition="all 0.2s"
                     >
@@ -558,33 +493,31 @@ const SignNDAPage: React.FC = () => {
                           },
                         }}
                       >
-                        <Text color={COLORS.textSecondary} fontSize="sm" lineHeight="1.6">
-                          I have read, understood, and agree to the terms of this Non-Disclosure 
+                        <Text color={COLORS.textSecondary} fontSize="14px" lineHeight="1.55">
+                          I have read, understood, and agree to the terms of this Non-Disclosure
                           Agreement. I acknowledge that this constitutes my legal electronic signature.
                         </Text>
                       </Checkbox>
                     </Box>
                     {termsError && (
-                      <Text color="red.500" fontSize="xs" mt={2} fontWeight="500">
+                      <Text color={COLORS.destructive} fontSize="12px" mt={2} fontWeight="500">
                         {termsError}
                       </Text>
                     )}
                   </FormControl>
 
-                  {/* User Info */}
+                  {/* Signing as info */}
                   {userEmail && (
-                    <HStack
-                      spacing={2}
-                      bg={COLORS.accentLight}
-                      px={4}
-                      py={2.5}
-                      borderRadius="lg"
-                      border="1px solid"
-                      borderColor={`${COLORS.accent}30`}
-                    >
-                      <Icon as={FaLock} color={COLORS.accent} boxSize={3} />
-                      <Text color={COLORS.textSecondary} fontSize="xs" fontWeight="500">
-                        Signing as: <Text as="span" color={COLORS.text} fontWeight="700">{userEmail}</Text>
+                    <HStack spacing={2} px={1}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={COLORS.textTertiary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                      <Text color={COLORS.textTertiary} fontSize="13px" fontWeight="500">
+                        Signing as{' '}
+                        <Text as="span" color={COLORS.text} fontWeight="600">
+                          {userEmail}
+                        </Text>
                       </Text>
                     </HStack>
                   )}
@@ -597,40 +530,34 @@ const SignNDAPage: React.FC = () => {
           <Button
             onClick={handleSignNDA}
             isLoading={isSubmitting}
-            loadingText="Signing NDA..."
+            loadingText="Signing..."
             size="lg"
             width="full"
-            bg={`linear-gradient(135deg, ${COLORS.primary}, ${COLORS.accent})`}
+            bg={COLORS.primary}
             color="white"
-            _hover={{
-              bg: `linear-gradient(135deg, ${COLORS.primaryHover}, ${COLORS.accent})`,
-              transform: 'translateY(-2px)',
-              boxShadow: `0 8px 24px ${COLORS.primary}40`,
-            }}
-            _active={{
-              transform: 'translateY(0)',
-              boxShadow: `0 4px 12px ${COLORS.primary}30`,
-            }}
-            leftIcon={<FaCheckCircle />}
+            _hover={{ bg: COLORS.primaryHover }}
+            _active={{ opacity: 0.8 }}
             isDisabled={!agreedToTerms || !signerName.trim() || isSubmitting}
-            borderRadius="xl"
+            borderRadius="12px"
             fontWeight="600"
-            h="56px"
-            fontSize="md"
-            transition="all 0.2s"
+            h="50px"
+            fontSize="17px"
+            transition="all 0.15s"
           >
-            Sign & Continue
+            Sign &amp; Continue
           </Button>
 
           {/* Footer Note */}
           <Text
-            color={COLORS.textMuted}
-            fontSize="xs"
+            color={COLORS.textTertiary}
+            fontSize="12px"
             textAlign="center"
-            mt={6}
-            lineHeight="1.6"
+            mt={5}
+            lineHeight="1.5"
+            maxW="sm"
+            mx="auto"
           >
-            By signing, you agree that your digital signature has the same legal validity 
+            By signing, you agree that your digital signature has the same legal validity
             as a handwritten signature under applicable electronic signature laws.
           </Text>
         </MotionBox>
