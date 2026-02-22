@@ -393,22 +393,6 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
 
         {/* Secondary actions: Skip + Connect another */}
         <Flex mt={3} justify="center" gap={4}>
-          {isDone && (
-            <Button
-              variant="ghost"
-              color={IOS.primary}
-              fontSize="15px"
-              fontWeight="600"
-              h="auto"
-              py={2}
-              _active={{ opacity: 0.6 }}
-              onClick={plaid.retry}
-              aria-label="Connect another account"
-            >
-              Connect another account
-            </Button>
-          )}
-
           {onSkip && (
             <Button
               variant="ghost"
@@ -425,6 +409,20 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
               Skip for now
             </Button>
           )}
+
+          <Button
+            variant="ghost"
+            color={IOS.primary}
+            fontSize="15px"
+            fontWeight="600"
+            h="auto"
+            py={2}
+            _active={{ opacity: 0.6 }}
+            onClick={isDone ? plaid.retry : () => plaid.isReady && plaid.openPlaidLink()}
+            aria-label="Connect another account"
+          >
+            Connect another account
+          </Button>
         </Flex>
       </Box>
     </Box>
