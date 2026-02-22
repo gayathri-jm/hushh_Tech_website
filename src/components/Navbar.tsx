@@ -383,11 +383,11 @@ export default function Navbar() {
               {/* Section 1: Primary Navigation */}
               <div className="bg-white rounded-[10px] overflow-hidden mb-5 shadow-sm">
                 {[
-                  { path: "/", label: t('nav.home'), icon: "🏠", bg: "#007AFF" },
-                  { path: "/about/leadership", label: t('nav.ourPhilosophy'), icon: "📖", bg: "#34C759" },
-                  { path: "/discover-fund-a", label: t('nav.fundA'), icon: "📊", bg: "#5856D6" },
-                  { path: "/community", label: t('nav.community'), icon: "👥", bg: "#FF9500" },
-                  { path: "/a2a-playground", label: t('nav.kycStudio'), icon: "🛡️", bg: "#FF2D55" },
+                  { path: "/", label: t('nav.home'), icon: "home", bg: "#007AFF" },
+                  { path: "/about/leadership", label: t('nav.ourPhilosophy'), icon: "menu_book", bg: "#34C759" },
+                  { path: "/discover-fund-a", label: t('nav.fundA'), icon: "pie_chart", bg: "#5856D6" },
+                  { path: "/community", label: t('nav.community'), icon: "groups", bg: "#FF9500" },
+                  { path: "/a2a-playground", label: t('nav.kycStudio'), icon: "verified_user", bg: "#FF2D55" },
                 ].map(({ path, label, icon, bg }, idx, arr) => (
                   <button
                     key={path}
@@ -395,10 +395,10 @@ export default function Navbar() {
                     className="flex items-center w-full min-h-[44px] py-2.5 pr-4 pl-4 active:bg-[#E5E5EA] transition-colors relative"
                   >
                     <div
-                      className="w-[29px] h-[29px] rounded-[7px] flex items-center justify-center mr-3 shrink-0 text-[15px]"
+                      className="w-[29px] h-[29px] rounded-[7px] flex items-center justify-center mr-3 shrink-0"
                       style={{ backgroundColor: bg }}
                     >
-                      <span className="text-white text-[14px]">{icon}</span>
+                      <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>{icon}</span>
                     </div>
                     <span className={`text-[17px] flex-grow text-left leading-none ${isActive(path) ? 'font-semibold text-[#007AFF]' : 'text-black'}`}>
                       {label}
@@ -417,8 +417,8 @@ export default function Navbar() {
               {/* Section 2: Contact & FAQ */}
               <div className="bg-white rounded-[10px] overflow-hidden mb-5 shadow-sm">
                 {[
-                  { path: "/contact", label: t('nav.contact'), icon: "✉️", bg: "#8E8E93" },
-                  { path: "/faq", label: t('nav.faq'), icon: "❓", bg: "#8E8E93" },
+                  { path: "/contact", label: t('nav.contact'), icon: "mail", bg: "#8E8E93" },
+                  { path: "/faq", label: t('nav.faq'), icon: "help", bg: "#FF9500" },
                 ].map(({ path, label, icon, bg }, idx, arr) => (
                   <button
                     key={path}
@@ -429,7 +429,7 @@ export default function Navbar() {
                       className="w-[29px] h-[29px] rounded-[7px] flex items-center justify-center mr-3 shrink-0"
                       style={{ backgroundColor: bg }}
                     >
-                      <span className="text-white text-[14px]">{icon}</span>
+                      <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>{icon}</span>
                     </div>
                     <span className={`text-[17px] flex-grow text-left leading-none ${isActive(path) ? 'font-semibold text-[#007AFF]' : 'text-black'}`}>
                       {label}
@@ -452,7 +452,7 @@ export default function Navbar() {
                     className="flex items-center w-full min-h-[44px] py-2.5 pr-4 pl-4 active:bg-[#E5E5EA] transition-colors relative"
                   >
                     <div className="w-[29px] h-[29px] rounded-[7px] bg-[#007AFF] flex items-center justify-center mr-3 shrink-0">
-                      <FiUser className="text-white" size={16} />
+                      <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>person</span>
                     </div>
                     <span className="text-[17px] text-black flex-grow text-left leading-none">
                       {t('nav.viewProfile')}
