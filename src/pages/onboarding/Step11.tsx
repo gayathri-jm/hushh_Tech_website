@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../utils/useFooterVisibility';
-import { OnboardingStepProgress } from '../../components/onboarding/OnboardingStepProgress';
 
 type RecurringFrequency = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';
 
@@ -486,37 +485,41 @@ function OnboardingStep11() {
       ? `${getFrequencyLabel(frequency)} \u2022 Day ${investmentDay}`
       : 'Tap Edit to add recurring amount, frequency, and day.';
 
+  const DISPLAY_STEP = 10;
+  const PROG_TOTAL = 12;
+  const PROG_PCT = Math.round((DISPLAY_STEP / PROG_TOTAL) * 100);
+
   return (
-    <div 
-      className="bg-slate-50 min-h-screen"
-      style={{ fontFamily: "'Manrope', sans-serif" }}
+    <div
+      className="bg-[#F2F2F7] min-h-[100dvh] flex flex-col"
+      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}
     >
-      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
-        
-        {/* Sticky Header */}
-        <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
-          <button 
-            onClick={handleBack}
-            aria-label="Go back"
-            className="flex size-10 shrink-0 items-center justify-center text-slate-900 rounded-full hover:bg-slate-50 transition-colors"
-          >
-            <BackIcon />
-          </button>
-        </header>
+      {/* ═══ iOS Navigation Bar ═══ */}
+      <nav
+        className="sticky top-0 z-30 bg-[#F2F2F7]/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 12px) + 4px)', minHeight: '48px' }}
+      >
+        <button onClick={handleBack} className="text-[#007AFF] flex items-center -ml-2 active:opacity-50 transition-opacity" aria-label="Go back">
+          <span className="material-symbols-outlined text-3xl -mr-1" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>chevron_left</span>
+          <span className="text-[17px] leading-none pb-[2px]">Back</span>
+        </button>
+      </nav>
 
-        <OnboardingStepProgress currentStep={11} />
+      <main className="flex-1 overflow-y-auto max-w-lg mx-auto w-full px-4 pt-4 pb-48">
+        {/* ─── Title ─── */}
+        <h1 className="text-[34px] leading-[41px] font-bold text-black tracking-tight mb-4">Investment Summary</h1>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto pb-48 sm:pb-64">
-          {/* Header Section - 22px title, 14px subtitle, center aligned */}
-          <div className="px-5 pt-2 pb-6 flex flex-col items-center text-center">
-            <h1 className="text-slate-900 text-[22px] font-extrabold leading-tight tracking-tight mb-2">
-              Your Investment Summary
-            </h1>
-            <p className="text-slate-500 text-sm font-bold">
-              Review your share class allocation below
-            </p>
+        {/* ─── Progress Bar ─── */}
+        <div className="space-y-2 mb-8">
+          <div className="flex justify-between items-end text-[13px] font-medium text-[#8E8E93] uppercase tracking-wide">
+            <span>Onboarding Progress</span>
+            <span>Step {DISPLAY_STEP}/{PROG_TOTAL}</span>
           </div>
+          <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-[#007AFF] rounded-full transition-all duration-500" style={{ width: `${PROG_PCT}%` }} />
+          </div>
+          <p className="text-[13px] text-[#8E8E93]">{PROG_PCT}% complete</p>
+        </div>
 
           {/* Error Message */}
           {error && (
@@ -785,52 +788,33 @@ function OnboardingStep11() {
 
         </main>
 
-        {/* Fixed Footer - matching template exactly */}
+        {/* ═══ iOS Fixed Footer ═══ */}
         {!isFooterVisible && (
           <div
-            className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto border-t border-slate-100 bg-white/90 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
+            className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-[#C6C6C8]/30 px-4 pt-3 z-50"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
             data-onboarding-footer
           >
-            <div className="flex flex-col gap-3 sm:gap-4">
-              {/* Total Investment Row */}
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] sm:text-sm font-bold text-slate-500 uppercase tracking-wider">
-                  TOTAL INVESTMENT
-                </span>
-                <span className="text-lg sm:text-xl font-extrabold text-slate-900">
-                  {formatCurrency(totalInvestment)}
-                </span>
+            <div className="max-w-lg mx-auto flex flex-col gap-3">
+              {/* Total row */}
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-bold text-[#8E8E93] uppercase tracking-wider">Total Investment</span>
+                <span className="text-[20px] font-bold text-black tracking-tight">{formatCurrency(totalInvestment)}</span>
               </div>
-
               {/* Buttons */}
-              <div className="flex flex-col gap-3">
-                {/* Continue Button - rounded-lg with arrow */}
+              <div className="flex gap-4 h-12">
+                <button onClick={handleBack} className="flex-1 bg-gray-200 text-black font-semibold text-[17px] rounded-xl active:bg-gray-300 transition-colors">Back</button>
                 <button
                   onClick={handleContinue}
                   disabled={!isFormValid || loading}
                   data-onboarding-cta
-                  className={`w-full h-11 sm:h-12 bg-[#2b8cee] hover:bg-[#2070c0] text-white font-semibold text-sm sm:text-base px-6 rounded-full shadow-md shadow-[#2b8cee]/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${
-                    !isFormValid || loading ? 'opacity-50 cursor-not-allowed' : ''
+                  className={`flex-[2] rounded-xl font-semibold text-[17px] flex items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20 ${
+                    isFormValid && !loading ? 'bg-[#007AFF] text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   }`}
                 >
                   {loading ? 'Saving...' : 'Continue'}
-                  {!loading && <ArrowForwardIcon />}
+                  {!loading && <span className="material-symbols-outlined text-xl">arrow_forward</span>}
                 </button>
-
-                {/* Back Link */}
-                <button
-                  onClick={handleBack}
-                  className="w-full text-center text-slate-500 hover:text-slate-900 text-sm font-semibold py-2 transition-colors"
-                >
-                  Back
-                </button>
-              </div>
-
-              {/* Footer Note */}
-              <div className="text-center">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
-                  Minimum investment per unit &bull; Units can be adjusted later
-                </p>
               </div>
             </div>
           </div>
@@ -843,17 +827,17 @@ function OnboardingStep11() {
               className="relative w-full max-w-[500px] bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-hidden flex flex-col"
               style={{ fontFamily: "'Manrope', sans-serif" }}
             >
-              {/* Modal Header */}
-              <header className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 bg-white sticky top-0 z-10">
-                <button 
-                  onClick={handleCloseModal}
-                  aria-label="Close modal"
-                  className="flex size-10 shrink-0 items-center justify-center text-slate-500 rounded-full hover:bg-slate-50 transition-colors"
+              {/* iOS Modal Header — Cancel | Title | Done */}
+              <header className="flex items-center justify-between px-4 h-[56px] border-b border-[#C6C6C8]/30 bg-white sticky top-0 z-10">
+                <button onClick={handleCloseModal} className="text-[#007AFF] text-[17px] font-normal active:opacity-50 transition-opacity">Cancel</button>
+                <h2 className="text-[17px] font-semibold text-black absolute left-1/2 -translate-x-1/2">Edit Units</h2>
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={!hasModalChanges || savingModal}
+                  className={`text-[17px] font-semibold active:opacity-50 transition-opacity ${hasModalChanges ? 'text-[#007AFF]' : 'text-[#8E8E93]'}`}
                 >
-                  <CloseIcon />
+                  {savingModal ? '...' : 'Done'}
                 </button>
-                <h2 className="text-lg font-bold text-slate-900">Edit Share Class Units</h2>
-                <div className="w-10" /> {/* Spacer for centering */}
               </header>
 
               {/* Modal Content */}
@@ -945,33 +929,9 @@ function OnboardingStep11() {
                 </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="fixed bottom-0 left-0 right-0 w-full max-w-[500px] mx-auto bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-50">
-                <div className="p-5 pb-8 flex flex-col gap-3">
-                  {/* Save Changes Button */}
-                  <button
-                    onClick={handleSaveChanges}
-                    disabled={!hasModalChanges || savingModal}
-                    className={`w-full bg-[#2b8cee] hover:bg-blue-600 text-white font-bold text-base py-4 rounded-lg shadow-lg shadow-blue-500/30 active:scale-[0.98] transition-all ${
-                      !hasModalChanges || savingModal ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    {savingModal ? 'Saving...' : 'Save Changes'}
-                  </button>
-
-                  {/* Cancel Button */}
-                  <button
-                    onClick={handleCloseModal}
-                    className="w-full text-center text-slate-500 hover:text-slate-900 text-sm font-semibold py-2 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         )}
-      </div>
 
       {/* Animation keyframes */}
       <style>{`
