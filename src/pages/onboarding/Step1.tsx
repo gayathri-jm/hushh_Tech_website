@@ -270,11 +270,11 @@ export default function OnboardingStep1() {
      ═══════════════════════════════════════════════ */
   return (
     <div
-      className="bg-[#F2F2F7] min-h-[100dvh] pb-52"
+      className="bg-white min-h-[100dvh] pb-52"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}
     >
       {/* ═══ iOS Navigation Bar ═══ */}
-      <nav className="sticky top-0 z-30 bg-[#F2F2F7]/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2" style={{ paddingTop: 'calc(env(safe-area-inset-top, 12px) + 4px)', minHeight: '48px' }}>
+      <nav className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2" style={{ paddingTop: 'calc(env(safe-area-inset-top, 12px) + 4px)', minHeight: '48px' }}>
         <button onClick={handleBack} className="text-[#007AFF] flex items-center -ml-2 active:opacity-50 transition-opacity" aria-label="Go back">
           <span className="material-symbols-outlined text-3xl -mr-1" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>chevron_left</span>
           <span className="text-[17px] leading-none pb-[2px]">Back</span>
@@ -500,7 +500,7 @@ export default function OnboardingStep1() {
 
       {/* ═══ Fixed Footer ═══ */}
       {!isFooterVisible && (
-        <footer className="fixed bottom-0 left-0 right-0 bg-[#F2F2F7]/80 backdrop-blur-xl border-t border-[#C6C6C8]/30 z-40 pt-4 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
+        <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-[#C6C6C8]/30 z-40 pt-4 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
           <div className="max-w-md mx-auto">
             <div className="flex justify-between items-center mb-4">
               <span className="text-[13px] font-bold text-[#3C3C4399] uppercase tracking-wide">

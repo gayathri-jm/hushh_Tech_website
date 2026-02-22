@@ -104,12 +104,12 @@ export default function OnboardingStep2() {
      ═══════════════════════════════════════════════ */
   return (
     <div
-      className="bg-[#F2F2F7] min-h-[100dvh] flex flex-col"
+      className="bg-white min-h-[100dvh] flex flex-col"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}
     >
       {/* ═══ iOS Navigation Bar ═══ */}
       <nav
-        className="sticky top-0 z-30 bg-[#F2F2F7]/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2"
+        className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 12px) + 4px)', minHeight: '48px' }}
       >
         <button onClick={handleBack} className="text-[#007AFF] flex items-center -ml-2 active:opacity-50 transition-opacity" aria-label="Go back">
@@ -202,7 +202,7 @@ export default function OnboardingStep2() {
       {/* ═══ Fixed Footer ═══ */}
       {!isFooterVisible && (
         <div
-          className="fixed bottom-0 left-0 right-0 p-4 bg-[#F2F2F7]/90 backdrop-blur-md border-t border-[#C6C6C8]/30 z-40"
+          className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-[#C6C6C8]/30 z-40"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
           data-onboarding-footer
         >

@@ -661,12 +661,12 @@ function OnboardingStep13() {
 
   return (
     <div
-      className="bg-[#F2F2F7] min-h-[100dvh] flex flex-col"
+      className="bg-white min-h-[100dvh] flex flex-col"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}
     >
       {/* ═══ iOS Navigation Bar ═══ */}
       <nav
-        className="sticky top-0 z-30 bg-[#F2F2F7]/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2"
+        className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 12px) + 4px)', minHeight: '48px' }}
       >
         <button onClick={handleBack} className="text-[#007AFF] flex items-center -ml-2 active:opacity-50 transition-opacity" aria-label="Go back">

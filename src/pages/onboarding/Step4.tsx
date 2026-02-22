@@ -216,7 +216,7 @@ export default function OnboardingStep4() {
      ═══════════════════════════════════════════════ */
   return (
     <div
-      className="bg-[#F2F2F7] min-h-[100dvh] flex flex-col relative overflow-hidden"
+      className="bg-white min-h-[100dvh] flex flex-col relative overflow-hidden"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}
     >
       {/* ═══ Background layer (blurs when modal is open) ═══ */}
@@ -428,7 +428,7 @@ export default function OnboardingStep4() {
       {/* ═══ Fixed Footer ═══ */}
       {!isFooterVisible && !showLocationModal && (
         <div
-          className="fixed bottom-0 left-0 right-0 p-4 bg-[#F2F2F7]/90 backdrop-blur-md border-t border-[#C6C6C8]/30 z-40"
+          className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-[#C6C6C8]/30 z-40"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
           data-onboarding-footer
         >
