@@ -245,29 +245,44 @@ export default function OnboardingStep9() {
         <div className="mb-8">
           <h2 className="ml-4 mb-2 text-[13px] uppercase text-[#8E8E93] font-normal">Date of birth</h2>
           <div className="bg-white rounded-xl overflow-hidden ring-1 ring-black/5">
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-[17px] text-black">Date of Birth</span>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={openDatePicker}
-                  className="bg-gray-100 text-[#007AFF] px-3 py-1.5 rounded-md text-[17px] font-medium cursor-pointer hover:bg-gray-200 transition-colors"
-                >
-                  {dob || 'MM/DD/YYYY'}
-                </button>
-                <input
-                  ref={dateInputRef}
-                  type="date"
-                  onChange={handleNativeDateChange}
-                  className="sr-only"
-                  aria-hidden="true"
-                  tabIndex={-1}
-                  max={new Date().toISOString().split('T')[0]}
-                  min="1900-01-01"
-                />
-              </div>
+            <div className="flex items-center px-4 py-3 gap-3">
+              {/* Typeable DOB input with auto-formatting (MM/DD/YYYY) */}
+              <input
+                type="text"
+                value={dob}
+                onChange={handleDobChange}
+                placeholder="MM/DD/YYYY"
+                maxLength={10}
+                inputMode="numeric"
+                aria-label="Date of Birth"
+                className="flex-1 bg-transparent border-none p-0 text-[17px] text-black placeholder-gray-400 focus:ring-0 outline-none tracking-wide"
+              />
+              {/* Calendar icon — opens native date picker as fallback */}
+              <button
+                type="button"
+                onClick={openDatePicker}
+                className="text-[#007AFF] active:opacity-50 transition-opacity p-1 -mr-1"
+                aria-label="Open date picker"
+              >
+                <span
+                  className="material-symbols-outlined text-2xl"
+                  style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}
+                >calendar_today</span>
+              </button>
+              {/* Hidden native date input for calendar picker fallback */}
+              <input
+                ref={dateInputRef}
+                type="date"
+                onChange={handleNativeDateChange}
+                className="sr-only"
+                aria-hidden="true"
+                tabIndex={-1}
+                max={new Date().toISOString().split('T')[0]}
+                min="1900-01-01"
+              />
             </div>
           </div>
+          <p className="ml-4 mt-1.5 text-[13px] text-[#8E8E93]">Type your date as MM/DD/YYYY</p>
         </div>
       </main>
 
