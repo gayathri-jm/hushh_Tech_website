@@ -232,9 +232,9 @@ export default function OnboardingStep4() {
             </span>
             <span className="text-[17px] leading-none pb-[2px]">Back</span>
           </button>
-          <h1 className="text-[17px] font-semibold text-black absolute left-1/2 transform -translate-x-1/2">
-            Setup
-          </span>
+            <h1 className="text-[17px] font-semibold text-black absolute left-1/2 transform -translate-x-1/2">
+              Setup
+            </h1>
           <button onClick={handleSkip} className="text-[#007AFF] font-medium text-[17px]">Skip</button>
         </nav>
 
@@ -252,9 +252,9 @@ export default function OnboardingStep4() {
           </div>
 
           {/* ─── Title ─── */}
-          <h1 className="text-[34px] leading-[41px] font-bold text-black mb-2 tracking-tight">
-            Confirm your residence
-          </span>
+            <h1 className="text-[34px] leading-[41px] font-bold text-black mb-2 tracking-tight">
+              Confirm your residence
+            </h1>
           <p className="text-[17px] text-[#8E8E93] mb-8 leading-snug">
             We need to know where you live and pay taxes to open your investment account.
           </p>
