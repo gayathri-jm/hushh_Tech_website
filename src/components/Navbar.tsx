@@ -61,6 +61,7 @@ export default function Navbar() {
   const careerDropdownRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+  const [hushhCoins, setHushhCoins] = useState<number | null>(null);
   const toast = useToast();
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const isDesktop = isMobile === false;
@@ -159,6 +160,22 @@ export default function Navbar() {
     sessionStorage.removeItem(WELCOME_TOAST_USER_KEY);
     setToastShown(true);
   }, [session, toastShown, toast, t]);
+
+  // Fetch Hushh Coins balance when authenticated
+  useEffect(() => {
+    if (!session?.user?.id || !config.supabaseClient) { setHushhCoins(null); return; }
+    const fetchCoins = async () => {
+      try {
+        const { data } = await config.supabaseClient!
+          .from('ceo_meeting_payments')
+          .select('hushh_coins_awarded')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        setHushhCoins(data?.hushh_coins_awarded ?? 0);
+      } catch { setHushhCoins(0); }
+    };
+    fetchCoins();
+  }, [session?.user?.id]);
 
   const isAuthenticated = !!session;
 
@@ -449,7 +466,62 @@ export default function Navbar() {
                 ))}
               </div>
 
-              {/* Section 3: Profile & Account (only when authenticated) */}
+              {/* Section 3: Hushh Coins (only when authenticated) */}
+              {isAuthenticated && (
+                <div className="rounded-[10px] overflow-hidden mb-5 shadow-sm">
+                  {/* Coins Balance Card — iOS Wallet style */}
+                  <div className="bg-gradient-to-br from-[#1C1C1E] to-[#2C2C2E] p-4 rounded-t-[10px]">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-[29px] h-[29px] rounded-[7px] bg-[#FF9F0A] flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>monetization_on</span>
+                        </div>
+                        <span className="text-[15px] font-semibold text-white/90">Hushh Coins</span>
+                      </div>
+                      <span className="text-[11px] text-white/40 font-medium">HC</span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[32px] font-bold text-white leading-none tracking-tight">
+                        {hushhCoins !== null ? hushhCoins.toLocaleString() : '—'}
+                      </span>
+                      <span className="text-[13px] text-white/50 font-medium">coins</span>
+                    </div>
+                    {hushhCoins !== null && hushhCoins > 0 && (
+                      <p className="text-[12px] text-white/40 mt-1.5">≈ ${(hushhCoins / 100).toLocaleString()} value</p>
+                    )}
+                  </div>
+                  {/* Coins Actions — iOS grouped list style */}
+                  <div className="bg-white rounded-b-[10px]">
+                    <button
+                      onClick={() => handleLinkClick("/onboarding/meet-ceo")}
+                      className="flex items-center w-full min-h-[44px] py-2.5 pr-4 pl-4 active:bg-[#E5E5EA] transition-colors relative"
+                    >
+                      <div className="w-[29px] h-[29px] rounded-[7px] bg-[#34C759] flex items-center justify-center mr-3 shrink-0">
+                        <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>calendar_month</span>
+                      </div>
+                      <span className="text-[17px] text-black flex-grow text-left leading-none">Book Consultation</span>
+                      <svg className="w-[7px] h-[12px] text-[#C7C7CC] shrink-0" viewBox="0 0 7 12" fill="none">
+                        <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <div className="absolute bottom-0 right-0 h-[0.5px] bg-[#C6C6C8]" style={{ width: 'calc(100% - 56px)', marginLeft: '56px' }} />
+                    </button>
+                    <button
+                      onClick={() => handleLinkClick("/hushh-user-profile")}
+                      className="flex items-center w-full min-h-[44px] py-2.5 pr-4 pl-4 active:bg-[#E5E5EA] transition-colors"
+                    >
+                      <div className="w-[29px] h-[29px] rounded-[7px] bg-[#5856D6] flex items-center justify-center mr-3 shrink-0">
+                        <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>receipt_long</span>
+                      </div>
+                      <span className="text-[17px] text-black flex-grow text-left leading-none">Transaction History</span>
+                      <svg className="w-[7px] h-[12px] text-[#C7C7CC] shrink-0" viewBox="0 0 7 12" fill="none">
+                        <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Section 4: Profile & Account (only when authenticated) */}
               {isAuthenticated && (
                 <div className="bg-white rounded-[10px] overflow-hidden mb-5 shadow-sm">
                   <button
