@@ -12,6 +12,8 @@ import { generateInvestorProfile } from "../../services/investorProfile/apiClien
 import { downloadHushhGoldPass, launchGoogleWalletPass } from "../../services/walletPass";
 import { InvestorProfile, FIELD_LABELS, VALUE_LABELS } from "../../types/investorProfile";
 import AIDetectedPreferences from "../../components/profile/AIDetectedPreferences";
+import NWSScoreBadge from "../../components/profile/NWSScoreBadge";
+import { calculateNWSFromDB, NWSResult } from "../../services/networkScore/calculateNWS";
 import { invokeShadowInvestigator, formatPhoneContact, ShadowProfile, SHADOW_FIELD_LABELS } from "../../services/shadowInvestigator";
 
 // Complete country list matching Step 6 onboarding - using full country names
@@ -107,6 +109,9 @@ const HushhUserProfilePage: React.FC = () => {
   // Shadow Investigator state
   const [shadowProfile, setShadowProfile] = useState<ShadowProfile | null>(null);
   const [shadowLoading, setShadowLoading] = useState(false);
+  // NWS Score state
+  const [nwsResult, setNwsResult] = useState<NWSResult | null>(null);
+  const [nwsLoading, setNwsLoading] = useState(true);
 
   // Field options for AI-generated profile editing
   const FIELD_OPTIONS: Record<string, { value: string; label: string }[]> = {
@@ -378,8 +383,39 @@ const HushhUserProfilePage: React.FC = () => {
             }
           }
         }
+        // Load NWS score from user_financial_data (pure math, no API)
+        try {
+          const { data: financialData } = await supabase
+            .from('user_financial_data')
+            .select('balance_data, investments_data, identity_match_data, nws_score')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (financialData) {
+            const nws = calculateNWSFromDB(financialData);
+            setNwsResult(nws);
+            console.log('[Profile] NWS Score calculated:', nws.score, nws.grade);
+
+            // Persist NWS score if not already saved
+            if (!financialData.nws_score || financialData.nws_score !== nws.score) {
+              supabase.from('user_financial_data').update({
+                nws_score: nws.score,
+                nws_breakdown: nws.breakdown,
+                nws_grade: nws.grade,
+                nws_calculated_at: new Date().toISOString(),
+              }).eq('user_id', user.id).then(() => {
+                console.log('[Profile] NWS score persisted to DB');
+              });
+            }
+          }
+        } catch (nwsErr) {
+          console.warn('[Profile] NWS calculation skipped:', nwsErr);
+        } finally {
+          setNwsLoading(false);
+        }
       } catch (error) {
         console.error("Authentication check failed:", error);
+        setNwsLoading(false);
       }
     };
 
@@ -744,20 +780,24 @@ const HushhUserProfilePage: React.FC = () => {
           <section className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-blue-50 to-indigo-50 px-6 py-6">
             <div className="pointer-events-none absolute -right-12 -top-14 h-44 w-44 rounded-full bg-[#3A63B8]/10 blur-2xl" />
             <div className="pointer-events-none absolute -left-10 -bottom-14 h-36 w-36 rounded-full bg-[#1A365D]/10 blur-2xl" />
-            <div className="relative z-10">
-              <div className="mb-3 flex items-center">
-                <span className="rounded-full border border-[#3A63B8]/20 bg-[#3A63B8]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#3A63B8]">
-                  Premium Member
-                </span>
+            <div className="relative z-10 flex items-start justify-between">
+              <div className="flex-1">
+                <div className="mb-3 flex items-center">
+                  <span className="rounded-full border border-[#3A63B8]/20 bg-[#3A63B8]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#3A63B8]">
+                    Premium Member
+                  </span>
+                </div>
+                <h2 className="mb-1.5 text-2xl font-bold tracking-tight text-slate-900">
+                  Welcome back, {form.name?.split(' ')[0] || 'Alex'}
+                </h2>
+                <p className="max-w-2xl text-sm leading-relaxed text-slate-500">
+                  Complete your profile to unlock personalized investment insights tailored to your financial goals.
+                </p>
               </div>
-            </div>
-            <div className="relative z-10">
-              <h2 className="mb-1.5 text-2xl font-bold tracking-tight text-slate-900">
-                Welcome back, {form.name?.split(' ')[0] || 'Alex'}
-              </h2>
-              <p className="max-w-2xl text-sm leading-relaxed text-slate-500">
-                Complete your profile to unlock personalized investment insights tailored to your financial goals.
-              </p>
+              {/* NWS Score Badge */}
+              <div className="ml-4 shrink-0">
+                <NWSScoreBadge result={nwsResult} loading={nwsLoading} size="sm" />
+              </div>
             </div>
           </section>
 

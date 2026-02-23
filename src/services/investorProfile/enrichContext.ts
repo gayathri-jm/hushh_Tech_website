@@ -1,5 +1,7 @@
 import { DerivedContext, InvestorProfileInput } from "../../types/investorProfile";
 import { parsePhoneNumber } from "libphonenumber-js";
+import config from "../../resources/config/config";
+import { calculateNWSFromDB } from "../networkScore/calculateNWS";
 
 // Static country → currency mapping
 const COUNTRY_CURRENCY_MAP: Record<string, string> = {
@@ -195,4 +197,91 @@ export async function enrichContext(
   }
   
   return context;
+}
+
+/** Plaid financial context for AI profile intelligence */
+export interface PlaidFinancialContext {
+  nws_score: number;
+  nws_tier: string;
+  total_cash_balance: number;
+  total_investment_value: number;
+  num_accounts: number;
+  account_types: string[];
+  primary_institution: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  address_country: string | null;
+  identity_verification_score: number | null;
+}
+
+/**
+ * Fetches Plaid financial data + calculates NWS score.
+ * Returns null if user has no Plaid data linked.
+ */
+export async function enrichWithPlaidData(userId: string): Promise<PlaidFinancialContext | null> {
+  if (!config.supabaseClient) return null;
+
+  try {
+    const { data: fin } = await config.supabaseClient
+      .from("user_financial_data")
+      .select("balances, investments, identity_data, identity_match_data, institution_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!fin || !fin.balances) return null;
+
+    // Calculate NWS score from Plaid data
+    const nwsResult = calculateNWSFromDB(fin);
+
+    // Extract balances summary
+    const accounts = fin.balances?.accounts || [];
+    let totalCash = 0;
+    const accountTypes: string[] = [];
+
+    for (const acct of accounts) {
+      const bal = acct?.balances?.current || acct?.balances?.available || 0;
+      totalCash += bal;
+      if (acct?.subtype && !accountTypes.includes(acct.subtype)) {
+        accountTypes.push(acct.subtype);
+      }
+    }
+
+    // Extract investment value
+    const holdings = fin.investments?.holdings || [];
+    let totalInvest = 0;
+    for (const h of holdings) {
+      totalInvest += h?.institution_value || 0;
+    }
+
+    // Extract address from identity data
+    const addresses = fin.identity_data?.accounts?.[0]?.owners?.[0]?.addresses || [];
+    const primaryAddr = addresses[0]?.data || {};
+
+    // Identity verification score
+    const idMatch = fin.identity_match_data;
+    const idScore = idMatch
+      ? Math.round(((idMatch.legal_name?.score || 0) + (idMatch.email_address?.score || 0) + (idMatch.phone_number?.score || 0) + (idMatch.address?.score || 0)) / 4)
+      : null;
+
+    // NWS tier
+    const score = nwsResult.score;
+    const tier = score >= 80 ? "Elite" : score >= 60 ? "Strong" : score >= 40 ? "Moderate" : "Building";
+
+    return {
+      nws_score: score,
+      nws_tier: tier,
+      total_cash_balance: Math.round(totalCash),
+      total_investment_value: Math.round(totalInvest),
+      num_accounts: accounts.length,
+      account_types: accountTypes,
+      primary_institution: fin.institution_name || null,
+      address_city: primaryAddr.city || null,
+      address_state: primaryAddr.region || null,
+      address_country: primaryAddr.country || null,
+      identity_verification_score: idScore,
+    };
+  } catch (err) {
+    console.error("enrichWithPlaidData failed:", err);
+    return null;
+  }
 }

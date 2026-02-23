@@ -468,7 +468,26 @@ export default function Navbar() {
                 ))}
               </div>
 
-              {/* Section 3: Hushh Coins (only when authenticated AND coins > 0 — after $1 payment or coupon) */}
+              {/* Section 3: Hushh Coins — unlock CTA when 0, full card when > 0 */}
+              {isAuthenticated && hushhCoins !== null && hushhCoins === 0 && (
+                <div className="bg-white rounded-[10px] overflow-hidden mb-5 shadow-sm">
+                  <button
+                    onClick={() => handleLinkClick("/onboarding/meet-ceo")}
+                    className="flex items-center w-full min-h-[52px] py-3 pr-4 pl-4 active:bg-[#E5E5EA] transition-colors"
+                  >
+                    <div className="w-[29px] h-[29px] rounded-[7px] bg-[#FF9F0A] flex items-center justify-center mr-3 shrink-0">
+                      <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>lock</span>
+                    </div>
+                    <div className="flex flex-col flex-grow text-left">
+                      <span className="text-[17px] text-black font-medium leading-tight">Unlock 300K Coins</span>
+                      <span className="text-[13px] text-[#8E8E93] leading-tight mt-0.5">$1 or use coupon code</span>
+                    </div>
+                    <svg className="w-[7px] h-[12px] text-[#C7C7CC] shrink-0" viewBox="0 0 7 12" fill="none">
+                      <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+              )}
               {isAuthenticated && hushhCoins !== null && hushhCoins > 0 && (
                 <div className="rounded-[10px] overflow-hidden mb-5 shadow-sm">
                   {/* Coins Balance Card — iOS Wallet style */}

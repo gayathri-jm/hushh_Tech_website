@@ -8,6 +8,7 @@ const SYSTEM_PROMPT = `You are an assistant that PRE-FILLS an INVESTOR PROFILE f
 You are given:
 - raw user inputs: name, phone (with country code), email, age, organisation
 - derived_context: country, region, currency, email_type, company_industry, life_stage, org_type
+- financial_context (optional, from verified bank data via Plaid): nws_score (0-100), nws_tier, total_cash_balance, total_investment_value, num_accounts, account_types, address, identity_verification_score
 
 GOALS:
 1. For each of 12 profile fields, GUESS a reasonable default value based on general demographic and behavioral patterns of investors.
@@ -24,7 +25,16 @@ GOALS:
    - Life stage influences liquidity needs and investment capacity
    - Early career = lower capacity, mid/late career = higher capacity
 
-4. If you have no clear signal, choose the SAFEST neutral option and set confidence <= 0.3.
+4. If financial_context is provided (verified bank data), use it to SIGNIFICANTLY improve accuracy:
+   - NWS score 80+ (Elite) → higher risk tolerance, larger ticket sizes, advanced experience
+   - NWS score 60-79 (Strong) → moderate-high risk, medium-large tickets
+   - NWS score 40-59 (Moderate) → moderate risk, small-medium tickets
+   - NWS score <40 (Building) → conservative, micro-small tickets
+   - Use total_cash_balance + total_investment_value to calibrate annual_investing_capacity
+   - Account types (401k, brokerage, etc.) indicate experience level
+   - Set confidence 0.7-0.9 for fields informed by real financial data
+
+5. If you have no clear signal, choose the SAFEST neutral option and set confidence <= 0.3.
 
 5. For multi-select fields (asset_class_preference, sector_preferences), return 2-4 relevant items.
 
@@ -125,8 +135,11 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'OpenAI API key not configured on server' });
     }
 
-    // Prepare prompt for GPT-4o
-    const userPrompt = JSON.stringify({
+    // Separate financial_context from derived_context if present
+    const { financial_context, ...derivedContext } = context;
+
+    // Prepare prompt for GPT-4o — include financial_context if available
+    const promptPayload = {
       raw_input: {
         name: input.name,
         email: input.email,
@@ -135,9 +148,16 @@ export default async function handler(req, res) {
         phone_number: input.phone_number,
         organisation: input.organisation || null
       },
-      derived_context: context,
+      derived_context: derivedContext,
       profile_schema: PROFILE_SCHEMA
-    }, null, 2);
+    };
+
+    // Add Plaid financial data if available — dramatically improves AI accuracy
+    if (financial_context) {
+      promptPayload.financial_context = financial_context;
+    }
+
+    const userPrompt = JSON.stringify(promptPayload, null, 2);
 
     // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
