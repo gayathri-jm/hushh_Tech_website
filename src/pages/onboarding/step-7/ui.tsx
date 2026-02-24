@@ -114,8 +114,9 @@ export default function OnboardingStep7() {
                   value={firstName}
                   onChange={(e) => handleFirstNameChange(e.target.value)}
                   placeholder="required"
-                  className="w-full text-xs text-gray-500 font-medium lowercase bg-transparent border-none outline-none p-0 placeholder-gray-400 focus:ring-0"
+                  className="w-full text-sm text-gray-700 font-medium lowercase bg-transparent border-none outline-none p-0 placeholder-gray-400 focus:ring-0"
                   autoComplete="given-name"
+                  style={{ textTransform: "lowercase" }}
                 />
               </div>
             </div>
@@ -145,8 +146,9 @@ export default function OnboardingStep7() {
                   value={lastName}
                   onChange={(e) => handleLastNameChange(e.target.value)}
                   placeholder="required"
-                  className="w-full text-xs text-gray-500 font-medium lowercase bg-transparent border-none outline-none p-0 placeholder-gray-400 focus:ring-0"
+                  className="w-full text-sm text-gray-700 font-medium lowercase bg-transparent border-none outline-none p-0 placeholder-gray-400 focus:ring-0"
                   autoComplete="family-name"
+                  style={{ textTransform: "lowercase" }}
                 />
               </div>
             </div>
