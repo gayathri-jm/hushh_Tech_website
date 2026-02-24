@@ -55,6 +55,11 @@ export function useLocationDropdowns(
   const [statesError, setStatesError] = useState(false);
   const [citiesError, setCitiesError] = useState(false);
 
+  // Bumped each time applyDetectedLocation is called so that the
+  // pending-resolution effects re-run even when the dropdown arrays
+  // haven't changed (fixes: same country → state/city not populating).
+  const [detectionVersion, setDetectionVersion] = useState(0);
+
   // Pending refs — store GPS values until dropdown options arrive
   const pendingState = useRef<string | null>(null);
   const pendingCity = useRef<string | null>(null);
@@ -122,7 +127,7 @@ export function useLocationDropdowns(
     return () => { cancelled = true; };
   }, [country, state, states]);
 
-  // Apply pending state when states list loads
+  // Apply pending state when states list loads OR detection version bumps
   useEffect(() => {
     if (states.length === 0 || !pendingState.current) return;
 
@@ -133,9 +138,9 @@ export function useLocationDropdowns(
 
     if (match) setStateRaw(match.isoCode);
     pendingState.current = null;
-  }, [states]);
+  }, [states, detectionVersion]);
 
-  // Apply pending city when cities list loads
+  // Apply pending city when cities list loads OR detection version bumps
   useEffect(() => {
     if (cities.length === 0 || !pendingCity.current) return;
 
@@ -146,7 +151,7 @@ export function useLocationDropdowns(
 
     if (match) setCityRaw(match.name);
     pendingCity.current = null;
-  }, [cities]);
+  }, [cities, detectionVersion]);
 
   // Apply GPS/detected location — queues values for when dropdowns load
   const applyDetectedLocation = useCallback((
@@ -155,10 +160,14 @@ export function useLocationDropdowns(
     stateName?: string,
     cityName?: string
   ) => {
-    if (countryCode) setCountryRaw(countryCode);
     if (stateCode) pendingState.current = stateCode;
     else if (stateName) pendingState.current = stateName;
     if (cityName) pendingCity.current = cityName;
+    if (countryCode) setCountryRaw(countryCode);
+
+    // Bump version so pending-resolution effects re-evaluate
+    // even when states/cities arrays haven't changed.
+    setDetectionVersion(v => v + 1);
   }, []);
 
   // Retry functions — re-trigger the useEffect by toggling country/state
