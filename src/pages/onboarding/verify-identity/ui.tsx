@@ -1,27 +1,10 @@
-import {
-  Box,
-  VStack,
-  HStack,
-  Text,
-  Button,
-  Icon,
-  Spinner,
-  Badge,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
-} from '@chakra-ui/react';
-import { 
-  Shield, 
-  FileText, 
-  Camera, 
-  Mail, 
-  Phone, 
-  ArrowRight,
-  RefreshCw,
-} from 'lucide-react';
+/**
+ * Verify Identity — Premium Hushh design
+ * Stripe Identity verification flow.
+ */
 import { useVerifyIdentityLogic } from './logic';
+import HushhTechBackHeader from '../../../components/hushh-tech-back-header/HushhTechBackHeader';
+import HushhTechCta, { HushhTechCtaVariant } from '../../../components/hushh-tech-cta/HushhTechCta';
 
 function VerifyIdentityPage() {
   const {
@@ -36,309 +19,147 @@ function VerifyIdentityPage() {
 
   if (loading) {
     return (
-      <Box
-        className="onboarding-shell"
-        minH="100dvh"
-        h="100dvh"
-        bg="white"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        mx="auto"
-      >
-        <VStack spacing={4}>
-          <Spinner size="xl" color="#2b8cee" thickness="4px" />
-          <Text color="gray.600">Loading...</Text>
-        </VStack>
-      </Box>
+      <div className="bg-white min-h-screen flex flex-col antialiased selection:bg-black selection:text-white">
+        <HushhTechBackHeader onBackClick={goBack} rightLabel="FAQs" />
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="text-center">
+            <div className="w-14 h-14 mx-auto mb-6 rounded-full border-4 border-gray-200 border-t-black animate-spin" />
+            <p className="text-sm text-gray-500 font-medium lowercase">loading...</p>
+          </div>
+        </div>
+      </div>
     );
   }
 
+  const items = [
+    {
+      icon: 'badge',
+      label: 'government id',
+      desc: 'passport, driver\'s license, or id card',
+      verified: verificationStatus.document_verified,
+    },
+    {
+      icon: 'photo_camera',
+      label: 'selfie verification',
+      desc: 'live selfie matching your id photo',
+      verified: verificationStatus.selfie_verified,
+    },
+    {
+      icon: 'mail',
+      label: 'email',
+      desc: onboardingData?.email?.toLowerCase() || 'your email address',
+      verified: verificationStatus.email_verified,
+    },
+    {
+      icon: 'phone_iphone',
+      label: 'phone number',
+      desc: onboardingData?.phone_country_code && onboardingData?.phone_number
+        ? `${onboardingData.phone_country_code} ${onboardingData.phone_number}`
+        : 'your phone number',
+      verified: verificationStatus.phone_verified,
+    },
+  ];
+
   return (
-    <Box className="onboarding-shell" minH="100dvh" h="100dvh" bg="white" display="flex" flexDirection="column" mx="auto">
-      <Box as="main" flex="1" minH={0} overflowY="auto" px={{ base: 4, md: 5 }} pt={{ base: 6, md: 8 }} pb={8}>
-      <Box maxW="500px" mx="auto">
-        {/* Header */}
-        <VStack spacing={4} textAlign="center" mb={8}>
-          <Box
-            w="80px"
-            h="80px"
-            borderRadius="full"
-            bg="linear-gradient(135deg, #2b8cee 0%, #38bdf8 100%)"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            boxShadow="0 10px 40px rgba(43, 140, 238, 0.3)"
-          >
-            <Icon as={Shield} boxSize={10} color="white" />
-          </Box>
-          
-          <Text
-            fontSize={{ base: '28px', md: '36px' }}
-            fontWeight="500"
-            color="#0B1120"
-          >
-            Verify Your Identity
-          </Text>
-          
-          <Text fontSize="lg" color="gray.600" maxW="480px">
-            Complete a quick verification to secure your account and unlock all features.
-          </Text>
-        </VStack>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
+      <HushhTechBackHeader onBackClick={goBack} rightLabel="FAQs" />
 
-        {/* Status Alert */}
+      <main className="px-6 flex-grow max-w-md mx-auto w-full pb-16">
+        {/* Title */}
+        <section className="py-8">
+          <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-semibold">identity</h3>
+          <h1 className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight lowercase" style={{ fontFamily: "'Playfair Display', serif" }}>
+            verify your
+            <br />
+            <span className="text-gray-400 italic font-normal">identity</span>
+          </h1>
+          <p className="text-sm text-gray-500 mt-4 leading-relaxed lowercase font-medium">
+            complete a quick verification to secure your account and unlock all features.
+          </p>
+        </section>
+
+        {/* Status alerts */}
         {verificationStatus.status === 'processing' && (
-          <Alert status="info" borderRadius="xl" mb={6}>
-            <AlertIcon as={RefreshCw} />
-            <Box>
-              <AlertTitle>Verification in Progress</AlertTitle>
-              <AlertDescription>
-                Your verification is being processed. This usually takes a few minutes.
-              </AlertDescription>
-            </Box>
-          </Alert>
+          <div className="mb-6 flex items-center gap-3 py-4 px-1 border-b border-blue-100">
+            <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-blue-600 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>sync</span>
+            </div>
+            <p className="text-sm font-medium text-blue-700 lowercase">verification in progress. this usually takes a few minutes.</p>
+          </div>
         )}
-
         {verificationStatus.status === 'requires_input' && (
-          <Alert status="warning" borderRadius="xl" mb={6}>
-            <AlertIcon />
-            <Box>
-              <AlertTitle>Additional Information Required</AlertTitle>
-              <AlertDescription>
-                Please complete the verification process. Some information may need to be resubmitted.
-              </AlertDescription>
-            </Box>
-          </Alert>
+          <div className="mb-6 flex items-center gap-3 py-4 px-1 border-b border-yellow-100">
+            <div className="w-10 h-10 rounded-full bg-yellow-50 border border-yellow-200 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-yellow-600 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+            </div>
+            <p className="text-sm font-medium text-yellow-700 lowercase">additional information required. please complete the verification.</p>
+          </div>
         )}
-
         {verificationStatus.status === 'failed' && (
-          <Alert status="error" borderRadius="xl" mb={6}>
-            <AlertIcon />
-            <Box>
-              <AlertTitle>Verification Failed</AlertTitle>
-              <AlertDescription>
-                Your verification could not be completed. Please try again or contact support.
-              </AlertDescription>
-            </Box>
-          </Alert>
+          <div className="mb-6 flex items-center gap-3 py-4 px-1 border-b border-red-100">
+            <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-red-500 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>error</span>
+            </div>
+            <p className="text-sm font-medium text-red-700 lowercase">verification failed. please try again or contact support.</p>
+          </div>
         )}
 
         {/* What will be verified */}
-        <Box
-          bg="gray.50"
-          borderRadius="2xl"
-          p={6}
-          mb={8}
-          border="1px solid"
-          borderColor="gray.200"
-        >
-          <Text fontWeight="500" color="#0B1120" mb={4}>
-            What will be verified:
-          </Text>
-          
-          <VStack spacing={4} align="stretch">
-            <HStack spacing={4}>
-              <Box
-                w="48px"
-                h="48px"
-                borderRadius="xl"
-                bg={verificationStatus.document_verified ? 'green.100' : 'gray.100'}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Icon 
-                  as={FileText} 
-                  boxSize={6} 
-                  color={verificationStatus.document_verified ? 'green.600' : 'gray.500'} 
-                />
-              </Box>
-              <Box flex={1}>
-                <HStack>
-                  <Text fontWeight="500" color="#0B1120">Government ID</Text>
-                  {verificationStatus.document_verified && (
-                    <Badge colorScheme="green" borderRadius="full">Verified</Badge>
-                  )}
-                </HStack>
-                <Text fontSize="sm" color="gray.600">
-                  Passport, Driver's License, or ID Card
-                </Text>
-              </Box>
-            </HStack>
+        <section className="space-y-0 mb-6">
+          <div className="py-4">
+            <h3 className="text-[11px] tracking-wide text-gray-500 lowercase font-semibold">what will be verified</h3>
+          </div>
+          {items.map((item) => (
+            <div key={item.icon} className="py-5 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${item.verified ? 'bg-green-50 border border-green-200' : 'bg-gray-100'}`}>
+                  <span className={`material-symbols-outlined text-lg ${item.verified ? 'text-green-600' : 'text-gray-700'}`} style={{ fontVariationSettings: "'FILL' 1, 'wght' 400" }}>{item.icon}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-gray-900 lowercase block">{item.label}</span>
+                  <span className="text-xs text-gray-500 font-medium lowercase">{item.desc}</span>
+                </div>
+                {item.verified && (
+                  <span className="text-[10px] font-semibold text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded lowercase">verified</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </section>
 
-            <HStack spacing={4}>
-              <Box
-                w="48px"
-                h="48px"
-                borderRadius="xl"
-                bg={verificationStatus.selfie_verified ? 'green.100' : 'gray.100'}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Icon 
-                  as={Camera} 
-                  boxSize={6} 
-                  color={verificationStatus.selfie_verified ? 'green.600' : 'gray.500'} 
-                />
-              </Box>
-              <Box flex={1}>
-                <HStack>
-                  <Text fontWeight="500" color="#0B1120">Selfie Verification</Text>
-                  {verificationStatus.selfie_verified && (
-                    <Badge colorScheme="green" borderRadius="full">Verified</Badge>
-                  )}
-                </HStack>
-                <Text fontSize="sm" color="gray.600">
-                  Live selfie matching your ID photo
-                </Text>
-              </Box>
-            </HStack>
+        {/* Security note */}
+        <div className="flex items-start gap-3 py-4 px-1 mb-6">
+          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-gray-500 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
+          </div>
+          <div>
+            <span className="text-xs font-semibold text-gray-900 lowercase block">secure & private</span>
+            <p className="text-xs text-gray-500 leading-relaxed lowercase font-medium mt-0.5">
+              your documents are encrypted and processed securely. we never store raw document images.
+            </p>
+          </div>
+        </div>
 
-            <HStack spacing={4}>
-              <Box
-                w="48px"
-                h="48px"
-                borderRadius="xl"
-                bg={verificationStatus.email_verified ? 'green.100' : 'gray.100'}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Icon 
-                  as={Mail} 
-                  boxSize={6} 
-                  color={verificationStatus.email_verified ? 'green.600' : 'gray.500'} 
-                />
-              </Box>
-              <Box flex={1}>
-                <HStack>
-                  <Text fontWeight="500" color="#0B1120">Email</Text>
-                  {verificationStatus.email_verified && (
-                    <Badge colorScheme="green" borderRadius="full">Verified</Badge>
-                  )}
-                </HStack>
-                <Text fontSize="sm" color="gray.600">
-                  {onboardingData?.email || 'Your email address'}
-                </Text>
-              </Box>
-            </HStack>
+        {/* CTAs */}
+        <section className="space-y-3 pb-6">
+          <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={startVerification} disabled={startingVerification}>
+            {startingVerification ? 'Starting...' : verificationStatus.status === 'requires_input' ? 'Continue Verification' : 'Start Verification'}
+          </HushhTechCta>
+          <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={skipVerification}>
+            I'll Do This Later
+          </HushhTechCta>
+        </section>
 
-            <HStack spacing={4}>
-              <Box
-                w="48px"
-                h="48px"
-                borderRadius="xl"
-                bg={verificationStatus.phone_verified ? 'green.100' : 'gray.100'}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Icon 
-                  as={Phone} 
-                  boxSize={6} 
-                  color={verificationStatus.phone_verified ? 'green.600' : 'gray.500'} 
-                />
-              </Box>
-              <Box flex={1}>
-                <HStack>
-                  <Text fontWeight="500" color="#0B1120">Phone Number</Text>
-                  {verificationStatus.phone_verified && (
-                    <Badge colorScheme="green" borderRadius="full">Verified</Badge>
-                  )}
-                </HStack>
-                <Text fontSize="sm" color="gray.600">
-                  {onboardingData?.phone_country_code && onboardingData?.phone_number
-                    ? `${onboardingData.phone_country_code} ${onboardingData.phone_number.replace(/(.{3})/g, '$1 ').trim()}`
-                    : 'Your phone number'}
-                </Text>
-              </Box>
-            </HStack>
-          </VStack>
-        </Box>
-
-        {/* Security Note */}
-        <Box
-          bg="blue.50"
-          borderRadius="xl"
-          p={4}
-          mb={8}
-          border="1px solid"
-          borderColor="blue.100"
-        >
-          <HStack spacing={3}>
-            <Icon as={Shield} color="blue.500" boxSize={5} />
-            <Box>
-              <Text fontWeight="500" color="blue.700" fontSize="sm">
-                Secure & Private
-              </Text>
-              <Text fontSize="xs" color="blue.600">
-                Your documents are encrypted and processed securely by Stripe Identity. 
-                We never store your raw document images.
-              </Text>
-            </Box>
-          </HStack>
-        </Box>
-
-        {/* Action Buttons */}
-        <VStack spacing={3}>
-          <Button
-            onClick={startVerification}
-            isLoading={startingVerification}
-            loadingText="Starting..."
-            w="full"
-            h="56px"
-            borderRadius="full"
-            bgGradient="linear(to-r, #2b8cee, #38bdf8)"
-            color="white"
-            fontWeight="600"
-            fontSize="lg"
-            rightIcon={<Icon as={ArrowRight} />}
-            boxShadow="0 10px 25px rgba(43, 140, 238, 0.35)"
-            _hover={{
-              bgGradient: 'linear(to-r, #2070c0, #2b8cee)',
-              boxShadow: '0 12px 30px rgba(43, 140, 238, 0.45)',
-            }}
-            _active={{
-              transform: 'scale(0.98)',
-            }}
-          >
-            {verificationStatus.status === 'requires_input' ? 'Continue Verification' : 'Start Verification'}
-          </Button>
-
-          <Button
-            onClick={skipVerification}
-            variant="ghost"
-            w="full"
-            h="48px"
-            color="gray.500"
-            fontWeight="500"
-            _hover={{ color: 'gray.700', bg: 'gray.50' }}
-          >
-            I'll do this later
-          </Button>
-        </VStack>
-
-        {/* Time estimate */}
-        <Text textAlign="center" fontSize="sm" color="gray.500" mt={4}>
-          This usually takes 2-3 minutes to complete
-        </Text>
-
-        {/* Back button */}
-        <Button
-          onClick={goBack}
-          variant="link"
-          color="orange.600"
-          fontWeight="500"
-          mt={6}
-          display="block"
-          mx="auto"
-        >
-          Back
-        </Button>
-      </Box>
-      </Box>
-    </Box>
+        {/* Time estimate + trust */}
+        <section className="flex flex-col items-center text-center gap-1 pb-8">
+          <span className="text-[10px] text-gray-500 lowercase font-medium">usually takes 2-3 minutes to complete</span>
+          <div className="flex items-center gap-1 mt-2">
+            <span className="material-symbols-outlined text-[12px] text-gray-600">lock</span>
+            <span className="text-[10px] text-gray-600 tracking-wide uppercase font-medium">stripe identity</span>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }
 

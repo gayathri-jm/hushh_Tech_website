@@ -1,19 +1,10 @@
-import {
-  Box,
-  VStack,
-  Text,
-  Button,
-  Icon,
-  Spinner,
-} from '@chakra-ui/react';
-import {
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  ArrowRight,
-  RefreshCw,
-} from 'lucide-react';
+/**
+ * Verify Complete — Premium Hushh design
+ * Shows verification result states: loading, verified, processing, requires_input, failed.
+ */
 import { useVerifyCompleteLogic } from './logic';
+import HushhTechBackHeader from '../../../components/hushh-tech-back-header/HushhTechBackHeader';
+import HushhTechCta, { HushhTechCtaVariant } from '../../../components/hushh-tech-cta/HushhTechCta';
 
 function VerifyCompletePage() {
   const {
@@ -23,259 +14,114 @@ function VerifyCompletePage() {
     handleRetry,
   } = useVerifyCompleteLogic();
 
-  const renderContent = () => {
-    switch (result) {
-      case 'loading':
-        return (
-          <VStack spacing={6}>
-            <Box
-              w="100px"
-              h="100px"
-              borderRadius="full"
-              bg="gray.100"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Spinner size="xl" color="#2b8cee" thickness="4px" />
-            </Box>
-            <Text fontSize="2xl" fontWeight="600" color="#0B1120">
-              Checking Status...
-            </Text>
-            <Text color="gray.600" textAlign="center">
-              Please wait while we confirm your verification.
-            </Text>
-          </VStack>
-        );
-
-      case 'verified':
-        return (
-          <VStack spacing={6}>
-            <Box
-              w="100px"
-              h="100px"
-              borderRadius="full"
-              bg="green.100"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              animation="pulse 1s ease-in-out"
-            >
-              <Icon as={CheckCircle} boxSize={16} color="green.500" />
-            </Box>
-            <Text fontSize="2xl" fontWeight="600" color="#0B1120">
-              Verification Complete
-            </Text>
-            <Text color="gray.600" textAlign="center" maxW="400px">
-              Your identity has been verified successfully. You now have full access to all features.
-            </Text>
-            <Button
-              onClick={handleContinue}
-              h="56px"
-              w="full"
-              maxW="320px"
-              borderRadius="full"
-              bgGradient="linear(to-r, #2b8cee, #38bdf8)"
-              color="white"
-              fontWeight="600"
-              fontSize="lg"
-              rightIcon={<Icon as={ArrowRight} />}
-              boxShadow="0 10px 25px rgba(43, 140, 238, 0.35)"
-              _hover={{
-                bgGradient: 'linear(to-r, #2070c0, #2b8cee)',
-                boxShadow: '0 12px 30px rgba(43, 140, 238, 0.45)',
-              }}
-            >
-              Continue to Profile
-            </Button>
-          </VStack>
-        );
-
-      case 'processing':
-        return (
-          <VStack spacing={6}>
-            <Box
-              w="100px"
-              h="100px"
-              borderRadius="full"
-              bg="blue.100"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Icon as={Clock} boxSize={16} color="blue.500" />
-            </Box>
-            <Text fontSize="2xl" fontWeight="600" color="#0B1120">
-              Verification in Progress
-            </Text>
-            <Text color="gray.600" textAlign="center" maxW="400px">
-              Your verification is being processed. This usually takes just a few moments.
-            </Text>
-            <VStack spacing={2} w="full" maxW="320px">
-              <Box
-                w="full"
-                h="4px"
-                bg="gray.200"
-                borderRadius="full"
-                overflow="hidden"
-              >
-                <Box
-                  h="full"
-                  bgGradient="linear(to-r, #2b8cee, #38bdf8)"
-                  animation="loading 2s ease-in-out infinite"
-                  w="60%"
-                />
-              </Box>
-              <Text fontSize="sm" color="gray.500">
-                {pollingCount < 10 ? 'Checking status...' : 'Taking longer than expected'}
-              </Text>
-            </VStack>
-            <Button
-              onClick={handleContinue}
-              variant="outline"
-              h="48px"
-              w="full"
-              maxW="320px"
-              borderRadius="full"
-              borderColor="gray.300"
-              color="gray.700"
-              fontWeight="500"
-              _hover={{ bg: 'gray.50' }}
-            >
-              Continue Anyway
-            </Button>
-            <Text fontSize="xs" color="gray.500" textAlign="center">
-              You'll be notified when verification is complete
-            </Text>
-          </VStack>
-        );
-
-      case 'requires_input':
-        return (
-          <VStack spacing={6}>
-            <Box
-              w="100px"
-              h="100px"
-              borderRadius="full"
-              bg="yellow.100"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Icon as={AlertCircle} boxSize={16} color="yellow.600" />
-            </Box>
-            <Text fontSize="2xl" fontWeight="600" color="#0B1120">
-              Additional Info Needed
-            </Text>
-            <Text color="gray.600" textAlign="center" maxW="400px">
-              We need some additional information to complete your verification. Please try again.
-            </Text>
-            <Button
-              onClick={handleRetry}
-              h="56px"
-              w="full"
-              maxW="320px"
-              borderRadius="full"
-              bgGradient="linear(to-r, #2b8cee, #38bdf8)"
-              color="white"
-              fontWeight="600"
-              fontSize="lg"
-              leftIcon={<Icon as={RefreshCw} />}
-              boxShadow="0 10px 25px rgba(43, 140, 238, 0.35)"
-              _hover={{
-                bgGradient: 'linear(to-r, #2070c0, #2b8cee)',
-              }}
-            >
-              Try Again
-            </Button>
-            <Button
-              onClick={handleContinue}
-              variant="ghost"
-              color="gray.500"
-              fontWeight="500"
-            >
-              I'll do this later
-            </Button>
-          </VStack>
-        );
-
-      case 'failed':
-        return (
-          <VStack spacing={6}>
-            <Box
-              w="100px"
-              h="100px"
-              borderRadius="full"
-              bg="red.100"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Icon as={AlertCircle} boxSize={16} color="red.500" />
-            </Box>
-            <Text fontSize="2xl" fontWeight="600" color="#0B1120">
-              Verification Failed
-            </Text>
-            <Text color="gray.600" textAlign="center" maxW="400px">
-              We couldn't verify your identity. This could be due to unclear images or mismatched information.
-            </Text>
-            <Button
-              onClick={handleRetry}
-              h="56px"
-              w="full"
-              maxW="320px"
-              borderRadius="full"
-              bgGradient="linear(to-r, #2b8cee, #38bdf8)"
-              color="white"
-              fontWeight="600"
-              fontSize="lg"
-              leftIcon={<Icon as={RefreshCw} />}
-              boxShadow="0 10px 25px rgba(43, 140, 238, 0.35)"
-              _hover={{
-                bgGradient: 'linear(to-r, #2070c0, #2b8cee)',
-              }}
-            >
-              Try Again
-            </Button>
-            <Button
-              onClick={handleContinue}
-              variant="ghost"
-              color="gray.500"
-              fontWeight="500"
-            >
-              Continue without verification
-            </Button>
-            <Text fontSize="xs" color="gray.500" textAlign="center">
-              Need help? Contact support@hushh.ai
-            </Text>
-          </VStack>
-        );
-    }
+  /** Icon + color per state */
+  const stateConfig: Record<string, { icon: string; bg: string; border: string; iconColor: string; title: string; desc: string }> = {
+    loading: {
+      icon: 'sync', bg: 'bg-gray-100', border: '', iconColor: 'text-gray-500',
+      title: 'checking status...', desc: 'please wait while we confirm your verification.',
+    },
+    verified: {
+      icon: 'check_circle', bg: 'bg-green-50', border: 'border border-green-200', iconColor: 'text-green-600',
+      title: 'verification complete', desc: 'your identity has been verified successfully. you now have full access to all features.',
+    },
+    processing: {
+      icon: 'schedule', bg: 'bg-blue-50', border: 'border border-blue-200', iconColor: 'text-blue-600',
+      title: 'verification in progress', desc: 'your verification is being processed. this usually takes just a few moments.',
+    },
+    requires_input: {
+      icon: 'warning', bg: 'bg-yellow-50', border: 'border border-yellow-200', iconColor: 'text-yellow-600',
+      title: 'additional info needed', desc: 'we need some additional information to complete your verification. please try again.',
+    },
+    failed: {
+      icon: 'error', bg: 'bg-red-50', border: 'border border-red-200', iconColor: 'text-red-500',
+      title: 'verification failed', desc: 'we couldn\'t verify your identity. this could be due to unclear images or mismatched information.',
+    },
   };
 
-  return (
-    <Box className="onboarding-shell" minH="100dvh" h="100dvh" bg="white" display="flex" flexDirection="column" mx="auto">
-      <Box as="main" flex="1" minH={0} overflowY="auto" px={{ base: 4, md: 5 }} pt={{ base: 8, md: 10 }} pb={8}>
-        <Box maxW="500px" mx="auto" textAlign="center">
-          {renderContent()}
-        </Box>
-      </Box>
+  const cfg = stateConfig[result] || stateConfig.loading;
 
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(0.95); opacity: 0.7; }
-            50% { transform: scale(1.05); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-          @keyframes loading {
-            0% { transform: translateX(-100%); }
-            50% { transform: translateX(0%); }
-            100% { transform: translateX(100%); }
-          }
-        `}
-      </style>
-    </Box>
+  return (
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
+      <HushhTechBackHeader onBackClick={handleContinue} rightLabel="FAQs" />
+
+      <main className="px-6 flex-grow max-w-md mx-auto w-full flex flex-col items-center justify-center text-center pb-16">
+        {/* Status icon */}
+        <div className={`w-20 h-20 rounded-full ${cfg.bg} ${cfg.border} flex items-center justify-center mb-6 ${result === 'loading' ? 'animate-spin' : ''}`}>
+          <span
+            className={`material-symbols-outlined text-[40px] ${cfg.iconColor}`}
+            style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}
+          >
+            {cfg.icon}
+          </span>
+        </div>
+
+        {/* Title */}
+        <h1
+          className="text-3xl font-normal text-black tracking-tight lowercase mb-3"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
+          {cfg.title}
+        </h1>
+
+        {/* Description */}
+        <p className="text-sm text-gray-500 lowercase font-medium leading-relaxed max-w-xs mb-8">
+          {cfg.desc}
+        </p>
+
+        {/* Processing progress */}
+        {result === 'processing' && (
+          <div className="w-full max-w-xs mb-8">
+            <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden mb-2">
+              <div className="h-full bg-black rounded-full animate-pulse" style={{ width: '60%' }} />
+            </div>
+            <p className="text-xs text-gray-400 lowercase font-medium">
+              {pollingCount < 10 ? 'checking status...' : 'taking longer than expected'}
+            </p>
+          </div>
+        )}
+
+        {/* CTAs per state */}
+        <div className="w-full space-y-3">
+          {result === 'verified' && (
+            <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={handleContinue}>
+              Continue to Profile
+            </HushhTechCta>
+          )}
+
+          {result === 'processing' && (
+            <>
+              <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={handleContinue}>
+                Continue Anyway
+              </HushhTechCta>
+              <p className="text-[10px] text-gray-400 lowercase font-medium">you'll be notified when verification is complete</p>
+            </>
+          )}
+
+          {result === 'requires_input' && (
+            <>
+              <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={handleRetry}>
+                Try Again
+              </HushhTechCta>
+              <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={handleContinue}>
+                I'll Do This Later
+              </HushhTechCta>
+            </>
+          )}
+
+          {result === 'failed' && (
+            <>
+              <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={handleRetry}>
+                Try Again
+              </HushhTechCta>
+              <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={handleContinue}>
+                Continue Without Verification
+              </HushhTechCta>
+              <p className="text-[10px] text-gray-400 lowercase font-medium">need help? contact support@hushh.ai</p>
+            </>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
 
