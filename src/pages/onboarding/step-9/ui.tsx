@@ -180,9 +180,9 @@ export default function OnboardingStep9() {
           </div>
 
           {/* Month */}
-          <div className="py-5 border-b border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+          <label htmlFor="dobMonth" className="block py-5 border-b border-gray-200 cursor-pointer">
+            <div className="flex items-center gap-4 relative">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0 pointer-events-none">
                 <span
                   className="material-symbols-outlined text-gray-700 text-lg"
                   style={{ fontVariationSettings: "'wght' 400" }}
@@ -191,12 +191,9 @@ export default function OnboardingStep9() {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <label
-                  htmlFor="dobMonth"
-                  className="text-sm font-semibold text-gray-900 lowercase block mb-1"
-                >
+                <span className="text-sm font-semibold text-gray-900 lowercase block mb-1">
                   month
-                </label>
+                </span>
                 <select
                   id="dobMonth"
                   value={dobMonth}
@@ -218,18 +215,18 @@ export default function OnboardingStep9() {
                 </select>
               </div>
               <span
-                className="material-symbols-outlined text-gray-400 text-lg"
+                className="material-symbols-outlined text-gray-400 text-lg pointer-events-none"
                 style={{ fontVariationSettings: "'wght' 400" }}
               >
                 expand_more
               </span>
             </div>
-          </div>
+          </label>
 
           {/* Day */}
-          <div className="py-5 border-b border-gray-200">
+          <label htmlFor="dobDay" className="block py-5 border-b border-gray-200 cursor-pointer">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0 pointer-events-none">
                 <span
                   className="material-symbols-outlined text-gray-700 text-lg"
                   style={{ fontVariationSettings: "'wght' 400" }}
@@ -238,12 +235,9 @@ export default function OnboardingStep9() {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <label
-                  htmlFor="dobDay"
-                  className="text-sm font-semibold text-gray-900 lowercase block mb-1"
-                >
+                <span className="text-sm font-semibold text-gray-900 lowercase block mb-1">
                   day
-                </label>
+                </span>
                 <select
                   id="dobDay"
                   value={dobDay}
@@ -262,18 +256,18 @@ export default function OnboardingStep9() {
                 </select>
               </div>
               <span
-                className="material-symbols-outlined text-gray-400 text-lg"
+                className="material-symbols-outlined text-gray-400 text-lg pointer-events-none"
                 style={{ fontVariationSettings: "'wght' 400" }}
               >
                 expand_more
               </span>
             </div>
-          </div>
+          </label>
 
           {/* Year */}
-          <div className="py-5 border-b border-gray-200">
+          <label htmlFor="dobYear" className="block py-5 border-b border-gray-200 cursor-pointer">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0 pointer-events-none">
                 <span
                   className="material-symbols-outlined text-gray-700 text-lg"
                   style={{ fontVariationSettings: "'wght' 400" }}
@@ -282,12 +276,9 @@ export default function OnboardingStep9() {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <label
-                  htmlFor="dobYear"
-                  className="text-sm font-semibold text-gray-900 lowercase block mb-1"
-                >
+                <span className="text-sm font-semibold text-gray-900 lowercase block mb-1">
                   year
-                </label>
+                </span>
                 <select
                   id="dobYear"
                   value={dobYear}
@@ -306,13 +297,13 @@ export default function OnboardingStep9() {
                 </select>
               </div>
               <span
-                className="material-symbols-outlined text-gray-400 text-lg"
+                className="material-symbols-outlined text-gray-400 text-lg pointer-events-none"
                 style={{ fontVariationSettings: "'wght' 400" }}
               >
                 expand_more
               </span>
             </div>
-          </div>
+          </label>
 
           {/* Confirmation when all selected */}
           {isFormValid && (
