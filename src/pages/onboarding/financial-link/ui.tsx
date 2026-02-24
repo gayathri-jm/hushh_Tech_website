@@ -9,6 +9,7 @@ import { useFinancialLinkLogic } from "./logic";
 import HushhTechCta, {
   HushhTechCtaVariant,
 } from "../../../components/hushh-tech-cta/HushhTechCta";
+import HushhTechBackHeader from "../../../components/hushh-tech-back-header/HushhTechBackHeader";
 
 /** Verification row data */
 const VERIFICATION_ROWS = [
@@ -51,20 +52,10 @@ export default function OnboardingFinancialLink() {
   return (
     <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
       {/* Header — back + FAQs */}
-      <header className="px-6 py-6 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur-md z-40">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 border border-black flex items-center justify-center hover:bg-gray-50 transition-colors"
-          aria-label="Go back"
-        >
-          <span className="material-symbols-outlined text-gray-900 text-[20px] font-light">
-            west
-          </span>
-        </button>
-        <button className="px-5 py-2 border border-black text-[11px] font-bold tracking-widest uppercase text-gray-900 hover:bg-black hover:text-white transition-colors">
-          FAQs
-        </button>
-      </header>
+      <HushhTechBackHeader
+        onBackClick={() => navigate(-1)}
+        rightLabel="FAQs"
+      />
 
       {/* Main Content */}
       <main className="px-6 mt-8 flex-grow max-w-md mx-auto w-full">
@@ -159,7 +150,6 @@ export default function OnboardingFinancialLink() {
                 timestamp: new Date().toISOString(),
               })
             }
-            className="h-14 text-sm tracking-widest uppercase"
           >
             Continue
           </HushhTechCta>
@@ -167,7 +157,6 @@ export default function OnboardingFinancialLink() {
           <HushhTechCta
             variant={HushhTechCtaVariant.WHITE}
             onClick={handleSkip}
-            className="h-14 text-sm tracking-widest uppercase"
           >
             Skip
           </HushhTechCta>
