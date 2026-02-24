@@ -113,17 +113,18 @@ const ContentWrapper = ({ children }: { children: ReactNode }) => {
 // Layout visibility hook - determines which components to show based on route
 const useLayoutVisibility = () => {
   const location = useLocation();
+  const isHomePage = location.pathname === '/';
   const isHushhAI = location.pathname.startsWith('/hushh-ai');
   const isHushhAgent = location.pathname.startsWith('/hushh-agent');
   const isKai = location.pathname.startsWith('/kai');
   const isStudio = location.pathname.startsWith('/studio');
   const isOnboarding = location.pathname.startsWith('/onboarding');
 
+  // Home + Onboarding use HushhTechHeader/Footer — hide old global nav/footer
   return {
-    // Keep the global header visible across onboarding/verification as requested.
-    showNavbar: !isHushhAI && !isHushhAgent && !isKai && !isStudio,
-    showFooter: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isOnboarding,
-    showMobileNav: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isOnboarding,
+    showNavbar: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isHomePage && !isOnboarding,
+    showFooter: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isOnboarding && !isHomePage,
+    showMobileNav: !isHushhAI && !isHushhAgent && !isKai && !isStudio && !isOnboarding && !isHomePage,
   };
 };
 
