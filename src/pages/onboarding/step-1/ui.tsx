@@ -68,7 +68,7 @@ export default function OnboardingStep1() {
       <main className="px-6 flex-grow max-w-md mx-auto w-full pb-48">
         {/* ── Progress Bar ── */}
         <div className="py-4">
-          <div className="flex justify-between text-[11px] font-medium tracking-wide text-gray-500 mb-3 lowercase">
+          <div className="flex justify-between text-[11px] font-semibold tracking-wide text-gray-500 mb-3 lowercase">
             <span>step {CURRENT_STEP}/{TOTAL_STEPS}</span>
             <span>{PROGRESS_PCT}% complete</span>
           </div>
@@ -82,7 +82,7 @@ export default function OnboardingStep1() {
 
         {/* ── Title Section ── */}
         <section className="py-8">
-          <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-medium">
+          <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-semibold">
             institutional series
           </h3>
           <h1
@@ -115,7 +115,7 @@ export default function OnboardingStep1() {
                   >
                     <span
                       className="material-symbols-outlined text-gray-600 text-xl"
-                      style={{ fontVariationSettings: "'wght' 300" }}
+                      style={{ fontVariationSettings: "'wght' 400" }}
                     >
                       {CLASS_ICONS[sc.id] || "wallet"}
                     </span>
@@ -131,7 +131,7 @@ export default function OnboardingStep1() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 lowercase leading-relaxed">
+                    <p className="text-xs text-gray-500 lowercase leading-relaxed font-medium">
                       {TIER_LABELS[sc.tier] || sc.description}
                     </p>
                   </div>
@@ -220,7 +220,7 @@ export default function OnboardingStep1() {
                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                   <span
                     className="material-symbols-outlined text-gray-700 text-lg"
-                    style={{ fontVariationSettings: "'wght' 300" }}
+                    style={{ fontVariationSettings: "'wght' 400" }}
                   >
                     calendar_today
                   </span>
@@ -229,7 +229,7 @@ export default function OnboardingStep1() {
                   <p className="text-sm font-semibold text-gray-900 lowercase mb-0.5">
                     frequency
                   </p>
-                  <p className="text-xs text-gray-500 lowercase">
+                  <p className="text-xs text-gray-500 lowercase font-medium">
                     choose payment schedule
                   </p>
                 </div>
@@ -260,7 +260,7 @@ export default function OnboardingStep1() {
                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                   <span
                     className="material-symbols-outlined text-gray-700 text-lg"
-                    style={{ fontVariationSettings: "'wght' 300" }}
+                    style={{ fontVariationSettings: "'wght' 400" }}
                   >
                     schedule
                   </span>
@@ -269,7 +269,7 @@ export default function OnboardingStep1() {
                   <p className="text-sm font-semibold text-gray-900 lowercase mb-0.5">
                     day
                   </p>
-                  <p className="text-xs text-gray-500 lowercase">
+                  <p className="text-xs text-gray-500 lowercase font-medium">
                     select debit date
                   </p>
                 </div>
@@ -300,7 +300,7 @@ export default function OnboardingStep1() {
                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                   <span
                     className="material-symbols-outlined text-gray-700 text-lg"
-                    style={{ fontVariationSettings: "'wght' 300" }}
+                    style={{ fontVariationSettings: "'wght' 400" }}
                   >
                     payments
                   </span>
@@ -309,7 +309,7 @@ export default function OnboardingStep1() {
                   <p className="text-sm font-semibold text-gray-900 lowercase mb-0.5">
                     amount
                   </p>
-                  <p className="text-xs text-gray-500 lowercase">
+                  <p className="text-xs text-gray-500 lowercase font-medium">
                     investment per cycle
                   </p>
                 </div>
