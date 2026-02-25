@@ -4,12 +4,9 @@
  * All logic in logic.ts via useProfileLogic().
  */
 import React from 'react';
-import HushhTechHeader from '../../components/hushh-tech-header/HushhTechHeader';
-import HushhTechFooter from '../../components/hushh-tech-footer/HushhTechFooter';
+import HushhTechBackHeader from '../../components/hushh-tech-back-header/HushhTechBackHeader';
 import HushhTechCta, { HushhTechCtaVariant } from '../../components/hushh-tech-cta/HushhTechCta';
 import HushhLogo from '../../components/images/Hushhogo.png';
-import { HushhFooterTab } from '../../components/hushh-tech-footer/HushhTechFooter';
-import { useNavigate } from 'react-router-dom';
 import { useProfileLogic } from './logic';
 
 /* ── section label (reusable) ── */
@@ -20,25 +17,16 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 );
 
 const ProfilePage: React.FC = () => {
-  const navigate = useNavigate();
   const {
     onboardingStatus,
     primaryCTA,
     handleDiscoverFundA,
   } = useProfileLogic();
 
-  /* footer tab navigation */
-  const handleTabChange = (tab: HushhFooterTab) => {
-    if (tab === HushhFooterTab.HOME) navigate('/');
-    else if (tab === HushhFooterTab.FUND_A) navigate('/discover-fund-a');
-    else if (tab === HushhFooterTab.COMMUNITY) navigate('/community');
-    else if (tab === HushhFooterTab.PROFILE) navigate('/profile');
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      {/* header */}
-      <HushhTechHeader className="!py-2" />
+      {/* header — back arrow to go home */}
+      <HushhTechBackHeader />
 
       {/* scrollable content */}
       <main className="flex-1 flex flex-col items-center justify-center px-5 py-2 sm:px-6 md:px-8">
@@ -108,12 +96,6 @@ const ProfilePage: React.FC = () => {
         </div>
       </main>
 
-      {/* footer */}
-      <HushhTechFooter
-        activeTab={HushhFooterTab.PROFILE}
-        onTabChange={handleTabChange}
-        onLogoClick={() => navigate('/')}
-      />
     </div>
   );
 };
