@@ -1,8 +1,10 @@
 /**
- * Fund A — Discover Page
- * Apple iOS Core App Colors + Proper English Capitalization.
- * Same design language as homepage, onboarding steps 1-8, profile.
+ * Fund A — Discover Page (Revamped 3.0)
+ * Pixel-perfect alignment with hushh-user-profile + step 1-8 design.
+ * Uses same wrapper, header, CTA, FieldRow, SectionLabel patterns.
  * All content from logic.ts — zero data here.
+ *
+ * Changes from original: capitalization fix, hero subheading styling.
  */
 import React from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +17,7 @@ import HushhTechFooter, {
   HushhFooterTab,
 } from "../../components/hushh-tech-footer/HushhTechFooter";
 
-/* ── settings-style row ── */
+/* ── settings-style row (same as profile page) ── */
 const FieldRow = ({
   label,
   children,
@@ -29,28 +31,26 @@ const FieldRow = ({
   </div>
 );
 
-/* ── section label ── */
+/* ── section label (same as profile page) ── */
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-medium mt-10 mb-2">
     {children}
   </p>
 );
 
-/* ── card with icon — Apple iOS colored icons ── */
+/* ── card with icon (same as step-2 cards) ── */
 const FeatureCard = ({
   icon,
-  iconColor,
   title,
   description,
 }: {
   icon: string;
-  iconColor?: string;
   title: string;
   description: string;
 }) => (
-  <div className="flex items-start gap-4 bg-ios-gray-bg border border-gray-200/60 rounded-2xl p-5 hover:border-hushh-blue/30 transition-all">
-    <div className="w-11 h-11 rounded-full border border-gray-200/60 flex items-center justify-center shrink-0 bg-white">
-      <span className={`material-symbols-outlined !text-[1.15rem] ${iconColor || "text-hushh-blue"}`}>
+  <div className="flex items-start gap-4 border border-gray-200 rounded-2xl p-5 hover:border-gray-300 hover:bg-gray-50/50 transition-all">
+    <div className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center shrink-0 bg-white">
+      <span className="material-symbols-outlined text-gray-700 !text-[1.15rem]">
         {icon}
       </span>
     </div>
@@ -65,32 +65,32 @@ const FeatureCard = ({
   </div>
 );
 
-/* ── icon + color map for cards ── */
-const PHILOSOPHY_ICONS: Record<string, { icon: string; color: string }> = {
-  "Options Intelligence": { icon: "psychology", color: "text-hushh-blue" },
-  "AI-Enhanced Research": { icon: "neurology", color: "text-hushh-blue" },
-  "Risk-First Architecture": { icon: "shield", color: "text-ios-green" },
-  "Concentrated Conviction": { icon: "target", color: "text-ios-yellow" },
+/* ── icon map for cards ── */
+const PHILOSOPHY_ICONS: Record<string, string> = {
+  "Options Intelligence": "psychology",
+  "AI-Enhanced Research": "neurology",
+  "Risk-First Architecture": "shield",
+  "Concentrated Conviction": "target",
 };
 
-const EDGE_ICONS: Record<string, { icon: string; color: string }> = {
-  "Volatility Harvesting": { icon: "trending_up", color: "text-ios-green" },
-  "Asymmetric Returns": { icon: "rocket_launch", color: "text-hushh-blue" },
-  "Income Generation": { icon: "payments", color: "text-ios-yellow" },
-  "Downside Protection": { icon: "security", color: "text-hushh-blue" },
+const EDGE_ICONS: Record<string, string> = {
+  "Volatility Harvesting": "trending_up",
+  "Asymmetric Returns": "rocket_launch",
+  "Income Generation": "payments",
+  "Downside Protection": "security",
 };
 
-const ASSET_ICONS: Record<string, { icon: string; color: string }> = {
-  "U.S. Large-Cap Equities": { icon: "account_balance", color: "text-hushh-blue" },
-  "Strategic Options Overlay": { icon: "tune", color: "text-ios-yellow" },
-  "Cash & Equivalents": { icon: "savings", color: "text-ios-green" },
+const ASSET_ICONS: Record<string, string> = {
+  "U.S. Large-Cap Equities": "account_balance",
+  "Strategic Options Overlay": "tune",
+  "Cash & Equivalents": "savings",
 };
 
-const RISK_ICONS: Record<string, { icon: string; color: string }> = {
-  "Position Limits": { icon: "pie_chart", color: "text-ios-yellow" },
-  "Hedging Framework": { icon: "shield", color: "text-ios-green" },
-  "Drawdown Protocols": { icon: "trending_down", color: "text-ios-red" },
-  "Liquidity Management": { icon: "water_drop", color: "text-hushh-blue" },
+const RISK_ICONS: Record<string, string> = {
+  "Position Limits": "pie_chart",
+  "Hedging Framework": "shield",
+  "Drawdown Protocols": "trending_down",
+  "Liquidity Management": "water_drop",
 };
 
 const FundA = () => {
@@ -127,7 +127,7 @@ const FundA = () => {
   } = useDiscoverFundALogic();
 
   return (
-    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader
         onBackClick={() => navigate("/")}
@@ -138,10 +138,10 @@ const FundA = () => {
       <main className="px-6 flex-grow max-w-md mx-auto w-full pb-32">
         {/* ── Hero ── */}
         <section className="pt-6 pb-8">
-          {/* pill badge — Apple blue tint like homepage */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-hushh-blue/20 rounded-full bg-hushh-blue/5 mb-6">
-            <span className="w-1.5 h-1.5 bg-hushh-blue rounded-full" />
-            <span className="text-[10px] tracking-[0.15em] uppercase font-medium text-hushh-blue">
+          {/* pill badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-full mb-6">
+            <span className="w-1.5 h-1.5 bg-black rounded-full" />
+            <span className="text-[10px] tracking-[0.15em] uppercase font-medium text-gray-500">
               Flagship Fund
             </span>
           </div>
@@ -159,18 +159,17 @@ const FundA = () => {
           </p>
         </section>
 
-        {/* ── Target IRR (ios-dark card with blue glow) ── */}
+        {/* ── Target IRR (premium black card — like step-1 share class) ── */}
         <section className="mb-8">
-          <div className="bg-ios-dark rounded-2xl p-6 text-center relative overflow-hidden">
-            {/* Apple blue glow */}
-            <div className="absolute -top-8 -right-8 w-32 h-32 bg-hushh-blue/15 rounded-full blur-2xl" />
-            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-hushh-blue/5 to-transparent" />
+          <div className="bg-black rounded-2xl p-6 text-center relative overflow-hidden">
+            {/* subtle glow */}
+            <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
             <div className="relative z-10">
               <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-3 font-medium">
                 {targetIRRLabel}
               </p>
               <p
-                className="text-[48px] leading-none font-medium text-ios-green mb-2"
+                className="text-[48px] leading-none font-medium text-white mb-2"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 {targetIRRValue}
@@ -188,18 +187,14 @@ const FundA = () => {
         {/* ── Investment Philosophy ── */}
         <SectionLabel>{philosophySectionTitle}</SectionLabel>
         <div className="space-y-3 mb-2">
-          {philosophyCards.map((card) => {
-            const mapped = PHILOSOPHY_ICONS[card.title] || { icon: "lightbulb", color: "text-hushh-blue" };
-            return (
-              <FeatureCard
-                key={card.title}
-                icon={mapped.icon}
-                iconColor={mapped.color}
-                title={card.title}
-                description={card.description}
-              />
-            );
-          })}
+          {philosophyCards.map((card) => (
+            <FeatureCard
+              key={card.title}
+              icon={PHILOSOPHY_ICONS[card.title] || "lightbulb"}
+              title={card.title}
+              description={card.description}
+            />
+          ))}
         </div>
 
         {/* ── Sell the Wall Framework ── */}
@@ -209,25 +204,21 @@ const FundA = () => {
             href={sellTheWallHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-hushh-blue underline decoration-hushh-blue/30 hover:decoration-hushh-blue transition-colors"
+            className="text-black underline decoration-gray-300 hover:decoration-black transition-colors"
           >
             Sell the Wall
           </a>{" "}
           Framework
         </SectionLabel>
         <div className="space-y-3 mb-2">
-          {edgeCards.map((card) => {
-            const mapped = EDGE_ICONS[card.title] || { icon: "auto_awesome", color: "text-hushh-blue" };
-            return (
-              <FeatureCard
-                key={card.title}
-                icon={mapped.icon}
-                iconColor={mapped.color}
-                title={card.title}
-                description={card.description}
-              />
-            );
-          })}
+          {edgeCards.map((card) => (
+            <FeatureCard
+              key={card.title}
+              icon={EDGE_ICONS[card.title] || "auto_awesome"}
+              title={card.title}
+              description={card.description}
+            />
+          ))}
         </div>
 
         {/* ── Asset Focus ── */}
@@ -236,18 +227,14 @@ const FundA = () => {
           {assetFocusDescription}
         </p>
         <div className="space-y-3 mb-2">
-          {assetPillars.map((pillar) => {
-            const mapped = ASSET_ICONS[pillar.title] || { icon: "category", color: "text-hushh-blue" };
-            return (
-              <FeatureCard
-                key={pillar.title}
-                icon={mapped.icon}
-                iconColor={mapped.color}
-                title={pillar.title}
-                description={pillar.description}
-              />
-            );
-          })}
+          {assetPillars.map((pillar) => (
+            <FeatureCard
+              key={pillar.title}
+              icon={ASSET_ICONS[pillar.title] || "category"}
+              title={pillar.title}
+              description={pillar.description}
+            />
+          ))}
         </div>
 
         {/* ── Targeted Alpha Stack (FieldRow style) ── */}
@@ -260,13 +247,13 @@ const FundA = () => {
             row.isTotalRow ? (
               <div
                 key={row.label}
-                className="flex items-center justify-between bg-ios-dark text-white rounded-2xl px-6 py-4 mt-3"
+                className="flex items-center justify-between bg-black text-white rounded-2xl px-6 py-4 mt-3"
               >
                 <span className="text-sm font-semibold">
                   {row.label}
                 </span>
                 <span
-                  className="text-xl font-medium text-ios-green"
+                  className="text-xl font-medium"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
                   {row.value}
@@ -285,18 +272,14 @@ const FundA = () => {
         {/* ── Risk Management ── */}
         <SectionLabel>{riskSectionTitle}</SectionLabel>
         <div className="space-y-3 mb-2">
-          {riskCards.map((card) => {
-            const mapped = RISK_ICONS[card.title] || { icon: "security", color: "text-hushh-blue" };
-            return (
-              <FeatureCard
-                key={card.title}
-                icon={mapped.icon}
-                iconColor={mapped.color}
-                title={card.title}
-                description={card.description}
-              />
-            );
-          })}
+          {riskCards.map((card) => (
+            <FeatureCard
+              key={card.title}
+              icon={RISK_ICONS[card.title] || "security"}
+              title={card.title}
+              description={card.description}
+            />
+          ))}
         </div>
 
         {/* ── Key Terms (FieldRow style) ── */}
@@ -322,11 +305,11 @@ const FundA = () => {
           {shareClasses.map((sc) => (
             <div
               key={sc.shareClass}
-              className="bg-ios-gray-bg border border-gray-200/60 rounded-2xl p-5 hover:border-hushh-blue/30 transition-colors"
+              className="border border-gray-200 rounded-2xl p-5 hover:border-gray-300 transition-colors"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-ios-dark flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center">
                     <span className="material-symbols-outlined text-white !text-[0.9rem]">
                       account_balance_wallet
                     </span>
@@ -335,7 +318,7 @@ const FundA = () => {
                     {sc.shareClass}
                   </span>
                 </div>
-                <span className="text-[11px] font-medium text-hushh-blue bg-hushh-blue/10 px-2.5 py-1 rounded-full">
+                <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
                   Min {sc.minInvestment}
                 </span>
               </div>
@@ -412,10 +395,7 @@ const FundA = () => {
         </section>
 
         {/* ── Disclaimer ── */}
-        <p
-          className="text-[9px] text-gray-400 text-center leading-relaxed italic max-w-xs mx-auto mb-4"
-          style={{ fontFamily: "'Playfair Display', serif" }}
-        >
+        <p className="text-[9px] text-gray-400 text-center leading-relaxed italic max-w-xs mx-auto mb-4">
           Investing involves risk, including possible loss of principal. Past
           performance does not guarantee future results. Hushh Technologies is an
           SEC registered investment advisor.
