@@ -8,6 +8,7 @@ import { useHushhUserProfileLogic } from "./logic";
 import { Copy, Check } from "lucide-react";
 import { FaApple } from "react-icons/fa";
 import { SiGooglepay } from "react-icons/si";
+import HushhTechHeader from "../../components/hushh-tech-header/HushhTechHeader";
 import HushhTechBackHeader from "../../components/hushh-tech-back-header/HushhTechBackHeader";
 import HushhTechCta, { HushhTechCtaVariant } from "../../components/hushh-tech-cta/HushhTechCta";
 import NWSScoreBadge from "../../components/profile/NWSScoreBadge";
@@ -41,7 +42,10 @@ const HushhUserProfilePage: React.FC = () => {
 
   return (
     <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
-      {/* ═══ Header ═══ */}
+      {/* ═══ Main Header — logo + hamburger ═══ */}
+      <HushhTechHeader />
+
+      {/* ═══ Sub Header — back arrow + FAQs ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
       <main className="px-6 flex-grow max-w-md mx-auto w-full pb-48">
