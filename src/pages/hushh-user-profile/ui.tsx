@@ -14,9 +14,9 @@ import NWSScoreBadge from "../../components/profile/NWSScoreBadge";
 
 /* ── tiny reusable row (settings-style) ── */
 const FieldRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="group flex items-center justify-between border-b border-gray-200 py-4 hover:bg-gray-50/50 transition-colors">
-    <span className="text-sm text-gray-500 font-light lowercase">{label}</span>
-    <div className="flex items-center gap-2 text-right">{children}</div>
+  <div className="group flex items-center justify-between gap-4 border-b border-gray-100 py-4 hover:bg-gray-50/50 transition-colors">
+    <span className="text-sm text-gray-500 font-light lowercase shrink-0">{label}</span>
+    <div className="flex items-center gap-2 text-right min-w-0 flex-1 justify-end">{children}</div>
   </div>
 );
 
@@ -25,7 +25,7 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 );
 
 /* inline input class */
-const inlineInput = "text-right text-sm font-medium bg-transparent border-none focus:ring-0 p-0 text-black";
+const inlineInput = "text-right text-sm font-medium bg-transparent border-none focus:ring-0 p-0 text-black w-full";
 
 /* ── page ── */
 const HushhUserProfilePage: React.FC = () => {
@@ -123,24 +123,23 @@ const HushhUserProfilePage: React.FC = () => {
           <div className="py-1">
             <SectionLabel>Personal Information</SectionLabel>
             <FieldRow label="full name">
-              <input type="text" value={form.name} onChange={(e) => handleChange("name", e.target.value)} className={`${inlineInput} w-1/2`} placeholder="Your Name" />
+              <input type="text" value={form.name} onChange={(e) => handleChange("name", e.target.value)} className={inlineInput} placeholder="Your Name" />
             </FieldRow>
             <FieldRow label="email address">
-              <input type="email" value={form.email} onChange={(e) => handleChange("email", e.target.value)} className={`${inlineInput} w-2/3`} placeholder="you@email.com" />
+              <input type="email" value={form.email} onChange={(e) => handleChange("email", e.target.value)} className={inlineInput} placeholder="you@email.com" />
             </FieldRow>
             <FieldRow label="phone">
-              <div className="flex items-center gap-1">
-                <select value={form.phoneCountryCode} onChange={(e) => handleChange("phoneCountryCode", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-black text-right">
+              <div className="flex items-center gap-1 min-w-0">
+                <select value={form.phoneCountryCode} onChange={(e) => handleChange("phoneCountryCode", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-black text-right shrink-0">
                   <option value="+1">+1</option>
                   <option value="+44">+44</option>
                   <option value="+91">+91</option>
                 </select>
-                <input type="tel" value={form.phoneNumber} onChange={(e) => handleChange("phoneNumber", e.target.value)} className={`${inlineInput} w-28`} placeholder="98765 43210" />
-                <span className="material-symbols-outlined text-gray-300 text-lg">chevron_right</span>
+                <input type="tel" value={form.phoneNumber} onChange={(e) => handleChange("phoneNumber", e.target.value)} className={inlineInput} placeholder="98765 43210" />
               </div>
             </FieldRow>
             <FieldRow label="age">
-              <input type="number" value={form.age} onChange={(e) => handleChange("age", e.target.value)} className={`${inlineInput} w-20`} placeholder="34" />
+              <input type="number" value={form.age} onChange={(e) => handleChange("age", e.target.value)} className={inlineInput} placeholder="34" />
             </FieldRow>
           </div>
 
@@ -148,7 +147,7 @@ const HushhUserProfilePage: React.FC = () => {
           <div className="py-8">
             <SectionLabel>Investment Details</SectionLabel>
             <FieldRow label="organisation">
-              <input type="text" value={form.organisation} onChange={(e) => handleChange("organisation", e.target.value)} className={`${inlineInput} w-1/2`} placeholder="Company Name" />
+              <input type="text" value={form.organisation} onChange={(e) => handleChange("organisation", e.target.value)} className={inlineInput} placeholder="Company Name" />
             </FieldRow>
             <FieldRow label="account type">
               <div className="relative">
@@ -188,7 +187,7 @@ const HushhUserProfilePage: React.FC = () => {
                 type="text"
                 value={form.initialInvestmentAmount ? `$${Number(form.initialInvestmentAmount).toLocaleString()}` : ""}
                 onChange={(e) => { const raw = e.target.value.replace(/[^0-9]/g, ""); handleChange("initialInvestmentAmount", raw); }}
-                className={`${inlineInput} w-1/2`}
+                className={inlineInput}
                 placeholder="$50,000"
               />
             </FieldRow>
@@ -198,7 +197,7 @@ const HushhUserProfilePage: React.FC = () => {
           <div className="py-2">
             <SectionLabel>Legal &amp; Residential</SectionLabel>
             <FieldRow label="country">
-              <div className="relative">
+              <div className="relative inline-flex">
                 <select value={form.citizenshipCountry} onChange={(e) => handleChange("citizenshipCountry", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 pr-6 text-sm font-medium text-black text-right cursor-pointer">
                   <option value="" disabled>Select</option>
                   {COUNTRIES.map((c) => (<option key={c} value={c}>{c}</option>))}
@@ -207,16 +206,16 @@ const HushhUserProfilePage: React.FC = () => {
               </div>
             </FieldRow>
             <FieldRow label="state">
-              <input type="text" value={form.state} onChange={(e) => handleChange("state", e.target.value)} className={`${inlineInput} w-28`} placeholder="State" />
+              <input type="text" value={form.state} onChange={(e) => handleChange("state", e.target.value)} className={inlineInput} placeholder="State" />
             </FieldRow>
             <FieldRow label="address">
-              <input type="text" value={form.addressLine1} onChange={(e) => handleChange("addressLine1", e.target.value)} className={`${inlineInput} w-2/3 truncate`} placeholder="Street address" />
+              <input type="text" value={form.addressLine1} onChange={(e) => handleChange("addressLine1", e.target.value)} className={inlineInput} placeholder="Street address" />
             </FieldRow>
             <FieldRow label="city">
-              <input type="text" value={form.city} onChange={(e) => handleChange("city", e.target.value)} className={`${inlineInput} w-28`} placeholder="City" />
+              <input type="text" value={form.city} onChange={(e) => handleChange("city", e.target.value)} className={inlineInput} placeholder="City" />
             </FieldRow>
             <FieldRow label="zip code">
-              <input type="text" value={form.zipCode} onChange={(e) => handleChange("zipCode", e.target.value)} className={`${inlineInput} w-20`} placeholder="560001" />
+              <input type="text" value={form.zipCode} onChange={(e) => handleChange("zipCode", e.target.value)} className={inlineInput} placeholder="560001" />
             </FieldRow>
           </div>
         </section>
