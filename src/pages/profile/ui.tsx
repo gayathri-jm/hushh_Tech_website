@@ -4,7 +4,7 @@
  * All logic in logic.ts via useProfileLogic().
  */
 import React from 'react';
-import HushhTechBackHeader from '../../components/hushh-tech-back-header/HushhTechBackHeader';
+import HushhTechHeader from '../../components/hushh-tech-header/HushhTechHeader';
 import HushhTechFooter from '../../components/hushh-tech-footer/HushhTechFooter';
 import HushhTechCta, { HushhTechCtaVariant } from '../../components/hushh-tech-cta/HushhTechCta';
 import HushhLogo from '../../components/images/Hushhogo.png';
@@ -28,10 +28,10 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* header */}
-      <HushhTechBackHeader />
+      <HushhTechHeader />
 
       {/* scrollable content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-5 py-10 sm:px-6 md:px-8">
+      <main className="flex-1 flex flex-col items-center justify-center px-5 py-4 sm:px-6 md:px-8">
         <div className="w-full max-w-[440px] flex flex-col items-center gap-8">
 
           {/* pill badge */}
