@@ -289,6 +289,9 @@ export default function HomePage() {
       <HushhTechFooter
         activeTab={HushhFooterTab.HOME}
         onTabChange={(tab) => {
+          if (tab === HushhFooterTab.HOME) onNavigate("/");
+          if (tab === HushhFooterTab.FUND_A) onNavigate("/discover-fund-a");
+          if (tab === HushhFooterTab.COMMUNITY) onNavigate("/community");
           if (tab === HushhFooterTab.PROFILE) onNavigate("/profile");
         }}
       />

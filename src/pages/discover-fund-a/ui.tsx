@@ -5,11 +5,15 @@
  * All content pulled from logic.ts — zero data here.
  */
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useDiscoverFundALogic } from "./logic";
 import HushhTechBackHeader from "../../components/hushh-tech-back-header/HushhTechBackHeader";
 import HushhTechCta, {
   HushhTechCtaVariant,
 } from "../../components/hushh-tech-cta/HushhTechCta";
+import HushhTechFooter, {
+  HushhFooterTab,
+} from "../../components/hushh-tech-footer/HushhTechFooter";
 
 /* ── tiny reusable card ── */
 const InfoCard = ({
@@ -37,6 +41,7 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 );
 
 const FundA = () => {
+  const navigate = useNavigate();
   const {
     heroTitle,
     heroSubtitle,
@@ -331,6 +336,17 @@ const FundA = () => {
           </div>
         </section>
       </main>
+
+      {/* ═══ Footer Nav ═══ */}
+      <HushhTechFooter
+        activeTab={HushhFooterTab.FUND_A}
+        onTabChange={(tab) => {
+          if (tab === HushhFooterTab.HOME) navigate("/");
+          if (tab === HushhFooterTab.FUND_A) navigate("/discover-fund-a");
+          if (tab === HushhFooterTab.COMMUNITY) navigate("/community");
+          if (tab === HushhFooterTab.PROFILE) navigate("/profile");
+        }}
+      />
     </div>
   );
 };
