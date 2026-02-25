@@ -151,36 +151,36 @@ const HushhUserProfilePage: React.FC = () => {
               <input type="text" value={form.organisation} onChange={(e) => handleChange("organisation", e.target.value)} className={`${inlineInput} w-1/2`} placeholder="Company Name" />
             </FieldRow>
             <FieldRow label="account type">
-              <div className="flex items-center gap-2">
-                <select value={form.accountType} onChange={(e) => handleChange("accountType", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-black text-right cursor-pointer">
+              <div className="relative">
+                <select value={form.accountType} onChange={(e) => handleChange("accountType", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 pr-6 text-sm font-medium text-black text-right cursor-pointer">
                   <option value="" disabled>Select</option>
                   <option value="individual">Individual</option>
                   <option value="joint">Joint</option>
                   <option value="retirement">Retirement (IRA)</option>
                   <option value="trust">Trust</option>
                 </select>
-                <span className="material-symbols-outlined text-gray-300 text-lg">expand_more</span>
+                <span className="material-symbols-outlined text-gray-300 text-lg absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
               </div>
             </FieldRow>
             <FieldRow label="account structure">
-              <div className="flex items-center gap-2">
-                <select value={form.accountStructure} onChange={(e) => handleChange("accountStructure", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-black text-right cursor-pointer">
+              <div className="relative">
+                <select value={form.accountStructure} onChange={(e) => handleChange("accountStructure", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 pr-6 text-sm font-medium text-black text-right cursor-pointer">
                   <option value="" disabled>Select</option>
                   <option value="discretionary">Discretionary</option>
                   <option value="non-discretionary">Non-Discretionary</option>
                 </select>
-                <span className="material-symbols-outlined text-gray-300 text-lg">expand_more</span>
+                <span className="material-symbols-outlined text-gray-300 text-lg absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
               </div>
             </FieldRow>
             <FieldRow label="selected fund">
-              <div className="flex items-center gap-2">
-                <select value={form.selectedFund} onChange={(e) => handleChange("selectedFund", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-black text-right cursor-pointer">
+              <div className="relative">
+                <select value={form.selectedFund} onChange={(e) => handleChange("selectedFund", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 pr-6 text-sm font-medium text-black text-right cursor-pointer">
                   <option value="" disabled>Choose</option>
                   <option value="hushh_fund_a">Fund A</option>
                   <option value="hushh_fund_b">Fund B</option>
                   <option value="hushh_fund_c">Fund C</option>
                 </select>
-                <span className="material-symbols-outlined text-gray-300 text-lg">expand_more</span>
+                <span className="material-symbols-outlined text-gray-300 text-lg absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
               </div>
             </FieldRow>
             <FieldRow label="initial investment">
@@ -198,19 +198,16 @@ const HushhUserProfilePage: React.FC = () => {
           <div className="py-2">
             <SectionLabel>Legal &amp; Residential</SectionLabel>
             <FieldRow label="country">
-              <div className="flex items-center gap-2">
-                <select value={form.citizenshipCountry} onChange={(e) => handleChange("citizenshipCountry", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-black text-right cursor-pointer">
+              <div className="relative">
+                <select value={form.citizenshipCountry} onChange={(e) => handleChange("citizenshipCountry", e.target.value)} className="appearance-none bg-transparent border-none focus:ring-0 p-0 pr-6 text-sm font-medium text-black text-right cursor-pointer">
                   <option value="" disabled>Select</option>
                   {COUNTRIES.map((c) => (<option key={c} value={c}>{c}</option>))}
                 </select>
-                <span className="material-symbols-outlined text-gray-300 text-lg">expand_more</span>
+                <span className="material-symbols-outlined text-gray-300 text-lg absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
               </div>
             </FieldRow>
             <FieldRow label="state">
-              <div className="flex items-center gap-2">
-                <input type="text" value={form.state} onChange={(e) => handleChange("state", e.target.value)} className={`${inlineInput} w-28`} placeholder="State" />
-                <span className="material-symbols-outlined text-gray-300 text-lg">expand_more</span>
-              </div>
+              <input type="text" value={form.state} onChange={(e) => handleChange("state", e.target.value)} className={`${inlineInput} w-28`} placeholder="State" />
             </FieldRow>
             <FieldRow label="address">
               <input type="text" value={form.addressLine1} onChange={(e) => handleChange("addressLine1", e.target.value)} className={`${inlineInput} w-2/3 truncate`} placeholder="Street address" />
