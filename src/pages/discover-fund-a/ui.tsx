@@ -4,7 +4,7 @@
  * Uses same wrapper, header, CTA, FieldRow, SectionLabel patterns.
  * All content from logic.ts — zero data here.
  *
- * Changes from original: capitalization fix, hero subheading styling.
+ * Changes from original: Apple iOS colors, capitalization, hero subheading.
  */
 import React from "react";
 import { useNavigate } from "react-router-dom";
@@ -127,7 +127,7 @@ const FundA = () => {
   } = useDiscoverFundALogic();
 
   return (
-    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader
         onBackClick={() => navigate("/")}
@@ -139,9 +139,9 @@ const FundA = () => {
         {/* ── Hero ── */}
         <section className="pt-6 pb-8">
           {/* pill badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-full mb-6">
-            <span className="w-1.5 h-1.5 bg-black rounded-full" />
-            <span className="text-[10px] tracking-[0.15em] uppercase font-medium text-gray-500">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-hushh-blue/20 rounded-full mb-6">
+            <span className="w-1.5 h-1.5 bg-hushh-blue rounded-full" />
+            <span className="text-[10px] tracking-[0.15em] uppercase font-medium text-hushh-blue">
               Flagship Fund
             </span>
           </div>
@@ -161,15 +161,15 @@ const FundA = () => {
 
         {/* ── Target IRR (premium black card — like step-1 share class) ── */}
         <section className="mb-8">
-          <div className="bg-black rounded-2xl p-6 text-center relative overflow-hidden">
+          <div className="bg-ios-dark rounded-2xl p-6 text-center relative overflow-hidden">
             {/* subtle glow */}
-            <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+            <div className="absolute -top-8 -right-8 w-32 h-32 bg-hushh-blue/15 rounded-full blur-2xl" />
             <div className="relative z-10">
               <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-3 font-medium">
                 {targetIRRLabel}
               </p>
               <p
-                className="text-[48px] leading-none font-medium text-white mb-2"
+                className="text-[48px] leading-none font-medium text-ios-green mb-2"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 {targetIRRValue}
@@ -204,7 +204,7 @@ const FundA = () => {
             href={sellTheWallHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-black underline decoration-gray-300 hover:decoration-black transition-colors"
+            className="text-hushh-blue underline decoration-hushh-blue/30 hover:decoration-hushh-blue transition-colors"
           >
             Sell the Wall
           </a>{" "}
@@ -247,13 +247,13 @@ const FundA = () => {
             row.isTotalRow ? (
               <div
                 key={row.label}
-                className="flex items-center justify-between bg-black text-white rounded-2xl px-6 py-4 mt-3"
+                className="flex items-center justify-between bg-ios-dark text-white rounded-2xl px-6 py-4 mt-3"
               >
                 <span className="text-sm font-semibold">
                   {row.label}
                 </span>
                 <span
-                  className="text-xl font-medium"
+                  className="text-xl font-medium text-ios-green"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
                   {row.value}
@@ -309,7 +309,7 @@ const FundA = () => {
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-full bg-ios-dark flex items-center justify-center">
                     <span className="material-symbols-outlined text-white !text-[0.9rem]">
                       account_balance_wallet
                     </span>
@@ -318,7 +318,7 @@ const FundA = () => {
                     {sc.shareClass}
                   </span>
                 </div>
-                <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                <span className="text-[11px] font-medium text-hushh-blue bg-hushh-blue/10 px-2.5 py-1 rounded-full">
                   Min {sc.minInvestment}
                 </span>
               </div>
@@ -395,7 +395,10 @@ const FundA = () => {
         </section>
 
         {/* ── Disclaimer ── */}
-        <p className="text-[9px] text-gray-400 text-center leading-relaxed italic max-w-xs mx-auto mb-4">
+        <p
+          className="text-[9px] text-gray-400 text-center leading-relaxed italic max-w-xs mx-auto mb-4"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
           Investing involves risk, including possible loss of principal. Past
           performance does not guarantee future results. Hushh Technologies is an
           SEC registered investment advisor.
