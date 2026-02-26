@@ -80,7 +80,7 @@ const HushhTechNavDrawer: React.FC<HushhTechNavDrawerProps> = ({
             <img src={hushhLogo} alt="Hushh" className="w-5 h-5 object-contain" />
           </div>
           <span className="text-[0.7rem] font-bold tracking-[0.2em] uppercase text-gray-900 pt-0.5">
-            Hushh Technologies
+            hushh technologies
           </span>
         </div>
         <button

@@ -40,7 +40,7 @@ const HushhTechHeader: React.FC<HushhTechHeaderProps> = ({
           </div>
           <div className="flex flex-col">
             <span className="text-[18px] font-bold tracking-tight text-gray-900">
-              Hushh
+              hushh
             </span>
             <span className="text-[11px] font-medium tracking-[0.08em] text-gray-400 uppercase">
               Technologies
