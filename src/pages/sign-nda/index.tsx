@@ -236,21 +236,21 @@ const SignNDAPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="bg-white min-h-screen flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-hushh-blue border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   /* ─── RENDER ─── */
   return (
-    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Common Header ═══ */}
       <HushhTechHeader />
 
       <main className="px-6 flex-grow max-w-md mx-auto w-full pb-32">
         {/* ── Icon + Title ── */}
         <section className="pt-12 pb-8 text-center">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-black flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-hushh-blue flex items-center justify-center">
             <span
               className="material-symbols-outlined text-white text-3xl"
               style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}
@@ -259,13 +259,14 @@ const SignNDAPage: React.FC = () => {
             </span>
           </div>
           <h1
-            className="text-[2.5rem] leading-[1.1] font-medium text-black tracking-tight lowercase"
+            className="text-[2.5rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
-            non-disclosure<br />agreement
+            Non-Disclosure<br />
+            <span className="text-gray-400 italic font-light">Agreement</span>
           </h1>
-          <p className="text-gray-500 text-sm font-light mt-3 lowercase leading-relaxed">
-            review and sign to access confidential investment materials
+          <p className="text-gray-500 text-sm font-light mt-3 leading-relaxed">
+            Review and sign to access confidential investment materials.
           </p>
         </section>
 
@@ -273,21 +274,21 @@ const SignNDAPage: React.FC = () => {
         <section className="mb-8">
           <div className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-200 bg-gray-50">
             <span
-              className="material-symbols-outlined text-gray-500 text-lg"
+              className="material-symbols-outlined text-hushh-blue text-lg"
               style={{ fontVariationSettings: "'wght' 400" }}
             >
               lock
             </span>
             <span className="text-[11px] text-gray-500 tracking-wide uppercase font-medium">
-              encrypted &amp; legally binding · gdpr compliant
+              Encrypted &amp; Legally Binding · GDPR Compliant
             </span>
           </div>
         </section>
 
         {/* ── Agreement Terms ── */}
         <section className="mb-8">
-          <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-semibold">
-            agreement terms
+          <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase mb-4 font-medium">
+            Agreement Terms
           </h3>
           <div className="border border-gray-200 bg-white">
             <div className="max-h-80 overflow-y-auto p-5 space-y-5 scrollbar-thin">
@@ -314,15 +315,15 @@ const SignNDAPage: React.FC = () => {
 
         {/* ── Digital Signature ── */}
         <section className="mb-8">
-          <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-semibold">
-            digital signature
+          <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase mb-4 font-medium">
+            Digital Signature
           </h3>
 
           {/* Name input */}
           <div className="border border-gray-200 mb-2">
             <div className="flex items-center px-4 py-4 border-b border-gray-100">
-              <label className="text-sm font-semibold text-gray-900 lowercase shrink-0 mr-4">
-                full legal name
+              <label className="text-sm font-semibold text-gray-900 shrink-0 mr-4">
+                Full Legal Name
               </label>
               <input
                 type="text"
@@ -332,7 +333,7 @@ const SignNDAPage: React.FC = () => {
                   if (nameError) setNameError('');
                 }}
                 placeholder="required"
-                className="flex-1 text-right text-sm font-medium text-black placeholder:text-gray-400 bg-transparent outline-none lowercase"
+                className="flex-1 text-right text-sm font-medium text-black placeholder:text-gray-400 bg-transparent outline-none"
               />
             </div>
             {nameError && (
@@ -355,9 +356,9 @@ const SignNDAPage: React.FC = () => {
                   }}
                   className="mt-0.5 w-5 h-5 accent-black shrink-0"
                 />
-                <span className="text-xs text-gray-500 leading-relaxed lowercase">
-                  i have read, understood, and agree to the terms of this non-disclosure
-                  agreement. i acknowledge that this constitutes my legal electronic signature.
+                <span className="text-xs text-gray-500 leading-relaxed">
+                  I have read, understood, and agree to the terms of this Non-Disclosure
+                  Agreement. I acknowledge that this constitutes my legal electronic signature.
                 </span>
               </label>
             </div>
@@ -375,8 +376,8 @@ const SignNDAPage: React.FC = () => {
               >
                 person
               </span>
-              <p className="text-xs text-gray-500 lowercase">
-                signing as{' '}
+              <p className="text-xs text-gray-500">
+                Signing as{' '}
                 <span className="text-black font-semibold">{userEmail}</span>
               </p>
             </div>
@@ -395,19 +396,19 @@ const SignNDAPage: React.FC = () => {
         </section>
 
         {/* ── Legal Footer ── */}
-        <p className="text-[11px] leading-[16px] text-gray-400 text-center font-light lowercase">
-          by signing, you agree that your digital signature has the same legal validity
+        <p className="text-[11px] leading-[16px] text-gray-400 text-center font-light">
+          By signing, you agree that your digital signature has the same legal validity
           as a handwritten signature under applicable electronic signature laws.
         </p>
 
         {/* ── Trust Badges ── */}
         <section className="flex flex-col items-center justify-center text-center gap-2 pt-12 pb-4">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px] text-gray-400">
+            <span className="material-symbols-outlined text-[12px] text-hushh-blue">
               lock
             </span>
-            <span className="text-[10px] text-gray-400 tracking-wide uppercase font-medium">
-              256 bit encryption
+            <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">
+              256 Bit Encryption
             </span>
           </div>
         </section>
