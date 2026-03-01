@@ -197,7 +197,7 @@ export default function AgentsHomePage() {
                 </div>
                 <div>
                   <span className="text-[10px] font-medium tracking-widest uppercase text-white/70 block">
-                    Gemini Live API
+                    Hushh Live API
                   </span>
                   <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
                     தமிழ் குரல் AI
