@@ -164,6 +164,83 @@ export default function AgentsHomePage() {
           </div>
         </section>
 
+        {/* ═══ Tamil Voice Nudge — Gemini Live API ═══ */}
+        <section className="py-6">
+          <div 
+            className="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:shadow-2xl"
+            style={{ 
+              background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B00 100%)',
+            }}
+            onClick={() => navigate('/hushh-agents/chat?lang=ta-IN&voice=true')}
+            role="button"
+            tabIndex={0}
+            aria-label="Start Tamil voice conversation"
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/hushh-agents/chat?lang=ta-IN&voice=true'); }}
+          >
+            {/* Animated glow */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/10 to-transparent" />
+            
+            {/* NEW Badge */}
+            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                NEW
+              </span>
+            </div>
+            
+            <div className="relative z-10 flex flex-col gap-4">
+              {/* Icon & Title */}
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                  <span className="material-symbols-outlined text-4xl text-white">record_voice_over</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-medium tracking-widest uppercase text-white/70 block">
+                    Gemini Live API
+                  </span>
+                  <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    தமிழ் குரல் AI
+                  </h2>
+                  <p className="text-sm text-white/90 font-light">Tamil Voice Assistant</p>
+                </div>
+              </div>
+              
+              {/* Description */}
+              <p className="text-white/90 text-sm font-light leading-relaxed">
+                <span className="font-medium">தமிழில் பேசுங்கள், தமிழில் பதில் பெறுங்கள்!</span><br />
+                Speak in Tamil, get responses in Tamil. Real-time voice conversations 
+                powered by Google's most advanced AI.
+              </p>
+              
+              {/* Features */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                {['Real-time Voice', 'Native Tamil', 'Low Latency', 'No Typing'].map((cap) => (
+                  <span 
+                    key={cap}
+                    className="px-3 py-1.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-[10px] font-medium uppercase tracking-wider text-white"
+                  >
+                    {cap}
+                  </span>
+                ))}
+              </div>
+              
+              {/* CTA */}
+              <div className="pt-4 border-t border-white/20 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-white/80">mic</span>
+                  <span className="text-sm font-medium text-white">
+                    குரலில் பேசத் தொடங்குங்கள்
+                  </span>
+                </div>
+                <span className="material-symbols-outlined text-white group-hover:translate-x-2 transition-transform">
+                  arrow_forward
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── Features Grid ── */}
         <section className="py-8">
           <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-2 font-medium">Features</p>
