@@ -192,6 +192,19 @@ export default function AgentsHomePage() {
             Available Agents
           </p>
           <div className="space-y-3">
+            {/* Kirkland Agents Directory — Priority */}
+            <AgentNudge
+              title="Kirkland Agents"
+              subtitle="Local Directory · 771 Agents"
+              description="Browse and discover local agents. Search by name, category, or location. View ratings and get directions."
+              icon="location_city"
+              color={APPLE.indigo}
+              badge="Live"
+              badgeColor={APPLE.blue}
+              chips={['Search', 'Filter', 'Ratings', 'Directions']}
+              onClick={() => navigate('/hushh-agents/kirkland')}
+            />
+
             {/* Hushh Chat Agent */}
             <AgentNudge
               title="Hushh"
@@ -229,19 +242,6 @@ export default function AgentsHomePage() {
               badgeColor={APPLE.green}
               chips={['Generate', 'Debug', 'Explain', 'TS · PY · GO']}
               onClick={() => navigate('/hushh-agents/code')}
-            />
-
-            {/* Kirkland Agents Directory */}
-            <AgentNudge
-              title="Kirkland Agents"
-              subtitle="Local Directory · 771 Agents"
-              description="Browse and discover local agents. Search by name, category, or location. View ratings and get directions."
-              icon="location_city"
-              color={APPLE.indigo}
-              badge="Live"
-              badgeColor={APPLE.blue}
-              chips={['Search', 'Filter', 'Ratings', 'Directions']}
-              onClick={() => navigate('/hushh-agents/kirkland')}
             />
           </div>
         </section>
