@@ -10,6 +10,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useChatPersistence, type PersistedMessage } from '../hooks/useChatPersistence';
 import HushhLogo from '../../components/images/Hushhogo.png';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 
 /* ── Types ── */
 type CodeMode = 'generate' | 'debug' | 'explain' | 'optimize';
@@ -552,21 +553,17 @@ export default function CodePage() {
                       </div>
                     )}
 
-                    {/* Explanation */}
+                    {/* Explanation — rendered as markdown */}
                     {msg.explanation && (
                       <div className={`px-4 py-3 ${msg.code ? 'border-t border-gray-800' : ''}`}>
-                        <div className="text-sm text-gray-400 leading-relaxed whitespace-pre-wrap">
-                          {msg.explanation}
-                        </div>
+                        <MarkdownRenderer content={msg.explanation} theme="dark" />
                       </div>
                     )}
 
-                    {/* No code, no explanation — show raw content */}
+                    {/* No code, no explanation — show raw content as markdown */}
                     {!msg.code && !msg.explanation && msg.content && (
                       <div className="px-4 py-3">
-                        <div className="text-sm text-gray-400 leading-relaxed whitespace-pre-wrap">
-                          {msg.content}
-                        </div>
+                        <MarkdownRenderer content={msg.content} theme="dark" />
                       </div>
                     )}
                   </div>

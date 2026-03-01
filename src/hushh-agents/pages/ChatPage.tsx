@@ -13,6 +13,7 @@ import {
   createUserMessage, 
   createAssistantMessage 
 } from '../services/hushhIntelligenceService';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE, type LanguageCode } from '../core/constants';
 import type { ChatMessage, SupportedLanguage } from '../core/types';
 
@@ -392,9 +393,13 @@ export default function ChatPage() {
                         </span>
                       </div>
                     )}
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+                    {message.role === 'assistant' ? (
+                      <MarkdownRenderer content={message.content} theme="light" />
+                    ) : (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                    )}
                     <span className={`text-[9px] mt-2 block ${
                       message.role === 'user' ? 'text-white/50' : 'text-gray-400'
                     }`}>
