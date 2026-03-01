@@ -8,6 +8,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useChatPersistence, type PersistedMessage } from '../hooks/useChatPersistence';
 import HushhLogo from '../../components/images/Hushhogo.png';
 
 /* ── Types ── */
@@ -57,17 +58,31 @@ export default function CodePage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const threadEndRef = useRef<HTMLDivElement>(null);
 
+  const persistence = useChatPersistence('code');
+
   const [prompt, setPrompt] = useState('');
   const [language, setLanguage] = useState('typescript');
   const [mode, setMode] = useState<CodeMode>('generate');
   const [thread, setThread] = useState<ThreadMessage[]>([]);
+  const [sessionId, setSessionId] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedThinking, setExpandedThinking] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  // On mount: restore latest session or create new one
+  useEffect(() => {
+    const latest = persistence.getLatestSession();
+    if (latest && latest.messages.length > 0) {
+      setThread(latest.messages as ThreadMessage[]);
+      setSessionId(latest.id);
+    } else {
+      setSessionId(persistence.createSession());
+    }
+    setMounted(true);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -75,6 +90,13 @@ export default function CodePage() {
       navigate('/login', { state: { redirectTo: '/hushh-agents/code' } });
     }
   }, [isAuthenticated, isLoading, navigate]);
+
+  // Auto-save thread to localStorage whenever it changes
+  useEffect(() => {
+    if (sessionId && thread.length > 0) {
+      persistence.saveSession(sessionId, thread as PersistedMessage[]);
+    }
+  }, [thread, sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-scroll to bottom when thread updates
   useEffect(() => {
@@ -200,12 +222,38 @@ export default function CodePage() {
     });
   }, []);
 
-  // Clear conversation and start fresh
+  // Start a new conversation (preserves old one in history)
   const handleNewConversation = useCallback(() => {
+    const newId = persistence.createSession();
+    setSessionId(newId);
     setThread([]);
     setError(null);
     setPrompt('');
-  }, []);
+    setShowHistory(false);
+  }, [persistence]);
+
+  // Load a past session from history
+  const handleLoadSession = useCallback((id: string) => {
+    const session = persistence.getSession(id);
+    if (session) {
+      setSessionId(session.id);
+      setThread(session.messages as ThreadMessage[]);
+      setError(null);
+      setPrompt('');
+    }
+    setShowHistory(false);
+  }, [persistence]);
+
+  // Delete a session from history
+  const handleDeleteSession = useCallback((id: string) => {
+    persistence.deleteSession(id);
+    // If we deleted the current session, start fresh
+    if (id === sessionId) {
+      const newId = persistence.createSession();
+      setSessionId(newId);
+      setThread([]);
+    }
+  }, [persistence, sessionId]);
 
   // Keyboard shortcut (Cmd+Enter to send)
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -248,18 +296,26 @@ export default function CodePage() {
         </Link>
 
         <div className="flex items-center gap-2">
+          {/* History button */}
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-800/60 hover:bg-gray-700/60 transition-colors text-gray-400 hover:text-white text-xs"
+            aria-label="Chat History"
+            title="Past conversations"
+          >
+            <span className="material-symbols-outlined text-sm">history</span>
+            <span className="hidden md:inline">History</span>
+          </button>
           {/* New Conversation button */}
-          {thread.length > 0 && (
-            <button
-              onClick={handleNewConversation}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-800/60 hover:bg-gray-700/60 transition-colors text-gray-400 hover:text-white text-xs"
-              aria-label="New Conversation"
-              title="Start fresh (clears context)"
-            >
-              <span className="material-symbols-outlined text-sm">add</span>
-              <span className="hidden md:inline">New</span>
-            </button>
-          )}
+          <button
+            onClick={handleNewConversation}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-800/60 hover:bg-gray-700/60 transition-colors text-gray-400 hover:text-white text-xs"
+            aria-label="New Conversation"
+            title="Start fresh (clears context)"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            <span className="hidden md:inline">New</span>
+          </button>
           <button
             onClick={() => navigate('/hushh-agents')}
             className="p-2 rounded-lg bg-gray-800/60 hover:bg-gray-700/60 transition-colors text-gray-400 hover:text-white"
@@ -269,6 +325,73 @@ export default function CodePage() {
           </button>
         </div>
       </header>
+
+      {/* ═══ History Sidebar Overlay ═══ */}
+      {showHistory && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-[60]" onClick={() => setShowHistory(false)} />
+          <div className="fixed right-0 top-0 bottom-0 w-80 md:w-96 bg-[#0d1117] border-l border-gray-800 z-[70] flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-800">
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <span className="material-symbols-outlined text-base text-purple-400">history</span>
+                Chat History
+              </h3>
+              <button onClick={() => setShowHistory(false)} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-500 hover:text-white transition-colors">
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {persistence.getSessions().length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+                  <span className="material-symbols-outlined text-3xl text-gray-700 mb-3">chat_bubble_outline</span>
+                  <p className="text-sm text-gray-600">No past conversations yet</p>
+                  <p className="text-xs text-gray-700 mt-1">Your chats will appear here</p>
+                </div>
+              ) : (
+                <div className="p-2 space-y-1">
+                  {persistence.getSessions().map((session) => (
+                    <div
+                      key={session.id}
+                      className={`group flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                        session.id === sessionId
+                          ? 'bg-purple-500/15 border border-purple-500/20'
+                          : 'hover:bg-gray-800/60 border border-transparent'
+                      }`}
+                      onClick={() => handleLoadSession(session.id)}
+                    >
+                      <span className="material-symbols-outlined text-sm text-gray-600 mt-0.5 shrink-0">
+                        {session.id === sessionId ? 'radio_button_checked' : 'chat'}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-300 truncate font-medium">{session.title}</p>
+                        <p className="text-[10px] text-gray-600 mt-0.5">
+                          {session.messages.length} msgs · {new Date(session.updatedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteSession(session.id); }}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/20 text-gray-600 hover:text-red-400 transition-all shrink-0"
+                        aria-label="Delete session"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-4 py-3 border-t border-gray-800">
+              <button
+                onClick={handleNewConversation}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 text-xs font-medium transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">add</span>
+                New Conversation
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ═══ Main ═══ */}
       <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 md:px-6">

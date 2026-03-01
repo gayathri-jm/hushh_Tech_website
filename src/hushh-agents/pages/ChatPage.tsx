@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import HushhLogo from '../../components/images/Hushhogo.png';
 import { useAuth } from '../hooks/useAuth';
+import { useChatPersistence, type PersistedMessage } from '../hooks/useChatPersistence';
 import { 
   sendChatMessage, 
   createUserMessage, 
@@ -22,16 +23,38 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, user } = useAuth();
   
+  const persistence = useChatPersistence('hushh');
+
   // Chat state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>(DEFAULT_LANGUAGE);
   const [error, setError] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
   
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // On mount: restore latest session or create new one
+  useEffect(() => {
+    const latest = persistence.getLatestSession();
+    if (latest && latest.messages.length > 0) {
+      const restored: ChatMessage[] = latest.messages.map((m) => ({
+        id: m.id,
+        conversationId: latest.id,
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+        createdAt: new Date(m.timestamp),
+      }));
+      setMessages(restored);
+      setSessionId(latest.id);
+    } else {
+      setSessionId(persistence.createSession());
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Scroll to bottom when messages change
   const scrollToBottom = useCallback(() => {
@@ -41,6 +64,19 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Auto-save messages to localStorage
+  useEffect(() => {
+    if (sessionId && messages.length > 0) {
+      const persisted: PersistedMessage[] = messages.map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        timestamp: m.createdAt instanceof Date ? m.createdAt.getTime() : Number(m.createdAt),
+      }));
+      persistence.saveSession(sessionId, persisted);
+    }
+  }, [messages, sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -102,10 +138,41 @@ export default function ChatPage() {
     }
   };
 
-  // Clear chat
+  // New conversation (preserves old in history)
   const handleClearChat = () => {
+    const newId = persistence.createSession();
+    setSessionId(newId);
     setMessages([]);
     setError(null);
+    setShowHistory(false);
+  };
+
+  // Load a past session
+  const handleLoadSession = (id: string) => {
+    const session = persistence.getSession(id);
+    if (session) {
+      const restored: ChatMessage[] = session.messages.map((m) => ({
+        id: m.id,
+        conversationId: session.id,
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+        createdAt: new Date(m.timestamp),
+      }));
+      setSessionId(session.id);
+      setMessages(restored);
+      setError(null);
+    }
+    setShowHistory(false);
+  };
+
+  // Delete a session
+  const handleDeleteSession = (id: string) => {
+    persistence.deleteSession(id);
+    if (id === sessionId) {
+      const newId = persistence.createSession();
+      setSessionId(newId);
+      setMessages([]);
+    }
   };
 
   if (isLoading) {
@@ -141,8 +208,82 @@ export default function ChatPage() {
           <span className="font-semibold text-sm">Hushh Agents</span>
         </Link>
         
-        <div className="w-10" /> {/* Spacer for centering */}
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+          aria-label="Chat history"
+          title="Past conversations"
+        >
+          <span className="material-symbols-outlined text-gray-600 text-lg">history</span>
+        </button>
       </header>
+
+      {/* ═══ History Sidebar Overlay ═══ */}
+      {showHistory && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-[60]" onClick={() => setShowHistory(false)} />
+          <div className="fixed right-0 top-0 bottom-0 w-80 md:w-96 bg-white border-l border-gray-200 z-[70] flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <span className="material-symbols-outlined text-base text-gray-500">history</span>
+                Chat History
+              </h3>
+              <button onClick={() => setShowHistory(false)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {persistence.getSessions().length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+                  <span className="material-symbols-outlined text-3xl text-gray-300 mb-3">chat_bubble_outline</span>
+                  <p className="text-sm text-gray-400">No past conversations yet</p>
+                  <p className="text-xs text-gray-300 mt-1">Your chats will appear here</p>
+                </div>
+              ) : (
+                <div className="p-2 space-y-1">
+                  {persistence.getSessions().map((session) => (
+                    <div
+                      key={session.id}
+                      className={`group flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                        session.id === sessionId
+                          ? 'bg-blue-50 border border-blue-200'
+                          : 'hover:bg-gray-50 border border-transparent'
+                      }`}
+                      onClick={() => handleLoadSession(session.id)}
+                    >
+                      <span className="material-symbols-outlined text-sm text-gray-400 mt-0.5 shrink-0">
+                        {session.id === sessionId ? 'radio_button_checked' : 'chat'}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-700 truncate font-medium">{session.title}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">
+                          {session.messages.length} msgs · {new Date(session.updatedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteSession(session.id); }}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all shrink-0"
+                        aria-label="Delete session"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-4 py-3 border-t border-gray-100">
+              <button
+                onClick={handleClearChat}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-900 hover:bg-black text-white text-xs font-medium transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">add</span>
+                New Conversation
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ═══ Main Chat Area ═══ */}
       <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 md:px-6">
