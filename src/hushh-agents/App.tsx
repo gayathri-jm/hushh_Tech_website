@@ -24,6 +24,7 @@ const CodePage = lazy(() => import('./pages/CodePage'));
 const KirklandAgentsPage = lazy(() => import('./pages/KirklandAgentsPage'));
 const AgentDetailPage = lazy(() => import('./pages/AgentDetailPage'));
 const AgentChatPage = lazy(() => import('./pages/AgentChatPage'));
+const AgentOnboardPage = lazy(() => import('./pages/AgentOnboardPage'));
 
 // Playfair heading style
 const playfair = { fontFamily: "'Playfair Display', serif" };
@@ -286,6 +287,12 @@ const App: React.FC = () => {
         <Route
           path="chat/:agentId"
           element={<ChatPage />}
+        />
+
+        {/* Agent Onboarding Form */}
+        <Route
+          path="onboard"
+          element={<AgentOnboardPage />}
         />
 
         {/* Default chat (Hushh agent) */}
