@@ -83,7 +83,8 @@ const SignNDAPage: React.FC = () => {
 
       const fullName =
         session.user.user_metadata?.full_name ||
-        session.user.user_metadata?.name || '';
+        session.user.user_metadata?.name ||
+        session.user.email?.split('@')[0] || '';
       if (fullName && !signerName) {
         setSignerName(fullName);
       }

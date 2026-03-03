@@ -248,7 +248,7 @@ function App() {
             } />
             <Route path='/california-privacy-policy' element={<CaliforniaPrivacyPolicy />} />
             <Route path='/eu-uk-jobs-privacy-policy' element={<EUUKPrivacyPolicy />} />
-            <Route path='/delete-account' element={<DeleteAccountPage />} />
+            <Route path='/delete-account' element={<AuthOnlyRoute><DeleteAccountPage /></AuthOnlyRoute>} />
             <Route path="/community/*" element={
               <CommunityPostPage />
             } />
