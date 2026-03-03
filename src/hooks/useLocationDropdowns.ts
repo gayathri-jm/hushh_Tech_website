@@ -18,7 +18,7 @@ interface CityItem {
   name: string;
 }
 
-interface LocationDropdownState {
+export interface LocationDropdownState {
   countries: DropdownItem[];
   states: DropdownItem[];
   cities: CityItem[];
@@ -136,21 +136,35 @@ export function useLocationDropdowns(
       states.find(s => s.isoCode.toLowerCase() === raw || s.name.toLowerCase() === raw) ||
       states.find(s => s.name.toLowerCase().includes(raw) || raw.includes(s.name.toLowerCase()));
 
-    if (match) setStateRaw(match.isoCode);
-    pendingState.current = null;
+    if (match) {
+      setStateRaw(match.isoCode);
+      pendingState.current = null;
+    }
+    /* Keep pendingState if no match — retry when states reload */
   }, [states, detectionVersion]);
 
   // Apply pending city when cities list loads OR detection version bumps
   useEffect(() => {
     if (cities.length === 0 || !pendingCity.current) return;
 
-    const raw = pendingCity.current.toLowerCase();
+    const raw = pendingCity.current.toLowerCase().replace(/[-]/g, ' ');
+    /* Normalize city names: strip hyphens, trim, compare loosely */
+    const normalize = (s: string) => s.toLowerCase().replace(/[-]/g, ' ').trim();
     const match =
-      cities.find(c => c.name.toLowerCase() === raw) ||
-      cities.find(c => c.name.toLowerCase().includes(raw) || raw.includes(c.name.toLowerCase()));
+      cities.find(c => normalize(c.name) === raw) ||
+      cities.find(c => normalize(c.name).includes(raw) || raw.includes(normalize(c.name))) ||
+      cities.find(c => {
+        /* Token-based: match if first word matches */
+        const cTokens = normalize(c.name).split(/\s+/);
+        const rTokens = raw.split(/\s+/);
+        return cTokens[0] === rTokens[0] && cTokens[0].length > 2;
+      });
 
-    if (match) setCityRaw(match.name);
-    pendingCity.current = null;
+    if (match) {
+      setCityRaw(match.name);
+      pendingCity.current = null;
+    }
+    /* Keep pendingCity if no match — retry when cities reload */
   }, [cities, detectionVersion]);
 
   // Apply GPS/detected location — queues values for when dropdowns load

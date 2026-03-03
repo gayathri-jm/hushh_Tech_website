@@ -126,7 +126,41 @@ export function useStep8Logic() {
         return;
       }
 
+      /* ── Try Plaid identity address as primary source ── */
+      let plaidCity: string | undefined;
+      try {
+        const { data: finData } = await config.supabaseClient
+          .from('user_financial_data')
+          .select('identity_data')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (finData?.identity_data) {
+          const accounts = finData.identity_data.accounts || [];
+          const owners = accounts[0]?.owners || [];
+          const owner = owners[0];
+          if (owner?.addresses?.length) {
+            const primaryAddr = owner.addresses.find((a: any) => a.primary) || owner.addresses[0];
+            const addr = primaryAddr?.data || {};
+            if (addr.city) {
+              plaidCity = addr.city;
+              console.log('[Step8] City from Plaid identity:', plaidCity);
+            }
+            /* Pre-fill address fields from Plaid if available */
+            if (addr.street && !saved?.address_line_1) setAddressLine1(addr.street);
+            if (addr.postal_code && !saved?.zip_code) setZipCode(addr.postal_code);
+          }
+        }
+      } catch (err) {
+        console.warn('[Step8] Plaid identity fetch failed:', err);
+      }
+
       await detectAndApply(user.id);
+
+      /* If GPS didn't set city but Plaid has it, apply Plaid city */
+      if (plaidCity && !dropdowns.city) {
+        dropdowns.applyDetectedLocation(undefined, undefined, undefined, plaidCity);
+      }
 
       if (saved?.residence_country) {
         const code = locationService.mapCountryToIsoCode(saved.residence_country);
