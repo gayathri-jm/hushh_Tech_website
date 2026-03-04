@@ -63,7 +63,7 @@ import OnboardingStep3 from './pages/onboarding/step-3/ui';
 import OnboardingStep4 from './pages/onboarding/step-4/ui';
 import OnboardingStep5 from './pages/onboarding/step-5/ui';
 import OnboardingStep7 from './pages/onboarding/step-7/ui';
-import OnboardingStep8 from './pages/onboarding/step-8/ui';
+// Step 8 removed — merged into Step 4 (Location & Address KYC)
 import OnboardingStep9 from './pages/onboarding/step-9/ui';
 import OnboardingStep11 from './pages/onboarding/step-11/ui';
 import OnboardingStep13 from './pages/onboarding/step-13/ui';
@@ -303,7 +303,7 @@ function App() {
             } />
             <Route path="/onboarding/step-8" element={
               <ProtectedRoute>
-                <OnboardingStep8 />
+                <Navigate to="/onboarding/step-9" replace />
               </ProtectedRoute>
             } />
             <Route path="/onboarding/step-9" element={
