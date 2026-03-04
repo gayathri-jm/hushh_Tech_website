@@ -222,6 +222,17 @@ export default function OnboardingStep5() {
                   className="flex-1 text-sm font-medium text-gray-900 placeholder-gray-400 bg-transparent border-none outline-none p-0"
                   aria-label="Phone number"
                 />
+
+                {/* Lock icon when pre-filled from Plaid */}
+                {isPreFilledFromBank && (
+                  <span
+                    className="material-symbols-outlined text-green-500 text-base shrink-0"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                    title="Pre-filled from your bank"
+                  >
+                    lock
+                  </span>
+                )}
               </div>
             </div>
 

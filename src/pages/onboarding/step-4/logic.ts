@@ -1,12 +1,14 @@
 /**
- * Step 4 — All Business Logic
- * Country/residence detection, GPS/IP location, Supabase upsert
+ * Step 4 — Confirm Residence + Full Address
+ * Merges country detection (old step-4) + address entry (old step-8).
+ * Sources: GPS for current address, Plaid for bank/citizenship address.
  */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../../resources/config/config';
 import { upsertOnboardingData } from '../../../services/onboarding/upsertOnboardingData';
 import { useFooterVisibility } from '../../../utils/useFooterVisibility';
+import { useLocationDropdowns } from '../../../hooks/useLocationDropdowns';
 import { locationService, type LocationData, COUNTRY_CODE_TO_NAME } from '../../../services/location';
 
 export const CURRENT_STEP = 4;
@@ -40,18 +42,46 @@ export const countries = [
 
 export type LocationStatus = 'detecting' | 'success' | 'ip-success' | 'denied' | 'failed' | 'manual' | null;
 
+/* ── Plaid bank address shape ── */
+export interface BankAddress {
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
 export interface Step4Logic {
-  citizenshipCountry: string; residenceCountry: string;
-  isLoading: boolean; isFooterVisible: boolean;
-  isDetectingLocation: boolean; locationDetected: boolean;
-  locationStatus: LocationStatus; detectedLocation: string;
-  userConfirmedManual: boolean; showPermissionHelp: boolean;
-  showLocationModal: boolean; canContinue: boolean;
-  isErrorStatus: boolean; isSuccessStatus: boolean;
-  shouldShowForm: boolean; canConfirmSelection: boolean;
+  /* Country */
+  citizenshipCountry: string;
+  residenceCountry: string;
+  plaidLinked: boolean;
+  /* Address */
+  addressLine1: string;
+  addressLine2: string;
+  setAddressLine2: (v: string) => void;
+  zipCode: string;
+  bankAddress: BankAddress | null;
+  /* Dropdowns */
+  dropdowns: ReturnType<typeof useLocationDropdowns>;
+  /* UI state */
+  isLoading: boolean;
+  isFooterVisible: boolean;
+  isDetectingLocation: boolean;
+  locationDetected: boolean;
+  locationStatus: LocationStatus;
+  detectedLocation: string;
+  showPermissionHelp: boolean;
+  showLocationModal: boolean;
+  canContinue: boolean;
+  isErrorStatus: boolean;
+  isSuccessStatus: boolean;
+  shouldShowForm: boolean;
+  /* Handlers */
   handleCitizenshipChange: (v: string) => void;
   handleResidenceChange: (v: string) => void;
-  handleConfirmManualSelection: () => void;
+  handleAddressLine1Change: (v: string) => void;
+  handleZipCodeChange: (v: string) => void;
   handleRetry: () => Promise<void>;
   handleAllowLocation: () => Promise<void>;
   handleDontAllow: () => void;
@@ -63,46 +93,74 @@ export interface Step4Logic {
 
 export const useStep4Logic = (): Step4Logic => {
   const navigate = useNavigate();
+  const isFooterVisible = useFooterVisibility();
+  const dropdowns = useLocationDropdowns();
+
+  /* ── Country state ── */
   const [userId, setUserId] = useState<string | null>(null);
   const [citizenshipCountry, setCitizenshipCountry] = useState('');
   const [residenceCountry, setResidenceCountry] = useState('');
-  const [plaidCity, setPlaidCity] = useState('');
-  const [citizenshipFromPlaid, setCitizenshipFromPlaid] = useState(false);
+  const [plaidLinked, setPlaidLinked] = useState(false);
+
+  /* ── Address state ── */
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [bankAddress, setBankAddress] = useState<BankAddress | null>(null);
+
+  /* ── UI state ── */
   const [isLoading, setIsLoading] = useState(false);
-  const isFooterVisible = useFooterVisibility();
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationDetected, setLocationDetected] = useState(false);
-  const [userManuallyChanged, setUserManuallyChanged] = useState(false);
   const [locationStatus, setLocationStatus] = useState<LocationStatus>(null);
   const [detectedLocation, setDetectedLocation] = useState('');
-  const [userConfirmedManual, setUserConfirmedManual] = useState(false);
   const [showPermissionHelp, setShowPermissionHelp] = useState(false);
   const [hasPreviousData, setHasPreviousData] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
 
-  const canContinue = locationDetected || userConfirmedManual;
+  /* ── Derived state ── */
+  const canContinue = locationDetected || hasPreviousData || Boolean(residenceCountry);
   const isErrorStatus = locationStatus === 'denied' || locationStatus === 'failed';
   const isSuccessStatus = locationStatus === 'success' || locationStatus === 'ip-success';
   const shouldShowForm = Boolean(locationStatus || hasPreviousData);
-  const canConfirmSelection = Boolean(citizenshipCountry && residenceCountry && !userConfirmedManual);
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
+  /* ── Init: Load saved data + Plaid + auto-detect ── */
   useEffect(() => {
-    const getCurrentUser = async () => {
+    const init = async () => {
       if (!config.supabaseClient) return;
       const { data: { user } } = await config.supabaseClient.auth.getUser();
       if (!user) { navigate('/login'); return; }
       setUserId(user.id);
 
       /* Load previously saved onboarding data */
-      const { data } = await config.supabaseClient.from('onboarding_data').select('*').eq('user_id', user.id).maybeSingle();
+      const { data } = await config.supabaseClient
+        .from('onboarding_data')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       if (data) {
-        if (data.citizenship_country) { setCitizenshipCountry(data.citizenship_country); setUserManuallyChanged(true); setHasPreviousData(true); }
+        if (data.citizenship_country) setCitizenshipCountry(data.citizenship_country);
         if (data.residence_country) setResidenceCountry(data.residence_country);
+        if (data.address_line_1) {
+          setAddressLine1(data.address_line_1);
+          setAddressLine2(data.address_line_2 || '');
+          setZipCode(data.zip_code || '');
+          setHasPreviousData(true);
+          setLocationDetected(true);
+          /* Restore dropdowns from saved address */
+          const code = locationService.mapCountryToIsoCode(data.address_country || data.residence_country || 'US');
+          dropdowns.applyDetectedLocation(code, data.state, undefined, data.city);
+          setLocationStatus('success');
+        } else if (data.residence_country) {
+          setHasPreviousData(true);
+        }
       }
 
-      /* ── Fetch Plaid identity data for citizenship pre-fill ── */
+      /* ── Fetch Plaid identity data ── */
+      let plaidCity = '';
       try {
         const { data: finData } = await config.supabaseClient
           .from('user_financial_data')
@@ -111,116 +169,176 @@ export const useStep4Logic = (): Step4Logic => {
           .maybeSingle();
 
         if (finData?.identity_data) {
-          const identityAccounts = finData.identity_data.accounts || [];
-          const owners = identityAccounts[0]?.owners || [];
+          const accounts = finData.identity_data.accounts || [];
+          const owners = accounts[0]?.owners || [];
           const owner = owners[0];
           if (owner?.addresses?.length) {
-            /* Find primary address, or fall back to first */
             const primaryAddr = owner.addresses.find((a: any) => a.primary) || owner.addresses[0];
-            const addrData = primaryAddr?.data || {};
+            const addr = primaryAddr?.data || {};
 
-            /* Country of citizenship from bank identity */
-            if (addrData.country && !data?.citizenship_country) {
-              const plaidCountryCode = addrData.country.toUpperCase();
-              const plaidCountryName = COUNTRY_CODE_TO_NAME[plaidCountryCode] || addrData.country;
-              if (countries.includes(plaidCountryName)) {
-                setCitizenshipCountry(plaidCountryName);
-                setCitizenshipFromPlaid(true);
-                setHasPreviousData(true);
-                console.log('[Step4] Citizenship pre-filled from Plaid:', plaidCountryName);
+            /* Citizenship from Plaid */
+            if (addr.country && !data?.citizenship_country) {
+              const plaidCode = addr.country.toUpperCase();
+              const plaidName = COUNTRY_CODE_TO_NAME[plaidCode] || addr.country;
+              if (countries.includes(plaidName)) {
+                setCitizenshipCountry(plaidName);
+                setPlaidLinked(true);
               }
             }
 
-            /* City from bank identity */
-            if (addrData.city) {
-              setPlaidCity(addrData.city);
-              console.log('[Step4] City from Plaid:', addrData.city);
+            /* Bank address from Plaid (read-only display) */
+            const bAddr: BankAddress = {
+              street: addr.street || '',
+              city: addr.city || '',
+              state: addr.region || '',
+              postalCode: addr.postal_code || '',
+              country: addr.country ? (COUNTRY_CODE_TO_NAME[addr.country.toUpperCase()] || addr.country) : '',
+            };
+            if (bAddr.street || bAddr.city) {
+              setBankAddress(bAddr);
+              setPlaidLinked(true);
             }
+            plaidCity = addr.city || '';
+
+            /* Pre-fill address line 1 from Plaid if no GPS yet */
+            if (addr.street && !data?.address_line_1) setAddressLine1(addr.street);
+            if (addr.postal_code && !data?.zip_code) setZipCode(addr.postal_code);
           }
         }
       } catch (err) {
-        console.warn('[Step4] Failed to fetch Plaid identity data:', err);
+        console.warn('[Step4] Plaid identity fetch failed:', err);
+      }
+
+      /* ── Auto-detect location if no previous address ── */
+      if (!data?.address_line_1) {
+        /* Check if location was previously granted (skip modal) */
+        const wasGranted = locationService.wasLocationGranted();
+        if (wasGranted) {
+          /* Auto-detect without showing modal */
+          await detectAndFillAddress(user.id, plaidCity);
+        } else {
+          setShowLocationModal(true);
+        }
       }
     };
-    getCurrentUser();
+    init();
     return () => { locationService.cancel(); };
-  }, [navigate]);
+  }, [navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (!locationStatus && !hasPreviousData && userId) setShowLocationModal(true);
-  }, [userId, locationStatus, hasPreviousData]);
-
-  const detectLocation = async (uid: string) => {
-    setIsDetectingLocation(true); setLocationStatus('detecting');
+  /* ── GPS detection + address fill ── */
+  const detectAndFillAddress = async (uid: string, plaidCity?: string) => {
+    setIsDetectingLocation(true);
+    setLocationStatus('detecting');
     try {
       const result = await locationService.detectLocation();
       if ((result.source === 'detected' || result.source === 'ip-detected') && result.data) {
-        const locationData: LocationData = result.data;
-        const countryName = COUNTRY_CODE_TO_NAME[locationData.countryCode] || locationData.country;
-        /* GPS sets residence; only set citizenship if Plaid didn't already */
-        if (countries.includes(countryName)) {
-          setResidenceCountry(countryName);
-          if (!citizenshipFromPlaid) setCitizenshipCountry(countryName);
+        const loc: LocationData = result.data;
+        const countryName = COUNTRY_CODE_TO_NAME[loc.countryCode] || loc.country;
+
+        /* Set residence country */
+        if (countries.includes(countryName)) setResidenceCountry(countryName);
+
+        /* Parse address from GPS */
+        if (loc.formattedAddress) {
+          const parsed = locationService.parseFormattedAddress(loc.formattedAddress, loc);
+          if (parsed.line1 && !addressLine1) setAddressLine1(parsed.line1);
+          if (parsed.line2) setAddressLine2(parsed.line2);
         }
-        setDetectedLocation(locationData.city || locationData.state || countryName);
+        if (loc.postalCode && !zipCode) setZipCode(loc.postalCode);
+
+        /* Apply country/state/city to dropdowns */
+        const bestCity = plaidCity || loc.city;
+        dropdowns.applyDetectedLocation(loc.countryCode, loc.stateCode, loc.state, bestCity);
+
+        /* Display only first city candidate (strip pipe-separated fallbacks) */
+        const displayCity = (loc.city || '').split('|')[0].trim();
+        setDetectedLocation(displayCity || loc.state || countryName);
         setLocationDetected(true);
         setLocationStatus(result.source === 'detected' ? 'success' : 'ip-success');
-        setHasPreviousData(false);
-        try { await locationService.saveLocationToOnboarding(uid, locationData); } catch (e) { console.warn('[Step4] Cache failed:', e); }
-      } else if (result.source === 'denied') { setLocationStatus('denied'); }
-      else { setLocationStatus('failed'); }
-    } catch (error) { console.error('[Step4] Location error:', error); setLocationStatus('failed'); }
-    finally { setIsDetectingLocation(false); }
+
+        /* Save GPS data to DB */
+        locationService.saveLocationToOnboarding(uid, loc).catch(() => {});
+      } else if (result.source === 'denied') {
+        setLocationStatus('denied');
+      } else {
+        setLocationStatus('failed');
+      }
+    } catch (error) {
+      console.error('[Step4] Location error:', error);
+      setLocationStatus('failed');
+    } finally {
+      setIsDetectingLocation(false);
+    }
   };
 
-  const handleCitizenshipChange = (value: string) => {
-    setCitizenshipCountry(value); setUserManuallyChanged(true);
-    if (userConfirmedManual) { setUserConfirmedManual(false); setLocationStatus('manual'); }
-  };
-
-  const handleResidenceChange = (value: string) => {
-    setResidenceCountry(value); setUserManuallyChanged(true);
-    if (userConfirmedManual) { setUserConfirmedManual(false); setLocationStatus('manual'); }
-  };
-
-  const handleConfirmManualSelection = () => {
-    if (citizenshipCountry && residenceCountry) { setUserConfirmedManual(true); setLocationStatus('manual'); }
-  };
+  /* ── Handlers ── */
+  const handleCitizenshipChange = (v: string) => setCitizenshipCountry(v);
+  const handleResidenceChange = (v: string) => setResidenceCountry(v);
+  const handleAddressLine1Change = (v: string) => setAddressLine1(v);
+  const handleZipCodeChange = (v: string) => setZipCode(v.slice(0, 10));
 
   const handleRetry = async () => {
-    setLocationDetected(false); setUserManuallyChanged(false); setUserConfirmedManual(false);
-    if (userId) await detectLocation(userId);
+    setLocationDetected(false);
+    if (userId) await detectAndFillAddress(userId);
   };
 
-  const handleAllowLocation = async () => { if (!userId) return; setShowLocationModal(false); await detectLocation(userId); };
-  const handleDontAllow = () => { setShowLocationModal(false); setLocationStatus('manual'); };
+  const handleAllowLocation = async () => {
+    if (!userId) return;
+    setShowLocationModal(false);
+    await detectAndFillAddress(userId);
+  };
+
+  const handleDontAllow = () => {
+    setShowLocationModal(false);
+    setLocationStatus('manual');
+    setHasPreviousData(true); // show form for manual entry
+  };
 
   const handleContinue = async () => {
     if (!userId || !config.supabaseClient || !canContinue) return;
     setIsLoading(true);
     try {
-      const updatePayload: Record<string, any> = {
-        citizenship_country: citizenshipCountry,
-        residence_country: residenceCountry,
+      const payload: Record<string, any> = {
+        citizenship_country: citizenshipCountry || null,
+        residence_country: residenceCountry || null,
         current_step: 4,
       };
-      /* Save city from Plaid identity if available */
-      if (plaidCity) updatePayload.city = plaidCity;
-      await upsertOnboardingData(userId, updatePayload);
+      /* Save address fields if filled */
+      if (addressLine1.trim()) {
+        /* Convert ISO codes → full names for DB storage */
+        const countryMatch = dropdowns.countries.find(c => c.isoCode === dropdowns.country);
+        const stateMatch = dropdowns.states.find(s => s.isoCode === dropdowns.state);
+
+        payload.address_line_1 = addressLine1.trim();
+        payload.address_line_2 = addressLine2.trim() || null;
+        payload.address_country = countryMatch?.name || residenceCountry || null;
+        payload.state = stateMatch?.name || dropdowns.state || null;
+        /* City auto-detected from GPS (no dropdown), strip pipe-separated fallbacks */
+        const detectedCity = (dropdowns.city || '').split('|')[0].trim();
+        payload.city = detectedCity || null;
+        payload.zip_code = zipCode.trim() || null;
+      }
+      await upsertOnboardingData(userId, payload);
       navigate('/onboarding/step-5');
-    } catch (error) { console.error('Error:', error); }
-    finally { setIsLoading(false); }
+    } catch (error) {
+      console.error('[Step4] Save error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBack = () => navigate('/onboarding/step-2');
   const handleSkip = () => navigate('/onboarding/step-5');
 
   return {
-    citizenshipCountry, residenceCountry, isLoading, isFooterVisible,
-    isDetectingLocation, locationDetected, locationStatus, detectedLocation,
-    userConfirmedManual, showPermissionHelp, showLocationModal, canContinue,
-    isErrorStatus, isSuccessStatus, shouldShowForm, canConfirmSelection,
-    handleCitizenshipChange, handleResidenceChange, handleConfirmManualSelection,
+    citizenshipCountry, residenceCountry, plaidLinked,
+    addressLine1, addressLine2, setAddressLine2, zipCode, bankAddress,
+    dropdowns,
+    isLoading, isFooterVisible, isDetectingLocation, locationDetected,
+    locationStatus, detectedLocation, showPermissionHelp, showLocationModal,
+    canContinue, isErrorStatus, isSuccessStatus, shouldShowForm,
+    handleCitizenshipChange, handleResidenceChange,
+    handleAddressLine1Change, handleZipCodeChange,
     handleRetry, handleAllowLocation, handleDontAllow, handleContinue,
     handleBack, handleSkip, setShowPermissionHelp,
   };
