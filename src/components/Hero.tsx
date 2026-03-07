@@ -26,8 +26,8 @@ const IOS = {
   subtext: "#86868B",
   separator: "#C6C6C8",
   fillGray: "rgba(118,118,128,0.12)",
-  font: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
-  fontDisplay: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif',
+  font: 'Ivar Display,Source Sans Pro,Helvetica Neue,Helvetica,Arial,sans-serif',
+  fontDisplay: 'Ivar Display,Source Sans Pro,Helvetica Neue,Helvetica,Arial,sans-serif',
 };
 
 /* ─── Inline SVG Icons (no external deps) ─── */
