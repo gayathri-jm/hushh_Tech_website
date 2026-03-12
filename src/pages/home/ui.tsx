@@ -194,13 +194,13 @@ export default function HomePage() {
               <div className="space-y-4 my-2">
                 <div>
                   <span className="text-xs text-white/50 block mb-1">Target Net IRR</span>
-                  <span className="text-4xl font-mono font-light tracking-tighter text-ios-green">
+                  <span className="text-4xl font-serif font-light tracking-tighter text-ios-green" style={playfair}>
                     18-23%
                   </span>
                 </div>
                 <div>
                   <span className="text-xs text-white/50 block mb-1">Inception Year</span>
-                  <span className="font-mono text-xl">2024</span>
+                  <span className="font-serif text-xl" style={playfair}>2024</span>
                 </div>
               </div>
 
