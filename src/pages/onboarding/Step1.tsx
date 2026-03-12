@@ -1,8 +1,8 @@
-import { useEffect, useState, type ChangeEvent } from 'react';
+import React, { useEffect, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
-import OnboardingShell from '../../components/OnboardingShell';
+import { useFooterVisibility } from '../../utils/useFooterVisibility';
 
 /* ═══════════════════════════════════════════════
    TYPES & CONSTANTS
@@ -18,6 +18,8 @@ interface ShareClass {
   displayPrice: string;
   description: string;
   tierLabel?: string;
+  tierBg?: string;
+  tierText?: string;
 }
 
 const SHARE_CLASSES: ShareClass[] = [
@@ -29,6 +31,8 @@ const SHARE_CLASSES: ShareClass[] = [
     displayPrice: '$25M',
     description: 'Maximum allocation priority with exclusive institutional benefits.',
     tierLabel: 'Ultra',
+    tierBg: 'bg-indigo-100 dark:bg-indigo-900',
+    tierText: 'text-indigo-600 dark:text-indigo-300',
   },
   {
     id: 'class_b',
@@ -38,6 +42,8 @@ const SHARE_CLASSES: ShareClass[] = [
     displayPrice: '$5M',
     description: 'Enhanced portfolio access and relationship management.',
     tierLabel: 'Premium',
+    tierBg: 'bg-yellow-100 dark:bg-yellow-900/40',
+    tierText: 'text-yellow-700 dark:text-yellow-400',
   },
   {
     id: 'class_c',
@@ -50,7 +56,6 @@ const SHARE_CLASSES: ShareClass[] = [
 ];
 
 const TOTAL_STEPS = 12;
-const CURRENT_STEP = 1;
 
 const formatCurrency = (amount: number): string => {
   if (amount === 0) return '$0';
@@ -67,14 +72,8 @@ const formatNumberWithCommas = (value: string): string => {
   return numbers.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
-const parseFormattedNumber = (value: string): number =>
-  parseInt(value.replace(/[^\d]/g, ''), 10) || 0;
-
-/* Tier badge color maps */
-const TIER_COLORS: Record<string, { bg: string; text: string }> = {
-  ultra: { bg: 'bg-[#AA4528]/10', text: 'text-[#AA4528]' },
-  premium: { bg: 'bg-[#F7F5F0]', text: 'text-[#4A4540]' },
-  standard: { bg: 'bg-[#F2F0EB]', text: 'text-[#8C8479]' },
+const parseFormattedNumber = (value: string): number => {
+  return parseInt(value.replace(/[^\d]/g, ''), 10) || 0;
 };
 
 /* ═══════════════════════════════════════════════
@@ -86,19 +85,21 @@ export default function OnboardingStep1() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isFooterVisible = useFooterVisibility();
 
   const [units, setUnits] = useState<Record<string, number>>({
-    class_a: 0, class_b: 0, class_c: 0,
+    class_a: 0,
+    class_b: 0,
+    class_c: 0,
   });
+
   const [frequency, setFrequency] = useState<RecurringFrequency>('once_a_month');
   const [investmentDay, setInvestmentDay] = useState('1st of the month');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [customAmountError, setCustomAmountError] = useState<string | null>(null);
 
-  const totalInvestment = SHARE_CLASSES.reduce(
-    (total, sc) => total + units[sc.id] * sc.unitPrice, 0
-  );
+  const totalInvestment = SHARE_CLASSES.reduce((total, sc) => total + units[sc.id] * sc.unitPrice, 0);
   const hasSelection = Object.values(units).some((c) => c > 0);
 
   /* ─── Scroll & body class ─── */
@@ -116,6 +117,7 @@ export default function OnboardingStep1() {
   useEffect(() => {
     const getCurrentUser = async () => {
       if (!config.supabaseClient) return;
+
       const { data: { user } } = await config.supabaseClient.auth.getUser();
       if (!user) { navigate('/login'); return; }
       setUserId(user.id);
@@ -123,12 +125,16 @@ export default function OnboardingStep1() {
       const hasSkipped = sessionStorage.getItem('financial_link_skipped') === 'true';
       const hasCompleted = sessionStorage.getItem('financial_verification_complete') === 'true';
 
-      if (!hasSkipped && !hasCompleted) {
-        const { data: financialData } = await config.supabaseClient
+      if (hasSkipped || hasCompleted) {
+        console.log('[Step1] Financial verification bypassed via sessionStorage flag');
+      } else {
+        const { data: financialData, error: finError } = await config.supabaseClient
           .from('user_financial_data')
           .select('status')
           .eq('user_id', user.id)
           .maybeSingle();
+
+        if (finError) console.warn('[Step1] Financial data query error:', finError.message);
 
         if (!financialData || (financialData.status !== 'complete' && financialData.status !== 'partial')) {
           navigate('/onboarding/financial-link', { replace: true });
@@ -148,6 +154,7 @@ export default function OnboardingStep1() {
           class_b: onboardingData.class_b_units || 0,
           class_c: onboardingData.class_c_units || 0,
         });
+
         if (onboardingData.recurring_frequency) {
           const freqMap: Record<string, RecurringFrequency> = {
             once_a_month: 'once_a_month', twice_a_month: 'twice_a_month',
@@ -156,10 +163,12 @@ export default function OnboardingStep1() {
           };
           setFrequency(freqMap[String(onboardingData.recurring_frequency)] || 'once_a_month');
         }
+
         if (onboardingData.recurring_day_of_month) {
           const d = onboardingData.recurring_day_of_month;
           setInvestmentDay(d === 31 ? 'Last day of the month' : d === 15 ? '15th of the month' : '1st of the month');
         }
+
         if (onboardingData.recurring_amount) {
           const amt = onboardingData.recurring_amount;
           if ([500000, 750000, 1000000, 1500000].includes(amt)) {
@@ -174,8 +183,9 @@ export default function OnboardingStep1() {
   }, [navigate]);
 
   /* ─── Handlers ─── */
-  const handleUnitChange = (classId: string, delta: number) =>
+  const handleUnitChange = (classId: string, delta: number) => {
     setUnits((prev) => ({ ...prev, [classId]: Math.max(0, prev[classId] + delta) }));
+  };
 
   const handleAmountClick = (amount: number) => {
     setSelectedAmount(amount); setCustomAmount(''); setCustomAmountError(null); setError(null);
@@ -243,238 +253,278 @@ export default function OnboardingStep1() {
     }
   };
 
+  const handleBack = () => navigate('/onboarding/financial-link');
+
+  /* ─── Frequency buttons config ─── */
   const freqOptions: { value: RecurringFrequency; label: string }[] = [
     { value: 'once_a_month', label: 'Once a month' },
     { value: 'twice_a_month', label: 'Twice a month' },
     { value: 'weekly', label: 'Weekly' },
     { value: 'every_other_week', label: 'Bi-weekly' },
   ];
+
   const amountPresets = [500000, 750000, 1000000, 1500000];
 
   /* ═══════════════════════════════════════════════
      RENDER
      ═══════════════════════════════════════════════ */
   return (
-    <OnboardingShell
-      step={CURRENT_STEP}
-      totalSteps={TOTAL_STEPS}
-      onBack={() => navigate('/onboarding/financial-link')}
-      onClose={() => navigate('/dashboard')}
-      continueLabel="Continue"
-      onContinue={handleNext}
-      continueDisabled={!hasSelection || !!customAmountError}
-      continueLoading={isLoading}
+    <div
+      className="bg-white min-h-[100dvh] pb-52"
+      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}
     >
-      {/* ── Heading ── */}
-      <div className="mb-8">
-        <p className="fr-overline mb-2">Institutional Series</p>
-        <h1
-          className="text-[2.2rem] md:text-[2.6rem] font-medium leading-tight text-[#151513] mb-3"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
-        >
-          Select your{' '}
-          <em className="not-italic text-[#AA4528]">share class allocation</em>
-        </h1>
-        <p className="text-[15px] text-[#8C8479] leading-relaxed">
-          Our inaugural fund leverages AI-driven value investing. Allocate units per share class.
-        </p>
-      </div>
+      {/* ═══ iOS Navigation Bar ═══ */}
+      <nav className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2" style={{ paddingTop: 'calc(env(safe-area-inset-top, 12px) + 4px)', minHeight: '48px' }}>
+        <button onClick={handleBack} className="text-[#007AFF] flex items-center -ml-2 active:opacity-50 transition-opacity" aria-label="Go back">
+          <span className="material-symbols-outlined text-3xl -mr-1" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>chevron_left</span>
+          <span className="text-[17px] leading-none pb-[2px]">Back</span>
+        </button>
+        <span className="font-semibold text-[17px] text-black">Setup</span>
+        <button onClick={() => navigate('/dashboard')} className="text-[#007AFF] text-[17px] font-normal active:opacity-50 transition-opacity">
+          Skip
+        </button>
+      </nav>
 
-      {/* ── Error ── */}
-      {error && (
-        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-[14px] text-red-700">
-          {error}
-        </div>
-      )}
-
-      {/* ── Share Class Selection Cards (Fundrise style) ── */}
-      <div className="space-y-3 mb-8">
-        {SHARE_CLASSES.map((sc) => {
-          const count = units[sc.id];
-          const isSelected = count > 0;
-          const colors = TIER_COLORS[sc.tier];
-
-          return (
-            <div
-              key={sc.id}
-              className={`border rounded-md transition-all duration-200 overflow-hidden ${isSelected
-                ? 'border-[#AA4528]/40 bg-[#FDF9F7]'
-                : 'border-[#EEE9E0] bg-white hover:border-[#C4BFB5]'
-                }`}
-            >
-              {/* Card header */}
-              <div className="px-5 py-4 border-b border-[#F2F0EB] flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-[16px] font-semibold text-[#151513]">{sc.name}</h3>
-                    {sc.tierLabel && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${colors.bg} ${colors.text}`}>
-                        {sc.tierLabel}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[13px] text-[#8C8479] leading-relaxed pr-2">{sc.description}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-[18px] font-semibold text-[#151513]">{sc.displayPrice}</div>
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8C8479]">per unit</div>
-                </div>
-              </div>
-
-              {/* Stepper */}
-              <div className="px-5 py-3 flex items-center justify-between">
-                <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#8C8479]">Units</span>
-                <div className="flex items-center gap-5">
-                  <button
-                    onClick={() => handleUnitChange(sc.id, -1)}
-                    disabled={count === 0}
-                    className="w-8 h-8 rounded-full border border-[#C4BFB5] flex items-center justify-center text-[#8C8479] disabled:opacity-40 hover:border-[#AA4528] hover:text-[#AA4528] transition-colors"
-                    aria-label={`Decrease ${sc.name}`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">remove</span>
-                  </button>
-                  <span className="text-[20px] font-medium w-5 text-center text-[#151513]" style={{ fontFamily: 'var(--font-display)' }}>
-                    {count}
-                  </span>
-                  <button
-                    onClick={() => handleUnitChange(sc.id, 1)}
-                    className="w-8 h-8 rounded-full border border-[#AA4528]/60 text-[#AA4528] flex items-center justify-center hover:bg-[#AA4528] hover:text-white transition-colors"
-                    aria-label={`Increase ${sc.name}`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">add</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── Total ── */}
-      {totalInvestment > 0 && (
-        <div className="mb-8 px-5 py-4 bg-[#F7F5F0] rounded-md border border-[#EEE9E0] flex items-center justify-between">
-          <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#8C8479]">Total Initial Investment</span>
-          <span className="text-[24px] font-medium text-[#AA4528]" style={{ fontFamily: 'var(--font-display)' }}>
-            {formatCurrency(totalInvestment)}
-          </span>
-        </div>
-      )}
-
-      {/* ── Recurring Investment (Fundrise style) ── */}
-      <div className="border-t border-[#F2F0EB] pt-8">
-        <div className="mb-5">
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-[18px] font-medium text-[#151513]" style={{ fontFamily: 'var(--font-display)' }}>
-              Recurring Investment
-            </h2>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8C8479] bg-[#F2F0EB] px-2 py-0.5 rounded-full">
-              Optional
-            </span>
+      <main className="px-4 pt-4 max-w-md mx-auto">
+        {/* ═══ Progress Bar ═══ */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[13px] font-medium text-[#8E8E93] uppercase tracking-wide">Onboarding Progress</span>
+            <span className="text-[13px] text-[#8E8E93]">Step 1/{TOTAL_STEPS}</span>
           </div>
-          <p className="text-[13px] text-[#8C8479] leading-relaxed">
-            Configure automated contributions to streamline future capital calls.
+          <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-[#007AFF] rounded-full transition-all duration-500" style={{ width: `${Math.round((1 / TOTAL_STEPS) * 100)}%` }} />
+          </div>
+          <p className="mt-2 text-[13px] font-medium text-[#007AFF]">{Math.round((1 / TOTAL_STEPS) * 100)}% complete</p>
+        </div>
+
+        {/* ═══ Title Block ═══ */}
+        <div className="mb-6">
+          <h2 className="text-[13px] font-semibold text-[#3C3C4399] uppercase tracking-wider mb-1">
+            Institutional Series
+          </h2>
+          <h1 className="text-[34px] leading-tight font-bold tracking-tight text-black">
+            Hushh Fund A<br />
+            <span className="text-[#007AFF]">Multi-Strategy Alpha</span>
+          </h1>
+          <p className="mt-2 text-[17px] leading-snug text-[#3C3C4399]">
+            Select unit allocation for each share class. Our inaugural fund leverages AI-driven value investing.
           </p>
         </div>
 
-        {/* Frequency */}
-        <div className="mb-5">
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8C8479] mb-3">
-            Frequency
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {freqOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setFrequency(opt.value)}
-                className={`py-2.5 px-3 text-[14px] font-medium rounded-md border text-center transition-colors ${frequency === opt.value
-                  ? 'bg-[#FDF9F7] text-[#AA4528] border-[#AA4528]/40'
-                  : 'bg-white text-[#4A4540] border-[#EEE9E0] hover:border-[#C4BFB5]'
-                  }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+        {/* ═══ Error ═══ */}
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {error}
           </div>
-        </div>
+        )}
 
-        {/* Investment Day */}
-        <div className="mb-5">
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8C8479] mb-2">
-            Investment Day
-          </label>
-          <div className="relative">
-            <select
-              value={investmentDay}
-              onChange={(e) => setInvestmentDay(e.target.value)}
-              className="w-full appearance-none bg-white border border-[#EEE9E0] rounded-md py-3 px-4 pr-9 text-[15px] text-[#151513] focus:outline-none focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20 transition-colors"
-            >
-              <option>1st of the month</option>
-              <option>15th of the month</option>
-              <option>Last day of the month</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#8C8479]">
-              <span className="material-symbols-outlined text-[18px]">expand_more</span>
-            </div>
-          </div>
-        </div>
+        {/* ═══ Share Class Cards ═══ */}
+        <div className="space-y-4 mb-8">
+          {SHARE_CLASSES.map((sc) => {
+            const count = units[sc.id];
+            const isSelected = count > 0;
 
-        {/* Recurring Amount */}
-        <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8C8479] mb-3">
-            Recurring Amount
-          </label>
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            {amountPresets.map((amt) => (
-              <button
-                key={amt}
-                onClick={() => handleAmountClick(amt)}
-                className={`py-2.5 px-3 text-[14px] font-medium rounded-md border text-center transition-colors ${selectedAmount === amt
-                  ? 'bg-[#FDF9F7] text-[#AA4528] border-[#AA4528]/40'
-                  : 'bg-white text-[#4A4540] border-[#EEE9E0] hover:border-[#C4BFB5]'
-                  }`}
-              >
-                ${(amt / 1000).toLocaleString()}k
-              </button>
-            ))}
-          </div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <span className="text-[#8C8479] text-[15px] font-medium">$</span>
-            </div>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={customAmount}
-              onChange={handleCustomAmountChange}
-              placeholder="Enter custom amount"
-              className={`block w-full pl-8 pr-4 py-3 border rounded-md bg-white text-[#151513] placeholder-[#C4BFB5] focus:outline-none focus:ring-1 text-[15px] transition-colors ${customAmountError
-                ? 'border-red-300 focus:ring-red-300 focus:border-red-400'
-                : 'border-[#EEE9E0] focus:border-[#AA4528] focus:ring-[#AA4528]/20'
+            return (
+              <div
+                key={sc.id}
+                className={`bg-white rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.05)] ${
+                  isSelected ? 'ring-2 ring-[#007AFF]/40' : ''
                 }`}
-            />
-          </div>
-          {customAmountError && (
-            <p className="text-red-500 text-[12px] mt-1.5">{customAmountError}</p>
-          )}
-        </div>
-      </div>
+              >
+                {/* Top section */}
+                <div className="p-4 border-b border-[#C6C6C8]/20">
+                  <div className="flex justify-between items-start mb-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[17px] font-semibold text-black">{sc.name}</h3>
+                      {sc.tierLabel && (
+                        <span className={`${sc.tierBg} ${sc.tierText} text-[11px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide`}>
+                          {sc.tierLabel}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[17px] font-semibold text-black">{sc.displayPrice}</div>
+                      <div className="text-[11px] text-[#3C3C4399] uppercase">Per Unit</div>
+                    </div>
+                  </div>
+                  <p className="text-[15px] text-[#3C3C4399] leading-snug pr-8">
+                    {sc.description}
+                  </p>
+                </div>
 
-      {/* ── Bottom CTA (inside card on desktop, mirrors Fundrise "Continue" button behavior) ── */}
-      <div className="mt-8 pt-6 border-t border-[#F2F0EB]">
-        <button
-          onClick={handleNext}
-          disabled={!hasSelection || isLoading || !!customAmountError}
-          className={`w-full py-3.5 rounded-md text-[15px] font-semibold transition-all ${!hasSelection || isLoading || !!customAmountError
-            ? 'bg-[#EEE9E0] text-[#C4BFB5] cursor-not-allowed'
-            : 'bg-[#AA4528] text-white hover:bg-[#8C3720] active:scale-[0.99]'
-            }`}
-        >
-          {isLoading ? 'Saving…' : 'Continue'}
-        </button>
-        <p className="text-[11px] text-center text-[#8C8479] mt-3">
-          Minimum investment per unit · Units can be adjusted later
-        </p>
-      </div>
-    </OnboardingShell>
+                {/* Units stepper */}
+                <div className="px-4 py-3 flex justify-between items-center">
+                  <span className="text-[15px] font-medium text-[#3C3C4399] uppercase tracking-wide">
+                    Units
+                  </span>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => handleUnitChange(sc.id, -1)}
+                      disabled={count === 0}
+                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 disabled:opacity-50 transition active:bg-gray-100"
+                      aria-label={`Decrease ${sc.name} units`}
+                    >
+                      <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>
+                        remove
+                      </span>
+                    </button>
+                    <span className="text-[20px] font-medium w-4 text-center text-black">
+                      {count}
+                    </span>
+                    <button
+                      onClick={() => handleUnitChange(sc.id, 1)}
+                      className="w-8 h-8 rounded-full border border-[#007AFF] text-[#007AFF] flex items-center justify-center transition active:bg-blue-50"
+                      aria-label={`Increase ${sc.name} units`}
+                    >
+                      <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>
+                        add
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ═══ Recurring Investment ═══ */}
+        <div className="mb-4">
+          <div className="text-center mb-4 px-4">
+            <h3 className="text-[20px] font-semibold text-black">Recurring Investment</h3>
+            <p className="text-[15px] text-[#3C3C4399] mt-1">
+              Configure automated contributions to streamline future capital calls.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+            {/* Frequency header */}
+            <div className="px-4 py-3 border-b border-[#C6C6C8]/20 flex justify-between items-center">
+              <span className="text-[13px] font-medium text-[#3C3C4399] uppercase tracking-wide">
+                Frequency
+              </span>
+              <span className="bg-gray-100 text-[#3C3C4399] text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">
+                Optional
+              </span>
+            </div>
+
+            {/* Frequency buttons */}
+            <div className="p-4 border-b border-[#C6C6C8]/20">
+              <div className="grid grid-cols-2 gap-3">
+                {freqOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setFrequency(opt.value)}
+                    className={`py-2.5 px-2 text-[15px] font-medium rounded-lg border text-center transition ${
+                      frequency === opt.value
+                        ? 'bg-blue-50 text-[#007AFF] border-[#007AFF]/20'
+                        : 'bg-white text-black border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Investment Day */}
+            <div className="px-4 py-4 border-b border-[#C6C6C8]/20">
+              <label className="text-[13px] font-medium text-[#3C3C4399] uppercase tracking-wide mb-2 block">
+                Investment Day
+              </label>
+              <div className="relative">
+                <select
+                  value={investmentDay}
+                  onChange={(e) => setInvestmentDay(e.target.value)}
+                  className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2.5 px-3 pr-8 text-[17px] text-black focus:outline-none focus:ring-1 focus:ring-[#007AFF] focus:border-[#007AFF]"
+                >
+                  <option>1st of the month</option>
+                  <option>15th of the month</option>
+                  <option>Last day of the month</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#3C3C4399]">
+                  <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>
+                    expand_more
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recurring Amount */}
+            <div className="p-4">
+              <label className="text-[13px] font-medium text-[#3C3C4399] uppercase tracking-wide mb-3 block">
+                Recurring Amount
+              </label>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                {amountPresets.map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => handleAmountClick(amt)}
+                    className={`py-2.5 px-2 text-[15px] font-medium rounded-lg border text-center transition ${
+                      selectedAmount === amt
+                        ? 'bg-blue-50 text-[#007AFF] border-[#007AFF]/20'
+                        : 'bg-white text-black border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    ${(amt / 1000).toLocaleString()}k
+                  </button>
+                ))}
+              </div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-[#3C3C4399] text-[17px]">$</span>
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={customAmount}
+                  onChange={handleCustomAmountChange}
+                  placeholder="Enter custom amount"
+                  className={`block w-full pl-7 pr-3 py-2.5 border rounded-lg bg-white text-black placeholder-gray-400 focus:outline-none focus:ring-1 text-[17px] ${
+                    customAmountError
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:ring-[#007AFF] focus:border-[#007AFF]'
+                  }`}
+                />
+              </div>
+              {customAmountError && (
+                <p className="text-red-500 text-[12px] mt-1.5 px-1">{customAmountError}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* ═══ Fixed Footer ═══ */}
+      {!isFooterVisible && (
+        <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-[#C6C6C8]/30 z-40 pt-4 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
+          <div className="max-w-md mx-auto">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-[13px] font-bold text-[#3C3C4399] uppercase tracking-wide">
+                Total Investment
+              </span>
+              <span className="text-[22px] font-bold text-black">
+                {formatCurrency(totalInvestment)}
+              </span>
+            </div>
+            <button
+              onClick={handleNext}
+              disabled={!hasSelection || isLoading || !!customAmountError}
+              data-onboarding-cta
+              className={`w-full font-semibold text-[17px] py-3.5 rounded-xl transition duration-200 shadow-md ${
+                !hasSelection || isLoading || !!customAmountError
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-[#007AFF] hover:bg-blue-600 text-white active:scale-[0.98]'
+              }`}
+            >
+              {isLoading ? 'Saving...' : 'Next'}
+            </button>
+            <p className="text-[11px] text-center text-[#3C3C4399] mt-3">
+              Minimum investment per unit • Units can be adjusted later
+            </p>
+          </div>
+        </footer>
+      )}
+    </div>
   );
 }

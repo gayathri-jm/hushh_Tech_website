@@ -17,7 +17,7 @@ const getColor = (grade: string): string => {
   switch (grade) {
     case 'A+': return '#34C759';
     case 'A': return '#30D158';
-    case 'B+': return '#AA4528';
+    case 'B+': return '#007AFF';
     case 'B': return '#5856D6';
     case 'C+': return '#FF9500';
     case 'C': return '#FF9500';
@@ -53,7 +53,7 @@ const NWSScoreBadge = ({ result, loading = false, size = 'md', showBreakdown = f
     return (
       <div className="flex flex-col items-center gap-1 opacity-50">
         <div className="w-16 h-16 rounded-full border-4 border-dashed border-gray-200 flex items-center justify-center">
-          <span className="text-[11px] text-gray-400 font-medium">Net Worth Score</span>
+          <span className="text-[11px] text-gray-400 font-medium">NWS</span>
         </div>
         <p className="text-[11px] text-gray-400">No data</p>
       </div>
@@ -102,7 +102,7 @@ const NWSScoreBadge = ({ result, loading = false, size = 'md', showBreakdown = f
 
       {/* Label */}
       <div className="text-center">
-        <p className="text-[13px] font-semibold text-black">Net Worth Score</p>
+        <p className="text-[13px] font-semibold text-black">NWS</p>
         <p className="text-[11px]" style={{ color }}>{label}</p>
       </div>
 

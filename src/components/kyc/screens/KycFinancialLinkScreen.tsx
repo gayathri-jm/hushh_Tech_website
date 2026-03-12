@@ -24,8 +24,8 @@ import type { FinancialVerificationResult } from '../../../types/kyc';
 
 /* iOS design tokens */
 const IOS = {
-  primary: '#AA4528',
-  primaryHover: '#8C3720',
+  primary: '#007AFF',
+  primaryHover: '#0062CC',
   text: '#000000',
   secondary: '#8E8E93',
   bg: '#FFFFFF',
@@ -46,14 +46,14 @@ export interface KycFinancialLinkScreenProps {
 
 /* ─── Account type icon + color mapping ─── */
 const accountTypeConfig: Record<string, { icon: string; bg: string; color: string; label: string }> = {
-  checking: { icon: 'account_balance', bg: 'rgba(170,69,40,0.1)', color: '#AA4528', label: 'Checking' },
+  checking: { icon: 'account_balance', bg: 'rgba(0,122,255,0.1)', color: '#007AFF', label: 'Checking' },
   savings: { icon: 'savings', bg: 'rgba(52,199,89,0.1)', color: '#34C759', label: 'Savings' },
   'credit card': { icon: 'credit_card', bg: 'rgba(255,149,0,0.1)', color: '#FF9500', label: 'Credit Card' },
   mortgage: { icon: 'home', bg: 'rgba(175,82,222,0.1)', color: '#AF52DE', label: 'Mortgage' },
   loan: { icon: 'account_balance_wallet', bg: 'rgba(255,59,48,0.1)', color: '#FF3B30', label: 'Loan' },
   investment: { icon: 'trending_up', bg: 'rgba(0,199,190,0.1)', color: '#00C7BE', label: 'Investment' },
   brokerage: { icon: 'monitoring', bg: 'rgba(0,199,190,0.1)', color: '#00C7BE', label: 'Brokerage' },
-  depository: { icon: 'account_balance', bg: 'rgba(170,69,40,0.1)', color: '#AA4528', label: 'Depository' },
+  depository: { icon: 'account_balance', bg: 'rgba(0,122,255,0.1)', color: '#007AFF', label: 'Depository' },
   credit: { icon: 'credit_card', bg: 'rgba(255,149,0,0.1)', color: '#FF9500', label: 'Credit' },
   other: { icon: 'account_circle', bg: 'rgba(142,142,147,0.1)', color: '#8E8E93', label: 'Other' },
 };
@@ -138,8 +138,8 @@ const StatusRow: React.FC<{
 }> = ({ title, icon, iconBg, iconColor, status, mainValue, message, isLast }) => {
   const text = status === 'loading' ? 'Fetching...'
     : status === 'success' ? (mainValue || '✓ Verified')
-      : status === 'pending' ? 'Generating...'
-        : (message || 'Not available');
+    : status === 'pending' ? 'Generating...'
+    : (message || 'Not available');
 
   return (
     <Flex
@@ -412,7 +412,7 @@ const KycFinancialLinkScreen: React.FC<KycFinancialLinkScreenProps> = ({
         <Box px={5}>
           <SectionHeader title="Product Status" />
           <Box bg={IOS.listBg} borderRadius="12px" overflow="hidden" border="0.5px solid" borderColor="rgba(0,0,0,0.04)">
-            <StatusRow title="Balance" icon="account_balance_wallet" iconBg="rgba(170,69,40,0.1)" iconColor={IOS.primary} status={plaid.balanceStatus} mainValue={allAccounts.length > 0 ? `${allAccounts.length} accounts` : undefined} message="Not available" />
+            <StatusRow title="Balance" icon="account_balance_wallet" iconBg="rgba(0,122,255,0.1)" iconColor={IOS.primary} status={plaid.balanceStatus} mainValue={allAccounts.length > 0 ? `${allAccounts.length} accounts` : undefined} message="Not available" />
             <StatusRow title="Assets" icon="finance_mode" iconBg="rgba(52,199,89,0.1)" iconColor={IOS.success} status={plaid.assetsStatus} mainValue={plaid.financialData?.assets?.available ? 'Report generated' : undefined} message={plaid.financialData?.assets?.reason === 'not_supported' ? 'Not supported' : 'Not available'} />
             <StatusRow title="Investments" icon="monitoring" iconBg="rgba(175,82,222,0.1)" iconColor="#AF52DE" status={plaid.investmentsStatus} mainValue={investmentHoldings.length > 0 ? `${investmentHoldings.length} holdings` : undefined} message={plaid.financialData?.investments?.reason === 'not_supported' ? 'Not supported' : 'No investment accounts'} />
             <StatusRow title="Identity" icon="badge" iconBg="rgba(255,149,0,0.1)" iconColor="#FF9500" status={identityInfo ? 'success' : (plaid.step === 'done' ? 'unavailable' : 'idle')} mainValue={identityInfo ? '✓ Verified' : undefined} message="Not available" isLast />

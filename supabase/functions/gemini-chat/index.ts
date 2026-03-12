@@ -30,8 +30,6 @@ interface ChatRequest {
   model?: string;
   userId?: string;
   sessionId?: string;
-  systemInstruction?: string;
-  agentId?: string;
 }
 
 // Create Supabase client for logging
@@ -130,7 +128,8 @@ serve(async (req: Request) => {
     console.log(`[gemini-chat] Found ${API_KEYS.length} valid API keys`);
     
     // Rotate keys based on timestamp for load distribution
-    const startKeyIndex = Math.floor(Date.now() / 1000) % API_KEYS.length;
+    const keyIndex = Math.floor(Date.now() / 1000) % API_KEYS.length;
+    const GEMINI_API_KEY = API_KEYS[keyIndex];
 
     // Initialize Supabase client for logging
     const supabase = getSupabaseClient();
@@ -142,9 +141,7 @@ serve(async (req: Request) => {
       language = "en-US", 
       model = DEFAULT_MODEL,
       userId,
-      sessionId,
-      systemInstruction: customSystemInstruction,
-      agentId: customAgentId 
+      sessionId 
     }: ChatRequest = await req.json();
 
     if (!message) {
@@ -164,8 +161,7 @@ serve(async (req: Request) => {
       "ta-IN": "நீங்கள் தமிழில் பதிலளிக்க வேண்டும். அனைத்து பதில்களும் தமிழில் இருக்க வேண்டும்।",
     };
 
-    // Use custom system instruction if provided (e.g., for agent-specific chats)
-    const systemInstruction = customSystemInstruction || `You are Hushh, a friendly and intelligent AI assistant created by Hushh Labs. You help users with a wide variety of tasks including answering questions, creative writing, analysis, coding, and general conversation.
+    const systemInstruction = `You are Hushh, a friendly and intelligent AI assistant created by Hushh Labs. You help users with a wide variety of tasks including answering questions, creative writing, analysis, coding, and general conversation.
 
 Key traits:
 - Warm, professional, and approachable
@@ -177,9 +173,6 @@ Key traits:
 ${languageInstructions[language] || languageInstructions["en-US"]}
 
 Important: Never mention that you are powered by Gemini or Google. You are Hushh, created by Hushh Labs.`;
-
-    // Determine agent ID for logging
-    const effectiveAgentId = customAgentId || "hushh";
 
     // Build conversation history
     const contents = [
@@ -193,66 +186,43 @@ Important: Never mention that you are powered by Gemini or Google. You are Hushh
       },
     ];
 
-    // Build request body (reused across retries)
-    const requestBody = JSON.stringify({
-      contents,
-      systemInstruction: {
-        parts: [{ text: systemInstruction }],
+    // Call Gemini API
+    const geminiUrl = `${GEMINI_API_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const geminiResponse = await fetch(geminiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 2048,
-        topP: 0.9,
-        topK: 40,
-      },
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-      ],
+      body: JSON.stringify({
+        contents,
+        systemInstruction: {
+          parts: [{ text: systemInstruction }],
+        },
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+          topP: 0.9,
+          topK: 40,
+        },
+        safetySettings: [
+          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        ],
+      }),
     });
-
-    // Try each API key until one works (retry on failure)
-    let geminiResponse: Response | null = null;
-    let lastError = "";
-
-    for (let attempt = 0; attempt < API_KEYS.length; attempt++) {
-      const keyIdx = (startKeyIndex + attempt) % API_KEYS.length;
-      const apiKey = API_KEYS[keyIdx];
-      const geminiUrl = `${GEMINI_API_URL}/${model}:generateContent?key=${apiKey}`;
-
-      console.log(`[gemini-chat] Trying key ${attempt + 1}/${API_KEYS.length} (index ${keyIdx})`);
-
-      try {
-        const resp = await fetch(geminiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: requestBody,
-        });
-
-        if (resp.ok) {
-          geminiResponse = resp;
-          break;
-        }
-
-        // Key failed — log and try next
-        lastError = await resp.text();
-        console.warn(`[gemini-chat] Key ${keyIdx} failed (${resp.status}): ${lastError.substring(0, 200)}`);
-      } catch (fetchErr) {
-        lastError = String(fetchErr);
-        console.warn(`[gemini-chat] Key ${keyIdx} fetch error: ${lastError}`);
-      }
-    }
 
     const responseTime = Date.now() - startTime;
 
-    if (!geminiResponse || !geminiResponse.ok) {
-      console.error(`[gemini-chat] All ${API_KEYS.length} API keys failed. Last error: ${lastError.substring(0, 200)}`);
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.text();
+      console.error(`[gemini-chat] Gemini API error: ${geminiResponse.status}`, errorData);
       return new Response(
         JSON.stringify({ 
           error: "AI service error", 
-          details: "All API keys exhausted. Service temporarily unavailable." 
+          details: geminiResponse.status === 403 ? "API key issue" : "Service unavailable" 
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -277,7 +247,7 @@ Important: Never mention that you are powered by Gemini or Google. You are Hushh
         "user",
         message,
         language,
-        effectiveAgentId,
+        "hushh",
         inputTokens,
         0,
         0,
@@ -291,7 +261,7 @@ Important: Never mention that you are powered by Gemini or Google. You are Hushh
         "assistant",
         responseText,
         language,
-        effectiveAgentId,
+        "hushh",
         0,
         outputTokens,
         responseTime,

@@ -63,7 +63,7 @@ export default function OnboardingStep13() {
   } = useStep13Logic();
 
   return (
-    <div className="bg-[#faf9f6] text-[#151513] min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
@@ -75,7 +75,7 @@ export default function OnboardingStep13() {
             <span>100% Complete</span>
           </div>
           <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-fr-rust w-full" />
+            <div className="h-full bg-hushh-blue w-full" />
           </div>
         </div>
 
@@ -83,14 +83,14 @@ export default function OnboardingStep13() {
         <section className="py-8">
           <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase mb-4 font-medium">Final Step</h3>
           <h1
-            className="text-[2.75rem] leading-[1.1] text-[#151513] tracking-tight"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
+            className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             Bank
             <br />
-            <span className="text-gray-400 italic font-medium">Details</span>
+            <span className="text-gray-400 italic font-light">Details</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-medium">
+          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-light">
             Provide your banking information for investment transfers securely.
           </p>
         </section>
@@ -101,7 +101,7 @@ export default function OnboardingStep13() {
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="h-16 bg-gray-100 rounded-xl border-b border-gray-200" />
             ))}
-            <p className="text-center text-xs text-gray-400 font-medium pt-4">Loading your data...</p>
+            <p className="text-center text-xs text-gray-400 font-light pt-4">Loading your data...</p>
           </div>
         )}
 
@@ -151,10 +151,11 @@ export default function OnboardingStep13() {
                           userModifiedFields.current.delete('accountType');
                           applyAccountSelection(acct);
                         }}
-                        className={`w-full flex items-center gap-4 py-4 px-1 border-b transition-all text-left ${isSelected ? 'border-black' : 'border-gray-200'
-                          }`}
+                        className={`w-full flex items-center gap-4 py-4 px-1 border-b transition-all text-left ${
+                          isSelected ? 'border-black' : 'border-gray-200'
+                        }`}
                       >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isSelected ? 'bg-fr-rust' : 'bg-gray-100'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isSelected ? 'bg-hushh-blue' : 'bg-gray-100'}`}>
                           <span className={`material-symbols-outlined text-lg ${isSelected ? 'text-white' : 'text-gray-400'}`} style={{ fontVariationSettings: "'wght' 400" }}>account_balance</span>
                         </div>
                         <div className="flex-1 min-w-0">
@@ -162,7 +163,7 @@ export default function OnboardingStep13() {
                           <span className="text-xs text-gray-500 font-medium">{acct.subtype} · ····{acct.mask}</span>
                         </div>
                         {isSelected && (
-                          <span className="material-symbols-outlined text-fr-rust text-lg" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>check_circle</span>
+                          <span className="material-symbols-outlined text-hushh-blue text-lg" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>check_circle</span>
                         )}
                       </button>
                     );
@@ -177,7 +178,7 @@ export default function OnboardingStep13() {
                 <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                   <div className="flex flex-col items-center text-center gap-2">
                     <span className="text-[10px] tracking-[0.2em] text-gray-400 uppercase font-medium">Investment Amount</span>
-                    <span className="text-3xl font-bold text-[#151513] tracking-tight" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
+                    <span className="text-3xl font-bold text-black tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
                       {formatCurrency(totalInvestment)}
                     </span>
                     <div className="flex flex-wrap gap-2 mt-2 justify-center">
@@ -364,7 +365,7 @@ export default function OnboardingStep13() {
                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-gray-500 text-lg" style={{ fontVariationSettings: "'wght' 400" }}>info</span>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed font-medium pt-2">
+                <p className="text-xs text-gray-500 leading-relaxed font-light pt-2">
                   Routing number can be found on the bottom left of your check. Ensure the holder name matches your ID exactly.
                 </p>
               </div>
@@ -383,10 +384,10 @@ export default function OnboardingStep13() {
             {/* ── Trust Badge ── */}
             <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
               <div className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-[12px] text-fr-rust">lock</span>
+                <span className="material-symbols-outlined text-[12px] text-hushh-blue">lock</span>
                 <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">Bank-Level Security</span>
               </div>
-              <p className="text-[10px] text-gray-400 font-medium max-w-xs">
+              <p className="text-[10px] text-gray-400 font-light max-w-xs">
                 Your data is encrypted with 256-bit SSL security.
               </p>
             </section>

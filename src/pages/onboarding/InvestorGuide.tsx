@@ -59,8 +59,8 @@ const benefits = [
     icon: 'psychology',
     title: 'AI-Powered Insights',
     description: 'Data-driven decisions',
-    bgColor: 'bg-[#FDF9F7]',
-    iconColor: 'text-[#AA4528]',
+    bgColor: 'bg-blue-50',
+    iconColor: 'text-[#2b8cee]',
   },
   {
     icon: 'savings',
@@ -86,8 +86,8 @@ const accountTiers = [
     name: 'Hushh Wealth Investment',
     description: 'AI-powered wealth building',
     badge: null,
-    borderColor: '#AA4528',
-    bgColor: 'rgba(170, 69, 40, 0.05)',
+    borderColor: '#2b8cee',
+    bgColor: 'rgba(43, 140, 238, 0.05)',
   },
   {
     id: 'wealth_5m',
@@ -129,7 +129,7 @@ export default function InvestorGuide() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const tiersRef = useRef<HTMLDivElement>(null);
-
+  
   // Track which phases are visible/active based on scroll
   const [activePhases, setActivePhases] = useState<Set<number>>(new Set([0])); // First phase active by default
   const phaseRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -158,7 +158,7 @@ export default function InvestorGuide() {
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
       entries.forEach((entry) => {
         const phaseIndex = parseInt(entry.target.getAttribute('data-phase-index') || '0', 10);
-
+        
         if (entry.isIntersecting) {
           setActivePhases((prev) => {
             const newSet = new Set(prev);
@@ -197,29 +197,29 @@ export default function InvestorGuide() {
   const isPhaseActive = useCallback((index: number) => activePhases.has(index), [activePhases]);
 
   return (
-    <div className="bg-[#faf9f6] min-h-screen font-['Source Sans Pro',sans-serif] antialiased text-[#151513] selection:bg-fr-rust/20 selection:text-fr-rust" style={{ fontFamily: "var(--font-body)" }}>
-      <div className="onboarding-shell mx-auto flex h-full min-h-screen w-full max-w-[500px] flex-col bg-[#faf9f6] shadow-xl relative overflow-hidden border-x border-slate-100">
-
+    <div className="bg-[#f6f7f8] min-h-screen font-['Manrope',sans-serif] antialiased text-[#111418] selection:bg-[#2b8cee]/20 selection:text-[#2b8cee]">
+      <div className="onboarding-shell mx-auto flex h-full min-h-screen w-full max-w-[500px] flex-col bg-white shadow-xl relative overflow-hidden border-x border-slate-100">
+        
         {/* Top App Bar */}
-        <header className="sticky top-0 z-50 flex items-center justify-between bg-[#faf9f6]/95 px-4 py-3 backdrop-blur-sm border-b border-gray-100">
-          <button
+        <header className="sticky top-0 z-50 flex items-center justify-between bg-white/95 px-4 py-3 backdrop-blur-sm border-b border-gray-100">
+          <button 
             onClick={handleBack}
-            className="flex size-10 items-center justify-center rounded-full text-[#151513] transition hover:bg-gray-100"
+            className="flex size-10 items-center justify-center rounded-full text-[#111418] transition hover:bg-[#f6f7f8]"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>arrow_back</span>
           </button>
-          <h2 className="flex-1 text-center text-lg font-bold leading-tight tracking-tight text-[#151513] pr-10" style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}>Investor Guide</h2>
+          <h2 className="flex-1 text-center text-lg font-bold leading-tight tracking-tight text-[#111418] pr-10">Investor Guide</h2>
         </header>
 
         {/* Main Scrollable Content */}
         <main className="flex-1 flex flex-col pb-44 sm:pb-52 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-
+          
           {/* Hero Section */}
           <div className="px-6 pt-6 pb-2 text-center">
-            <div className="mb-4 inline-flex items-center justify-center rounded-full bg-[#AA4528]/10 px-3 py-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#AA4528]">Investor Guide</span>
+            <div className="mb-4 inline-flex items-center justify-center rounded-full bg-[#2b8cee]/10 px-3 py-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#2b8cee]">Investor Guide</span>
             </div>
-            <h1 className="mb-3 text-3xl text-[#151513] tracking-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}>
+            <h1 className="mb-3 text-3xl font-extrabold leading-tight tracking-tight text-[#111418]">
               Investor Onboarding Guide
             </h1>
             <p className="text-base font-medium leading-relaxed text-[#617589]">
@@ -248,38 +248,39 @@ export default function InvestorGuide() {
               {/* Vertical Line Connector - animated */}
               <div className="absolute left-[19px] top-4 h-[calc(100%-2rem)] w-0.5 bg-gray-100">
                 {/* Animated fill line */}
-                <div
-                  className="w-full bg-[#AA4528] transition-all duration-700 ease-out"
-                  style={{
+                <div 
+                  className="w-full bg-[#2b8cee] transition-all duration-700 ease-out"
+                  style={{ 
                     height: `${Math.min(100, (activePhases.size / onboardingPhases.length) * 100)}%`,
                   }}
                 />
               </div>
-
+              
               {onboardingPhases.map((phase, index) => {
                 const isActive = isPhaseActive(index);
-
+                
                 return (
-                  <div
-                    key={phase.phase}
+                  <div 
+                    key={phase.phase} 
                     ref={(el) => { phaseRefs.current[index] = el; }}
                     data-phase-index={index}
                     className="relative flex gap-4"
                   >
                     {/* Phase number circle with animation */}
-                    <div
-                      className={`relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full shadow-sm ring-4 ring-white transition-all duration-500 ease-out ${isActive
-                        ? 'bg-[#AA4528] text-white shadow-md scale-100'
-                        : 'bg-white border-2 border-gray-200 text-gray-400 scale-95'
-                        }`}
+                    <div 
+                      className={`relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full shadow-sm ring-4 ring-white transition-all duration-500 ease-out ${
+                        isActive 
+                          ? 'bg-[#2b8cee] text-white shadow-md scale-100' 
+                          : 'bg-white border-2 border-gray-200 text-gray-400 scale-95'
+                      }`}
                     >
                       <span className="text-sm font-bold">{String(phase.phase).padStart(2, '0')}</span>
                     </div>
-
+                    
                     <div className="flex-1 pt-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span
-                          className={`material-symbols-outlined transition-colors duration-500 ${isActive ? 'text-[#AA4528]' : 'text-gray-400'}`}
+                        <span 
+                          className={`material-symbols-outlined transition-colors duration-500 ${isActive ? 'text-[#2b8cee]' : 'text-gray-400'}`} 
                           style={{ fontSize: '20px' }}
                         >
                           {phase.icon}
@@ -291,8 +292,9 @@ export default function InvestorGuide() {
                       <p className={`mb-3 text-sm transition-colors duration-500 ${isActive ? 'text-[#617589]' : 'text-gray-300'}`}>
                         {phase.description}
                       </p>
-                      <ul className={`space-y-2 rounded-lg p-3 transition-all duration-500 ${isActive ? 'bg-[#f6f7f8]' : 'border border-gray-100 bg-white'
-                        }`}>
+                      <ul className={`space-y-2 rounded-lg p-3 transition-all duration-500 ${
+                        isActive ? 'bg-[#f6f7f8]' : 'border border-gray-100 bg-white'
+                      }`}>
                         {phase.steps.map((step, stepIndex) => (
                           <li key={stepIndex} className="flex items-start gap-2 text-sm">
                             {isActive ? (
@@ -314,12 +316,12 @@ export default function InvestorGuide() {
           </section>
 
           {/* Requirements & Benefits Grid */}
-          <section className="px-6 py-6 bg-gray-50/50">
+          <section className="px-6 py-6 bg-[#f6f7f8]">
             <div className="grid grid-cols-1 gap-8">
               {/* Requirements */}
               <div>
                 <h3 className="mb-4 text-lg font-bold text-[#111418] flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#AA4528]">fact_check</span>
+                  <span className="material-symbols-outlined text-[#2b8cee]">fact_check</span>
                   Requirements
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -336,14 +338,14 @@ export default function InvestorGuide() {
               {/* Benefits */}
               <div>
                 <h3 className="mb-4 text-lg font-bold text-[#111418] flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#AA4528]">star</span>
+                  <span className="material-symbols-outlined text-[#2b8cee]">star</span>
                   Benefits
                 </h3>
                 <div className="space-y-3">
                   {benefits.map((benefit, index) => (
-                    <div
+                    <div 
                       key={index}
-                      className="flex items-center gap-3 rounded-lg bg-white p-3 shadow-sm border border-transparent hover:border-[#AA4528]/20 transition"
+                      className="flex items-center gap-3 rounded-lg bg-white p-3 shadow-sm border border-transparent hover:border-[#2b8cee]/20 transition"
                     >
                       <div className={`flex size-10 items-center justify-center rounded-full ${benefit.bgColor} ${benefit.iconColor}`}>
                         <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{benefit.icon}</span>
@@ -362,16 +364,16 @@ export default function InvestorGuide() {
           {/* Account Tiers - Horizontal Swipeable */}
           <section className="px-6 py-8">
             <h3 className="mb-4 text-xl font-bold text-[#111418]">Account Tiers</h3>
-            <div
+            <div 
               ref={tiersRef}
               className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
             >
               {accountTiers.map((tier) => (
-                <div
+                <div 
                   key={tier.id}
                   className="flex min-w-[260px] flex-col rounded-xl p-5 shadow-sm snap-start relative overflow-hidden"
-                  style={{
+                  style={{ 
                     borderWidth: '2px',
                     borderStyle: 'solid',
                     borderColor: tier.borderColor,
@@ -380,19 +382,19 @@ export default function InvestorGuide() {
                 >
                   {/* Badge */}
                   {tier.badge && (
-                    <div
+                    <div 
                       className="absolute top-0 right-0 rounded-bl-lg px-3 py-1 text-[10px] font-bold uppercase text-white"
                       style={{ backgroundColor: tier.borderColor }}
                     >
                       {tier.badge}
                     </div>
                   )}
-
+                  
                   {/* Tier Name Tag */}
                   <div className="mb-4">
-                    <span
+                    <span 
                       className="rounded-md px-2 py-1 text-xs font-bold uppercase"
-                      style={{
+                      style={{ 
                         backgroundColor: `${tier.borderColor}20`,
                         color: tier.borderColor,
                       }}
@@ -400,11 +402,11 @@ export default function InvestorGuide() {
                       {tier.id === 'wealth_1m' ? 'WEALTH' : tier.id === 'wealth_5m' ? 'PREMIUM' : 'ULTRA'}
                     </span>
                   </div>
-
+                  
                   {/* Minimum Investment */}
-                  <h4 className="text-3xl font-bold text-[#151513] mb-1" style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}>{tier.minimum}</h4>
+                  <h4 className="text-3xl font-bold text-[#111418] mb-1">{tier.minimum}</h4>
                   <p className="text-xs text-[#617589] mb-3">Minimum Investment</p>
-
+                  
                   {/* Tier Name */}
                   <h5 className="text-base font-bold text-[#111418] mb-1">{tier.name}</h5>
                   <p className="text-sm text-[#617589]">{tier.description}</p>
@@ -417,9 +419,9 @@ export default function InvestorGuide() {
           <section className="px-6 pb-6">
             <div className="relative overflow-hidden rounded-2xl bg-[#101922] p-6 text-white shadow-xl">
               {/* Abstract Background Pattern */}
-              <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#AA4528]/20 blur-3xl"></div>
+              <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#2b8cee]/20 blur-3xl"></div>
               <div className="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-purple-500/20 blur-3xl"></div>
-
+              
               <div className="relative z-10">
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur-md">
                   <span className="material-symbols-outlined text-xs">trending_up</span>
@@ -448,7 +450,7 @@ export default function InvestorGuide() {
             <h3 className="mb-4 text-xl font-bold text-[#111418]">Frequently Asked Questions</h3>
             <div className="space-y-3">
               {faqs.map((faq, index) => (
-                <details
+                <details 
                   key={index}
                   className="group rounded-lg border border-gray-200 bg-white [&_summary::-webkit-details-marker]:hidden"
                   open={openFaq === index}
@@ -474,11 +476,11 @@ export default function InvestorGuide() {
         </main>
 
         {/* Sticky Footer */}
-        <footer className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto border-t border-slate-100 bg-[#faf9f6]/90 backdrop-blur-md px-4 sm:px-6 pt-4 sm:pt-5 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]" data-onboarding-footer>
-          <button
+        <footer className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto border-t border-slate-100 bg-white/90 backdrop-blur-md px-4 sm:px-6 pt-4 sm:pt-5 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]" data-onboarding-footer>
+          <button 
             onClick={handleStartJourney}
             data-onboarding-cta
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#AA4528] px-6 py-3.5 text-sm sm:text-base font-semibold text-white shadow-lg shadow-[#AA4528]/30 transition hover:bg-[#8C3720] active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#2b8cee] px-6 py-3.5 text-sm sm:text-base font-semibold text-white shadow-lg shadow-blue-200/70 transition hover:bg-blue-600 active:scale-[0.98]"
           >
             {isLoggedIn ? 'Start Onboarding' : 'Start Onboarding'}
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>arrow_forward</span>

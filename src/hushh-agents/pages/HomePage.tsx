@@ -1,1060 +1,429 @@
 /**
- * Hushh Agents — Landing Page (Saturn-inspired)
- *
- * Clean, editorial layout with dashed corner borders,
- * serif headings, feature sections, CEO testimonial,
- * enterprise security badges, and KPI stats.
- * Fully public — no auth gate.
+ * Hushh Agents — Home Page
+ * Standalone project - separate from main HushhTech app.
+ * Custom header/footer without main app navigation.
  */
-import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import HushhTechCta, { HushhTechCtaVariant } from '../../components/hushh-tech-cta/HushhTechCta';
 import { useAuth } from '../hooks/useAuth';
-import DeleteAccountModal from '../../components/DeleteAccountModal';
 import HushhLogo from '../../components/images/Hushhogo.png';
 
-/* ── Fonts ── */
-const serif = { fontFamily: "'Playfair Display', serif" };
-const sans = { fontFamily: "'Inter', sans-serif" };
+/* ── Playfair heading style ── */
+const playfair = { fontFamily: "'Playfair Display', serif" };
 
-/* ── Colors ── */
-const C = {
-  primary: '#1A1A1B',
-  accent: '#1400FF',
-  textSub: '#8A8A8A',
-  divider: '#E5E5E5',
-  bg: '#FFFFFF',
-  bgLight: '#F5F5F5',
-};
-
-/* ═══════════════════════════════════════
-   Dashed Corner Section Wrapper
-   Saturn-style crop mark borders
-   ═══════════════════════════════════════ */
-const DashedSection = ({
-  children,
-  className = '',
-  id,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  id?: string;
-}) => (
-  <section
-    id={id}
-    className={`relative mx-4 sm:mx-6 md:mx-8 my-2 ${className}`}
-    style={{
-      borderLeft: `1px solid ${C.divider}`,
-      borderRight: `1px solid ${C.divider}`,
-      borderTop: `1px solid ${C.divider}`,
-      borderBottom: `1px solid ${C.divider}`,
-      clipPath:
-        'polygon(0 0, 20px 0, 20px 0, 20px 0, calc(100% - 20px) 0, 100% 0, 100% 20px, 100% 20px, 100% calc(100% - 20px), 100% 100%, calc(100% - 20px) 100%, 20px 100%, 0 100%, 0 calc(100% - 20px), 0 20px)',
-    }}
-  >
-    {/* Top-left corner */}
-    <div
-      className="absolute top-0 left-0 w-5 h-5 pointer-events-none"
-      style={{
-        borderTop: `1px solid ${C.primary}`,
-        borderLeft: `1px solid ${C.primary}`,
-      }}
-    />
-    {/* Top-right corner */}
-    <div
-      className="absolute top-0 right-0 w-5 h-5 pointer-events-none"
-      style={{
-        borderTop: `1px solid ${C.primary}`,
-        borderRight: `1px solid ${C.primary}`,
-      }}
-    />
-    {/* Bottom-left corner */}
-    <div
-      className="absolute bottom-0 left-0 w-5 h-5 pointer-events-none"
-      style={{
-        borderBottom: `1px solid ${C.primary}`,
-        borderLeft: `1px solid ${C.primary}`,
-      }}
-    />
-    {/* Bottom-right corner */}
-    <div
-      className="absolute bottom-0 right-0 w-5 h-5 pointer-events-none"
-      style={{
-        borderBottom: `1px solid ${C.primary}`,
-        borderRight: `1px solid ${C.primary}`,
-      }}
-    />
-    {children}
-  </section>
-);
-
-/* ═══════════════════════════════════════
-   Feature Section Component
-   Visual card + label + heading + desc
-   ═══════════════════════════════════════ */
-const FeatureSection = ({
-  label,
-  heading,
-  description,
-  description2,
-  linkText,
-  linkTo,
-  mockupIcon,
-  mockupItems,
-  onNavigate,
-}: {
-  label: string;
-  heading: string;
-  description: string;
-  description2?: string;
-  linkText: string;
-  linkTo: string;
-  mockupIcon: string;
-  mockupItems?: string[];
-  onNavigate?: (to: string) => void;
-}) => {
-  const navigate = useNavigate();
-  /* Use guarded navigation if provided, else fallback to plain navigate */
-  const handleNav = onNavigate || navigate;
-  const [activeIdx, setActiveIdx] = useState(0);
-
-  /* Auto-cycle through items every 2s — Saturn video-like effect */
-  useEffect(() => {
-    if (!mockupItems || mockupItems.length === 0) return;
-    const timer = setInterval(() => {
-      setActiveIdx((prev) => (prev + 1) % mockupItems.length);
-    }, 2000);
-    return () => clearInterval(timer);
-  }, [mockupItems]);
-
-  return (
-    <DashedSection>
-      {/* Visual Card — premium product mockup */}
-      <div
-        className="w-full py-8 sm:py-12 md:py-16 flex items-center justify-center relative overflow-hidden"
-        style={{ background: `linear-gradient(180deg, ${C.bgLight} 0%, #EBEBEB 100%)` }}
-      >
-        {mockupItems ? (
-          <div
-            className="w-[88%] max-w-[280px] sm:max-w-[320px] rounded-2xl overflow-hidden"
-            style={{
-              background: 'rgba(255,255,255,0.85)',
-              backdropFilter: 'blur(20px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
-              border: '1px solid rgba(255,255,255,0.6)',
-              animation: 'float-card 6s ease-in-out infinite',
-            }}
-          >
-            {/* Mini app header bar */}
-            <div className="flex items-center gap-1.5 px-4 py-2.5" style={{ borderBottom: '1px solid #F0F0F0' }}>
-              <div className="w-2 h-2 rounded-full bg-[#FF5F57]" />
-              <div className="w-2 h-2 rounded-full bg-[#FFBD2E]" />
-              <div className="w-2 h-2 rounded-full bg-[#28C840]" />
-              <span className="ml-auto text-[9px] font-medium tracking-wider uppercase" style={{ color: '#BBB' }}>
-                hushh agents
-              </span>
-            </div>
-
-            {/* Items list */}
-            <div className="p-3 sm:p-4 flex flex-col gap-1.5 sm:gap-2">
-              {mockupItems.map((item, i) => {
-                const isActive = i === activeIdx;
-                return (
-                  <div
-                    key={item}
-                    className="flex items-center gap-2.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-lg transition-all duration-600"
-                    style={{
-                      background: isActive ? `linear-gradient(90deg, rgba(20,0,255,0.06) 0%, rgba(20,0,255,0.02) 100%)` : 'transparent',
-                      borderLeft: isActive ? `3px solid ${C.accent}` : '3px solid transparent',
-                      transform: isActive ? 'translateX(2px)' : 'translateX(0)',
-                      transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                  >
-                    {/* Check/radio icon */}
-                    <div
-                      className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-400"
-                      style={{
-                        width: 18, height: 18,
-                        background: isActive ? C.accent : 'transparent',
-                        border: isActive ? 'none' : '1.5px solid #D0D0D0',
-                      }}
-                    >
-                      {isActive && (
-                        <span className="text-white text-[10px] font-bold">✓</span>
-                      )}
-                    </div>
-                    <span
-                      className="text-[12px] sm:text-[13px] transition-all duration-400"
-                      style={{
-                        color: isActive ? C.primary : '#B0B0B0',
-                        fontWeight: isActive ? 600 : 400,
-                        letterSpacing: isActive ? '0.01em' : '0',
-                      }}
-                    >
-                      {item}
-                    </span>
-                    {/* Animated arrow for active */}
-                    <span
-                      className="ml-auto transition-all duration-400"
-                      style={{
-                        opacity: isActive ? 0.6 : 0,
-                        transform: isActive ? 'translateX(0)' : 'translateX(-8px)',
-                        fontSize: 12,
-                        color: C.accent,
-                      }}
-                    >
-                      →
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Bottom progress indicator */}
-            <div className="px-4 pb-3">
-              <div className="flex gap-1.5">
-                {mockupItems.map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-[3px] rounded-full flex-1 transition-all duration-500"
-                    style={{
-                      background: i <= activeIdx ? C.accent : '#E8E8E8',
-                      opacity: i === activeIdx ? 1 : i < activeIdx ? 0.4 : 0.2,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="relative">
-            {/* Concentric circles with pulse */}
-            <div
-              className="w-64 h-64 sm:w-72 sm:h-72 rounded-full border border-dashed flex items-center justify-center"
-              style={{ borderColor: '#D0D0D0', animation: 'pulse-ring 3s ease-in-out infinite' }}
-            >
-              <div
-                className="w-44 h-44 sm:w-52 sm:h-52 rounded-full border flex items-center justify-center"
-                style={{ borderColor: '#D8D8D8' }}
-              >
-                <div
-                  className="w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center"
-                  style={{ background: C.accent }}
-                >
-                  <span className="material-symbols-outlined text-white text-4xl sm:text-5xl">
-                    {mockupIcon}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Text Content */}
-      <div className="px-5 sm:px-8 py-8 sm:py-10">
-        <p
-          className="text-[11px] tracking-[0.25em] uppercase mb-3 font-medium"
-          style={{ color: C.textSub, ...sans }}
-        >
-          {label}
-        </p>
-        <h3
-          className="text-2xl sm:text-3xl mb-4 font-normal"
-          style={{ ...serif, color: C.primary }}
-        >
-          {heading}
-        </h3>
-        <p
-          className="text-sm leading-relaxed mb-3 font-light"
-          style={{ color: C.textSub, ...sans }}
-        >
-          {description}
-        </p>
-        {description2 && (
-          <p
-            className="text-sm leading-relaxed mb-3 font-light"
-            style={{ color: C.textSub, ...sans }}
-          >
-            {description2}
-          </p>
-        )}
-        <button
-          onClick={() => handleNav(linkTo)}
-          className="text-sm font-semibold mt-2 hover:opacity-70 transition-opacity"
-          style={{ color: C.accent, ...sans }}
-        >
-          {linkText}
-        </button>
-      </div>
-    </DashedSection>
-  );
-};
-
-/* ═══════════════════════════════════════
-   KPI Stat Block
-   ═══════════════════════════════════════ */
-const KpiBlock = ({ value, label }: { value: string; label: string }) => (
-  <DashedSection>
-    <div className="px-5 sm:px-8 py-16 sm:py-20">
-      <h3
-        className="text-5xl sm:text-6xl mb-6 font-normal"
-        style={{ ...serif, color: C.primary }}
-      >
-        {value}
-      </h3>
-      <p
-        className="text-sm leading-relaxed font-light max-w-md"
-        style={{ color: C.textSub, ...sans }}
-      >
-        {label}
-      </p>
-    </div>
-  </DashedSection>
-);
-
-/* ═══════════════════════════════════════
-   Main Page Component
-   ═══════════════════════════════════════ */
 export default function AgentsHomePage() {
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const { isAuthenticated, signOut } = useAuth();
+  const { isAuthenticated, isLoading, user, signOut } = useAuth();
+  const [mounted, setMounted] = useState(false);
 
-  /* Log out — full cleanup: Supabase sign out + cache purge */
-  const handleLogout = useCallback(async () => {
-    setIsMenuOpen(false);
-    try {
-      await signOut();
-      /* Purge all agent-related cached data */
-      try {
-        sessionStorage.removeItem('hushh_agents_cache');
-        localStorage.removeItem('hushh_agents_cache');
-        localStorage.removeItem('hushh_agents_session');
-      } catch {}
-      navigate('/hushh-agents', { replace: true });
-    } catch {
-      navigate('/hushh-agents', { replace: true });
-    }
-  }, [signOut, navigate]);
-
-  /* Delete account — opens production glassmorphism modal */
-  const handleOpenDeleteModal = useCallback(() => {
-    setIsMenuOpen(false);
-    setIsDeleteModalOpen(true);
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
-  /* After account is deleted via modal — full redirect */
-  const handleAccountDeleted = useCallback(() => {
-    setIsDeleteModalOpen(false);
-    try { sessionStorage.clear(); localStorage.clear(); } catch {}
-    navigate('/hushh-agents', { replace: true });
-  }, [navigate]);
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate('/login', { state: { redirectTo: '/hushh-agents' } });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
-  /* Nav items — editorial labels with icons */
-  const navItems = [
-    { label: 'Home', desc: 'Landing page', to: '/hushh-agents', icon: 'home' },
-    { label: 'Chat', desc: 'AI conversations', to: '/hushh-agents/chat', icon: 'chat' },
-    { label: 'Voice', desc: 'Speak naturally', to: '/hushh-agents/voice', icon: 'mic' },
-    { label: 'Code', desc: 'Generate & debug', to: '/hushh-agents/code', icon: 'code' },
-  ];
-
-  /* Current path for active state */
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-
-  /**
-   * Auth guardrail — if user is NOT logged in, redirect to login
-   * with ?redirectTo= so they return to the target page after auth.
-   * Home (/hushh-agents) is the only public page — everything else requires auth.
-   */
-  const guardedNavigate = useCallback(
-    (to: string) => {
-      if (isAuthenticated) {
-        navigate(to);
-      } else {
-        navigate(`/hushh-agents/login?redirectTo=${encodeURIComponent(to)}`);
-      }
-    },
-    [isAuthenticated, navigate],
-  );
-
-  return (
-    <div
-      className="min-h-screen selection:bg-blue-100"
-      style={{ background: C.bg, color: C.primary, ...sans }}
-    >
-      {/* ═══ Header ═══ */}
-      <DashedSection>
-        <header className="px-5 sm:px-8 py-4 sm:py-5 flex items-center justify-between">
-          <Link to="/hushh-agents" className="flex items-center gap-3">
-            <img
-              src={HushhLogo}
-              alt="Hushh"
-              className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
-            />
-            <span
-              className="text-lg sm:text-xl tracking-wide font-normal"
-              style={{ ...serif, color: C.primary }}
-            >
-              HUSHH AGENTS
-            </span>
-          </Link>
-          <button
-            onClick={() => setIsMenuOpen(true)}
-            className="w-10 h-10 flex items-center justify-center"
-            aria-label="Open menu"
-          >
-            <div className="flex flex-col gap-[5px]">
-              <span className="w-6 h-[1.5px]" style={{ background: C.primary }} />
-              <span className="w-6 h-[1.5px]" style={{ background: C.primary }} />
-            </div>
-          </button>
-        </header>
-      </DashedSection>
-
-      {/* ═══ Nav Drawer — Saturn editorial design ═══ */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-[100] bg-white flex flex-col" style={sans}>
-          {/* Drawer Header — DashedSection matching homepage */}
-          <DashedSection>
-            <div className="px-5 sm:px-8 py-4 sm:py-5 flex items-center justify-between">
-              <Link to="/hushh-agents" className="flex items-center gap-3" onClick={() => setIsMenuOpen(false)}>
-                <img src={HushhLogo} alt="Hushh" className="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
-                <span className="text-lg sm:text-xl tracking-wide font-normal" style={{ ...serif, color: C.primary }}>
-                  HUSHH AGENTS
-                </span>
-              </Link>
-              <button
-                onClick={() => setIsMenuOpen(false)}
-                className="w-10 h-10 flex items-center justify-center hover:opacity-60 transition-opacity"
-                aria-label="Close menu"
-              >
-                <span className="material-symbols-outlined text-2xl" style={{ color: C.textSub }}>close</span>
-              </button>
-            </div>
-          </DashedSection>
-
-          {/* Nav Section — editorial list with dashed dividers */}
-          <DashedSection className="flex-1 flex flex-col">
-            <div className="flex-1 flex flex-col">
-              {/* Section label */}
-              <div className="px-5 sm:px-8 pt-8 pb-4">
-                <p
-                  className="text-[11px] tracking-[0.25em] uppercase font-medium"
-                  style={{ color: C.textSub, ...sans }}
-                >
-                  Navigate
-                </p>
-              </div>
-
-              {/* Nav items — editorial row style */}
-              <div className="px-5 sm:px-8">
-                {navItems.map((item, idx) => {
-                  const isActive = currentPath === item.to || (item.to === '/hushh-agents' && currentPath === '/hushh-agents/');
-                  return (
-                    <button
-                      key={item.label}
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        /* Home is public — everything else requires auth */
-                        if (item.to === '/hushh-agents') {
-                          navigate(item.to);
-                        } else {
-                          guardedNavigate(item.to);
-                        }
-                      }}
-                      className="group w-full py-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors -mx-2 px-2"
-                      style={{ borderBottom: idx < navItems.length - 1 ? `1px solid ${C.divider}` : 'none' }}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all"
-                          style={{
-                            background: isActive ? C.accent : C.bgLight,
-                            border: isActive ? 'none' : `1px solid ${C.divider}`,
-                          }}
-                        >
-                          <span
-                            className="material-symbols-outlined text-[1.15rem]"
-                            style={{
-                              color: isActive ? '#FFFFFF' : C.accent,
-                              fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
-                            }}
-                          >
-                            {item.icon}
-                          </span>
-                        </div>
-                        <div className="flex flex-col text-left">
-                          <span
-                            className="text-sm tracking-wide"
-                            style={{
-                              color: C.primary,
-                              fontWeight: isActive ? 600 : 400,
-                              ...sans,
-                            }}
-                          >
-                            {item.label}
-                          </span>
-                          <span
-                            className="text-[11px] mt-0.5 font-light"
-                            style={{ color: C.textSub }}
-                          >
-                            {item.desc}
-                          </span>
-                        </div>
-                      </div>
-                      <span
-                        className="material-symbols-outlined text-lg transition-transform group-hover:translate-x-0.5"
-                        style={{ color: isActive ? C.accent : '#D0D0D0' }}
-                      >
-                        arrow_forward
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Spacer */}
-              <div className="flex-1" />
-
-              {/* Dashed divider before actions */}
-              <div
-                className="mx-5 sm:mx-8 border-b border-dashed"
-                style={{ borderColor: C.divider }}
-              />
-
-              {/* Bottom Actions — session-aware, editorial style */}
-              <div className="px-5 sm:px-8 py-6 space-y-0">
-                {isAuthenticated ? (
-                  <>
-                    {/* Log out row */}
-                    <button
-                      onClick={handleLogout}
-                      className="group w-full py-4 flex items-center gap-4 cursor-pointer hover:opacity-70 transition-opacity"
-                      style={{ borderBottom: `1px solid ${C.divider}` }}
-                    >
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: C.bgLight, border: `1px solid ${C.divider}` }}
-                      >
-                        <span
-                          className="material-symbols-outlined text-[1.15rem]"
-                          style={{ color: C.primary, fontVariationSettings: "'FILL' 0, 'wght' 300" }}
-                        >
-                          logout
-                        </span>
-                      </div>
-                      <div className="flex flex-col text-left">
-                        <span className="text-sm font-medium" style={{ color: C.primary }}>
-                          Log out
-                        </span>
-                        <span className="text-[11px] font-light mt-0.5" style={{ color: C.textSub }}>
-                          Sign out of your account
-                        </span>
-                      </div>
-                    </button>
-
-                    {/* Delete account row */}
-                    <button
-                      onClick={handleOpenDeleteModal}
-                      className="group w-full py-4 flex items-center gap-4 cursor-pointer hover:opacity-70 transition-opacity"
-                    >
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: '#FEF2F2', border: '1px solid #FEE2E2' }}
-                      >
-                        <span
-                          className="material-symbols-outlined text-[1.15rem] text-red-500"
-                          style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}
-                        >
-                          delete_forever
-                        </span>
-                      </div>
-                      <div className="flex flex-col text-left">
-                        <span className="text-sm font-medium text-red-500">
-                          Delete account
-                        </span>
-                        <span className="text-[11px] font-light mt-0.5" style={{ color: C.textSub }}>
-                          Permanently remove all data
-                        </span>
-                      </div>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {/* Login row */}
-                    <button
-                      onClick={() => { setIsMenuOpen(false); navigate('/hushh-agents/login'); }}
-                      className="group w-full py-4 flex items-center gap-4 cursor-pointer hover:opacity-70 transition-opacity"
-                      style={{ borderBottom: `1px solid ${C.divider}` }}
-                    >
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: C.bgLight, border: `1px solid ${C.divider}` }}
-                      >
-                        <span
-                          className="material-symbols-outlined text-[1.15rem]"
-                          style={{ color: C.primary, fontVariationSettings: "'FILL' 0, 'wght' 300" }}
-                        >
-                          login
-                        </span>
-                      </div>
-                      <div className="flex flex-col text-left">
-                        <span className="text-sm font-medium" style={{ color: C.primary }}>
-                          Login
-                        </span>
-                        <span className="text-[11px] font-light mt-0.5" style={{ color: C.textSub }}>
-                          Sign in with Apple or Google
-                        </span>
-                      </div>
-                    </button>
-
-                    {/* Get started CTA */}
-                    <div className="pt-4">
-                      <button
-                        onClick={() => { setIsMenuOpen(false); guardedNavigate('/hushh-agents/kirkland'); }}
-                        className="w-full py-4 text-center text-sm font-medium tracking-wide text-white transition-opacity hover:opacity-90"
-                        style={{ background: C.accent }}
-                      >
-                        Get started →
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Trust badge */}
-              <div className="flex items-center justify-center gap-2 pb-6 opacity-50">
-                <span
-                  className="material-symbols-outlined text-[1rem]"
-                  style={{ color: C.accent, fontVariationSettings: "'FILL' 0, 'wght' 300" }}
-                >
-                  lock
-                </span>
-                <span className="text-[0.6rem] tracking-[0.15em] uppercase font-medium" style={{ color: C.textSub }}>
-                  256-bit encryption
-                </span>
-              </div>
-            </div>
-          </DashedSection>
-        </div>
-      )}
-
-      {/* ═══ Hero ═══ */}
-      <DashedSection>
-        <div className="px-5 sm:px-8 py-20 sm:py-28 md:py-32 text-center">
-          <h1
-            className="text-4xl sm:text-5xl md:text-6xl font-normal leading-tight mb-6"
-            style={{ ...serif, color: C.primary }}
-          >
-            Unlock your
-            <br />
-            <span className="italic" style={{ color: C.textSub }}>
-              advisory potential
-            </span>
-          </h1>
-          <p
-            className="text-sm sm:text-base leading-relaxed font-light max-w-lg mx-auto mb-10"
-            style={{ color: C.textSub, ...sans }}
-          >
-            AI-powered agents for Registered Investment Advisors and financial
-            professionals. Discover local advisors, automate workflows, and
-            deliver excellence at scale.
-          </p>
-          <button
-            onClick={() => guardedNavigate('/hushh-agents/kirkland')}
-            className="inline-flex items-center gap-2 px-8 py-4 text-sm font-medium text-white tracking-wide transition-opacity hover:opacity-90"
-            style={{ background: C.accent }}
-          >
-            Get started
-            <span className="text-lg">→</span>
-          </button>
-        </div>
-      </DashedSection>
-
-      {/* ═══ Trusted By — Scrolling Marquee ═══ */}
-      <DashedSection>
-        <div className="py-14 sm:py-20 overflow-hidden" style={{ background: C.bgLight }}>
-          {/* Marquee with fade edges */}
-          <div
-            className="relative mb-10"
-            style={{
-              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)',
-              maskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)',
-            }}
-          >
-            <div
-              className="flex items-center whitespace-nowrap"
-              style={{
-                animation: 'marquee-scroll 30s linear infinite',
-                width: 'max-content',
-              }}
-            >
-              {[1, 2].map((set) => (
-                <div key={set} className="flex items-center" style={{ gap: '4.5rem' }}>
-                  {/* rockwealth */}
-                  <span
-                    className="text-2xl sm:text-3xl md:text-4xl tracking-tight"
-                    style={{ color: C.primary, opacity: 0.35, fontFamily: "'Inter', sans-serif", fontWeight: 700 }}
-                  >
-                    rock<span style={{ fontWeight: 300 }}>wealth</span>
-                  </span>
-
-                  {/* Paradigm Norton | for life */}
-                  <span
-                    className="text-2xl sm:text-3xl md:text-4xl flex items-center"
-                    style={{ color: C.primary, opacity: 0.35 }}
-                  >
-                    <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 600 }}>Paradigm</span>
-                    <span className="inline-block w-px mx-3" style={{ height: '1.8em', background: '#AAAAAA' }} />
-                    <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 300, fontStyle: 'italic' }}>for life</span>
-                  </span>
-
-                  {/* COOPER PARRY */}
-                  <span
-                    className="text-2xl sm:text-3xl md:text-4xl uppercase"
-                    style={{ color: C.primary, opacity: 0.35, fontFamily: "'Inter', sans-serif", fontWeight: 900, letterSpacing: '0.12em' }}
-                  >
-                    Cooper Parry
-                  </span>
-
-                  {/* hushh.ai */}
-                  <span
-                    className="text-2xl sm:text-3xl md:text-4xl tracking-tight"
-                    style={{ color: C.primary, opacity: 0.35, fontFamily: "'Inter', sans-serif", fontWeight: 800 }}
-                  >
-                    hushh<span style={{ fontWeight: 300 }}>.ai</span>
-                  </span>
-
-                  {/* Kirkland Advisors */}
-                  <span
-                    className="text-2xl sm:text-3xl md:text-4xl"
-                    style={{ color: C.primary, opacity: 0.35, fontFamily: "'Playfair Display', serif", fontWeight: 600 }}
-                  >
-                    Kirkland <span style={{ fontWeight: 300, fontStyle: 'italic' }}>Advisors</span>
-                  </span>
-
-                  {/* Google Cloud */}
-                  <span
-                    className="text-2xl sm:text-3xl md:text-4xl"
-                    style={{ color: C.primary, opacity: 0.35, fontFamily: "'Inter', sans-serif", fontWeight: 500, letterSpacing: '0.02em' }}
-                  >
-                    Google Cloud
-                  </span>
-
-                  {/* spacer between sets */}
-                  <span className="inline-block" style={{ width: '4.5rem' }} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <p
-            className="text-sm text-center font-light tracking-wide px-5"
-            style={{ color: C.textSub, fontFamily: "'Inter', sans-serif" }}
-          >
-            Trusted by over 500+ leading advice firms
-          </p>
-        </div>
-      </DashedSection>
-
-      {/* Animation keyframes */}
-      <style>{`
-        @keyframes marquee-scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        @keyframes pulse-ring {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.03); }
-        }
-        @keyframes float-card {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-6px); }
-        }
-      `}</style>
-
-      {/* ═══ Feature 1: Kirkland R.I.A. Agents (PRIMARY) ═══ */}
-      <FeatureSection
-        label="R.I.A. AGENT NETWORK"
-        heading="Discover advisors near you"
-        description="Browse and connect with Registered Investment Advisors in Kirkland and beyond. Search by name, specialty, or location to find the right financial expertise."
-        description2="Unify everything into a single source of truth through deep integrations with your advisory ecosystem and back-office platforms."
-        linkText="Learn more"
-        linkTo="/hushh-agents/kirkland"
-        mockupIcon="domain"
-        mockupItems={['R.I.A. Advisors', 'Fund Research', 'Compliance Reports', 'Client Matching']}
-        onNavigate={guardedNavigate}
-      />
-
-      {/* ═══ Feature 2: AI Chat ═══ */}
-      <FeatureSection
-        label="INTELLIGENT CONVERSATIONS"
-        heading="Converse naturally in any language"
-        description="Your AI companion that understands context, nuance, and multiple languages. Ask questions, get analysis, creative writing, and more."
-        description2="Create a seamless conversational experience where your AI operates in perfect harmony, scaling effortlessly with your needs."
-        linkText="Learn more"
-        linkTo="/hushh-agents/chat"
-        mockupIcon="chat"
-        mockupItems={['Natural Language', 'Multi-turn Context', 'Creative Writing', 'Code Analysis']}
-        onNavigate={guardedNavigate}
-      />
-
-      {/* ═══ Feature 3: Voice Agent ═══ */}
-      <FeatureSection
-        label="VOICE INTELLIGENCE"
-        heading="Speak naturally, get instant responses"
-        description="Real-time voice conversations powered by advanced AI. Speak in Tamil, Hindi, or English and get native responses instantly."
-        description2="Reinvent communication from text-only to voice-first with intelligent speech recognition across every interaction."
-        linkText="Learn more"
-        linkTo="/hushh-agents/voice"
-        mockupIcon="record_voice_over"
-        onNavigate={guardedNavigate}
-      />
-
-      {/* ═══ Feature 4: Code Generation ═══ */}
-      <FeatureSection
-        label="CODE ASSISTANT"
-        heading="Generate, debug and optimize code"
-        description="AI-powered code generation, debugging, explanation, and optimization with step-by-step reasoning."
-        description2="From suitability analysis to code reviews, release your team from manual debugging to focus exclusively on value delivery."
-        linkText="Learn more"
-        linkTo="/hushh-agents/code"
-        mockupIcon="code"
-        onNavigate={guardedNavigate}
-      />
-
-      {/* ═══ CEO Section ═══ */}
-      <DashedSection>
-        <div className="px-5 sm:px-8 pt-6 sm:pt-8">
-          {/* CEO Image */}
-          <div
-            className="w-full aspect-[4/3] sm:aspect-[16/10] rounded-sm overflow-hidden mb-8 flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #1a1a1b 0%, #333 100%)' }}
-          >
-            <div className="text-center">
-              <div
-                className="w-32 h-32 sm:w-40 sm:h-40 rounded-full mx-auto mb-4 flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.1)' }}
-              >
-                <span className="text-5xl sm:text-6xl" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                  MS
-                </span>
-              </div>
-              <span
-                className="text-xs uppercase tracking-[0.2em] font-medium"
-                style={{ color: 'rgba(255,255,255,0.4)' }}
-              >
-                hushh technologies
-              </span>
-            </div>
-            {/* Next Arrow */}
-            <button
-              className="absolute right-8 sm:right-10 bottom-[calc(50%+20px)] w-10 h-10 rounded flex items-center justify-center"
-              style={{ background: C.primary }}
-              aria-label="Next testimonial"
-            >
-              <span className="material-symbols-outlined text-white text-lg">chevron_right</span>
-            </button>
-          </div>
-
-          {/* Quote */}
-          <p
-            className="text-sm sm:text-base leading-relaxed font-light mb-8"
-            style={{ color: C.textSub, ...sans }}
-          >
-            We're redefining the data landscape. Our mission: empower users by making their
-            data universally accessible and valuable, all while placing paramount importance
-            on privacy and user control. Hushh Agents lets us focus on delivering that for
-            our users.
-          </p>
-
-          {/* Dashed Divider */}
-          <div
-            className="border-b border-dashed mb-6"
-            style={{ borderColor: C.divider }}
-          />
-
-          {/* CEO Info */}
-          <div className="pb-8">
-            <h4 className="text-base font-bold mb-1" style={{ color: C.primary, ...sans }}>
-              Manish Sainani
-            </h4>
-            <p className="text-sm font-light" style={{ color: C.textSub, ...sans }}>
-              CEO
-            </p>
-            <p className="text-sm font-light" style={{ color: C.textSub, ...sans }}>
-              Hushh Technologies
-            </p>
-          </div>
-        </div>
-      </DashedSection>
-
-      {/* ═══ Enterprise Security ═══ */}
-      <DashedSection>
-        <div className="px-5 sm:px-8 py-10 sm:py-14">
-          <h3
-            className="text-2xl sm:text-3xl mb-5 font-normal"
-            style={{ ...serif, color: C.primary }}
-          >
-            Enterprise security as standard
-          </h3>
-          <div className="space-y-1 mb-4">
-            <p className="text-sm font-light" style={{ color: C.textSub, ...sans }}>
-              Privacy. Security. Peace of mind.
-            </p>
-            <p className="text-sm font-light" style={{ color: C.textSub, ...sans }}>
-              Never used for training.
-            </p>
-            <p className="text-sm font-light" style={{ color: C.textSub, ...sans }}>
-              Round the clock enterprise security.
-            </p>
-          </div>
-          <button
-            className="text-sm font-semibold mt-2 mb-8 hover:opacity-70 transition-opacity"
-            style={{ color: C.accent, ...sans }}
-          >
-            Learn more
-          </button>
-
-          {/* Security Badges */}
-          <div className="flex items-center gap-6 sm:gap-10">
-            {/* SOC 2 */}
-            <div
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border flex flex-col items-center justify-center"
-              style={{ borderColor: C.divider }}
-            >
-              <span className="text-[11px] font-bold" style={{ color: C.primary }}>
-                AICPA
-              </span>
-              <span className="text-[10px] font-light" style={{ color: C.textSub }}>
-                SOC 2
-              </span>
-            </div>
-            {/* GDPR */}
-            <div
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border flex flex-col items-center justify-center"
-              style={{ borderColor: C.divider }}
-            >
-              <div className="flex items-center gap-0.5 mb-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-[8px]" style={{ color: C.textSub }}>
-                    ★
-                  </span>
-                ))}
-              </div>
-              <span className="text-[11px] font-bold" style={{ color: C.primary }}>
-                GDPR
-              </span>
-              <div className="flex items-center gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-[8px]" style={{ color: C.textSub }}>
-                    ★
-                  </span>
-                ))}
-              </div>
-            </div>
-            {/* Cyber Essentials */}
-            <div
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border flex flex-col items-center justify-center"
-              style={{ borderColor: C.divider }}
-            >
-              <span className="material-symbols-outlined text-sm mb-0.5" style={{ color: C.textSub }}>
-                check
-              </span>
-              <span className="text-[10px] font-medium text-center leading-tight" style={{ color: C.primary }}>
-                Cyber
-              </span>
-              <span className="text-[9px] font-light" style={{ color: C.textSub }}>
-                Essentials
-              </span>
-            </div>
-          </div>
-        </div>
-      </DashedSection>
-
-      {/* ═══ KPI Stats ═══ */}
-      <KpiBlock
-        value="500+"
-        label="Leading enterprises use Hushh Agents to automate workflows, generate insights and enhance productivity"
-      />
-      <KpiBlock
-        value="3,000+"
-        label="AI-powered conversations processed daily across multiple languages and modalities"
-      />
-      <KpiBlock
-        value="99.9%"
-        label="Uptime SLA backed by Google Cloud infrastructure with enterprise-grade reliability"
-      />
-
-      {/* ═══ CTA Footer ═══ */}
-      <div className="mx-4 sm:mx-6 md:mx-8 my-8">
-        <div
-          className="rounded-sm px-6 sm:px-10 py-14 sm:py-20"
-          style={{ background: C.primary }}
-        >
-          <h3
-            className="text-3xl sm:text-4xl text-white mb-8 font-normal"
-            style={serif}
-          >
-            Unlock your AI agents
-          </h3>
-          <button
-            onClick={() => guardedNavigate('/hushh-agents/kirkland')}
-            className="inline-flex items-center gap-2 px-7 py-4 text-sm font-medium tracking-wide text-white transition-opacity hover:opacity-80"
-            style={{ background: 'rgba(255,255,255,0.15)' }}
-          >
-            Get started
-            <span className="text-lg">→</span>
-          </button>
+  if (isLoading || !mounted) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gray-100" />
+          <div className="w-32 h-4 bg-gray-100 rounded" />
         </div>
       </div>
+    );
+  }
 
-      {/* ═══ Footer ═══ */}
-      <DashedSection>
-        <footer className="px-5 sm:px-8 py-10 sm:py-14">
-          <p className="text-sm mb-6" style={{ color: C.textSub, ...sans }}>
-            contact@hushh.ai
+  if (!isAuthenticated) return null;
+
+  return (
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
+      
+      {/* ═══ Custom Agents Header ═══ */}
+      <header className="px-6 py-5 flex justify-between items-center border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur-md z-50">
+        <Link to="/hushh-agents" className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-ios-dark flex items-center justify-center">
+            <img src={HushhLogo} alt="Hushh" className="w-7 h-7 object-contain" />
+          </div>
+          <div>
+            <span className="font-semibold text-sm">Hushh Agents</span>
+            <span className="text-[9px] text-hushh-blue block uppercase tracking-widest">AI Platform</span>
+          </div>
+        </Link>
+        
+        <div className="flex items-center gap-4">
+          {user?.name && (
+            <span className="text-xs text-gray-500 hidden md:block">
+              Hello, {user.name.split(' ')[0]}
+            </span>
+          )}
+          <button
+            onClick={signOut}
+            className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <span className="material-symbols-outlined text-sm">logout</span>
+            <span className="hidden md:inline">Sign Out</span>
+          </button>
+        </div>
+      </header>
+
+      {/* ═══ Main Content ═══ */}
+      <main className="flex-1 px-6 pb-16 max-w-2xl mx-auto w-full">
+        
+        {/* ── Hero Section ── */}
+        <section className="pt-12 pb-8">
+          <div className="inline-block px-3 py-1 mb-5 border border-hushh-blue/20 rounded-full bg-hushh-blue/5">
+            <span className="text-[10px] tracking-widest uppercase font-medium text-hushh-blue flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-hushh-blue rounded-full animate-pulse" />
+              AI Agents Platform
+            </span>
+          </div>
+          
+          <h1 
+            className="text-[2.5rem] md:text-[3rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
+            style={playfair}
+          >
+            Meet Your <br className="md:hidden" />
+            <span className="text-gray-400 italic font-light">AI Agents.</span>
+          </h1>
+          
+          <p className="text-gray-500 text-sm font-light mt-4 leading-relaxed max-w-md">
+            Intelligent assistants powered by GCP's most advanced AI. 
+            Chat in English, Hindi, or Tamil with voice support.
           </p>
-          <div className="space-y-4 mb-8">
-            {['Careers', 'Journal', 'Security', 'Agents', 'About Us'].map((link) => (
-              <p key={link}>
-                <span
-                  className="text-sm cursor-pointer hover:opacity-60 transition-opacity"
-                  style={{ color: C.primary, ...sans }}
-                >
-                  {link}
+        </section>
+
+        {/* ── Agent Card ── */}
+        <section className="py-6">
+          <div 
+            className="group bg-ios-dark text-white p-6 md:p-8 rounded-2xl relative overflow-hidden shadow-xl cursor-pointer hover:shadow-2xl transition-all duration-300"
+            onClick={() => navigate('/hushh-agents/chat')}
+            role="button"
+            tabIndex={0}
+            aria-label="Start chatting with Hushh AI"
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/hushh-agents/chat'); }}
+          >
+            {/* Glow effects */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-hushh-blue/20 rounded-full blur-3xl group-hover:bg-hushh-blue/30 transition-colors" />
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-hushh-blue/10 to-transparent" />
+
+            <div className="relative z-10 flex flex-col gap-6">
+              {/* Agent Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-hushh-blue/20 to-hushh-blue/5 flex items-center justify-center border border-white/10">
+                    <img src={HushhLogo} alt="Hushh" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-medium tracking-widest uppercase text-white/50 block">
+                      Primary Agent
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-medium font-serif" style={playfair}>
+                      Hushh
+                    </h2>
+                  </div>
+                </div>
+                <span className="bg-ios-green/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider border border-ios-green/30 text-ios-green">
+                  Online
                 </span>
+              </div>
+
+              {/* Agent Description */}
+              <p className="text-white/70 text-sm font-light leading-relaxed">
+                Your intelligent AI companion. Ask questions, get help with analysis, 
+                creative writing, coding, and more.
               </p>
+
+              {/* Capabilities */}
+              <div className="flex flex-wrap gap-2">
+                {['Multi-language', 'Voice Chat', 'Code Help', 'Analysis'].map((cap) => (
+                  <span 
+                    key={cap}
+                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-medium uppercase tracking-wider text-white/60"
+                  >
+                    {cap}
+                  </span>
+                ))}
+              </div>
+
+              {/* Start Chat CTA */}
+              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+                <span className="text-sm font-medium text-hushh-blue">
+                  Start Conversation
+                </span>
+                <span className="material-symbols-outlined text-hushh-blue group-hover:translate-x-2 transition-transform">
+                  arrow_forward
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ Tamil Voice Nudge — Gemini Live API ═══ */}
+        <section className="py-6">
+          <div 
+            className="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:shadow-2xl"
+            style={{ 
+              background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B00 100%)',
+            }}
+            onClick={() => navigate('/hushh-agents/voice?lang=ta-IN')}
+            role="button"
+            tabIndex={0}
+            aria-label="Start Tamil voice conversation"
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/hushh-agents/voice?lang=ta-IN'); }}
+          >
+            {/* Animated glow */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/10 to-transparent" />
+            
+            {/* NEW Badge */}
+            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                NEW
+              </span>
+            </div>
+            
+            <div className="relative z-10 flex flex-col gap-4">
+              {/* Icon & Title */}
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                  <span className="material-symbols-outlined text-4xl text-white">record_voice_over</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-medium tracking-widest uppercase text-white/70 block">
+                    Hushh Live API
+                  </span>
+                  <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    தமிழ் குரல் AI
+                  </h2>
+                  <p className="text-sm text-white/90 font-light">Tamil Voice Assistant</p>
+                </div>
+              </div>
+              
+              {/* Description */}
+              <p className="text-white/90 text-sm font-light leading-relaxed">
+                <span className="font-medium">தமிழில் பேசுங்கள், தமிழில் பதில் பெறுங்கள்!</span><br />
+                Speak in Tamil, get responses in Tamil. Real-time voice conversations 
+                powered by Google's most advanced AI.
+              </p>
+              
+              {/* Features */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                {['Real-time Voice', 'Native Tamil', 'Low Latency', 'No Typing'].map((cap) => (
+                  <span 
+                    key={cap}
+                    className="px-3 py-1.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-[10px] font-medium uppercase tracking-wider text-white"
+                  >
+                    {cap}
+                  </span>
+                ))}
+              </div>
+              
+              {/* CTA */}
+              <div className="pt-4 border-t border-white/20 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-white/80">mic</span>
+                  <span className="text-sm font-medium text-white">
+                    குரலில் பேசத் தொடங்குங்கள்
+                  </span>
+                </div>
+                <span className="material-symbols-outlined text-white group-hover:translate-x-2 transition-transform">
+                  arrow_forward
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ Hushh Code Agent — Separate Agent Card ═══ */}
+        <section className="py-6">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-2 font-medium">Code Agent</p>
+          <h2 className="text-xl md:text-2xl font-medium mb-4 tracking-tight font-serif" style={playfair}>
+            Hushh Code
+          </h2>
+
+          <div 
+            className="group bg-[#0d1117] text-white p-6 md:p-8 rounded-2xl relative overflow-hidden shadow-xl cursor-pointer hover:shadow-2xl transition-all duration-300"
+            onClick={() => navigate('/hushh-agents/code')}
+            role="button"
+            tabIndex={0}
+            aria-label="Open Hushh Code - AI Code Generation"
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/hushh-agents/code'); }}
+          >
+            {/* Glow effects */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl group-hover:bg-purple-500/30 transition-colors" />
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-purple-600/10 to-transparent" />
+
+            <div className="relative z-10 flex flex-col gap-6">
+              {/* Agent Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 flex items-center justify-center border border-purple-400/20">
+                    <span className="material-symbols-outlined text-3xl md:text-4xl text-purple-400">terminal</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-medium tracking-widest uppercase text-white/50 block">
+                      Code Agent • Claude Opus 4.5
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-medium font-serif" style={playfair}>
+                      Hushh Code
+                    </h2>
+                  </div>
+                </div>
+                <span className="bg-purple-500/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider border border-purple-400/30 text-purple-400">
+                  Online
+                </span>
+              </div>
+
+              {/* Agent Description */}
+              <p className="text-white/70 text-sm font-light leading-relaxed">
+                AI-powered code generation, debugging, explanation, and optimization. 
+                Powered by Claude Opus 4.5 via GCP Vertex AI with extended thinking.
+              </p>
+
+              {/* Capabilities */}
+              <div className="flex flex-wrap gap-2">
+                {['Generate', 'Debug', 'Explain', 'Optimize'].map((cap) => (
+                  <span 
+                    key={cap}
+                    className="px-3 py-1.5 bg-purple-500/10 border border-purple-400/15 rounded-full text-[10px] font-medium uppercase tracking-wider text-purple-300/80"
+                  >
+                    {cap}
+                  </span>
+                ))}
+              </div>
+
+              {/* Language Support */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-[10px] text-white/40 uppercase tracking-wider">Languages:</span>
+                {['TS', 'JS', 'PY', 'RX', 'SQ', 'RS', 'GO'].map((lang) => (
+                  <span 
+                    key={lang}
+                    className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] font-mono font-bold text-white/50"
+                  >
+                    {lang}
+                  </span>
+                ))}
+              </div>
+
+              {/* Extended Thinking Badge */}
+              <div className="flex items-center gap-2 bg-purple-500/10 border border-purple-400/15 rounded-xl px-4 py-2.5">
+                <span className="material-symbols-outlined text-purple-400 text-lg">psychology</span>
+                <div>
+                  <p className="text-[11px] text-purple-300 font-medium">Extended Thinking Enabled</p>
+                  <p className="text-[9px] text-purple-300/60">Claude reasons step-by-step before generating code</p>
+                </div>
+              </div>
+
+              {/* Start Coding CTA */}
+              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+                <span className="text-sm font-medium text-purple-400">
+                  Start Coding
+                </span>
+                <span className="material-symbols-outlined text-purple-400 group-hover:translate-x-2 transition-transform">
+                  arrow_forward
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Features Grid ── */}
+        <section className="py-8">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-2 font-medium">Features</p>
+          <h2 className="text-xl md:text-2xl font-medium mb-6 tracking-tight font-serif" style={playfair}>
+            What Hushh Can Do
+          </h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { icon: 'chat', color: 'text-hushh-blue', bg: 'bg-hushh-blue/10', title: 'Chat', desc: 'Natural conversations' },
+              { icon: 'translate', color: 'text-ios-green', bg: 'bg-ios-green/10', title: 'Languages', desc: 'EN • HI • TA' },
+              { icon: 'mic', color: 'text-amber-500', bg: 'bg-amber-500/10', title: 'Voice', desc: 'Speak naturally' },
+              { icon: 'code', color: 'text-purple-500', bg: 'bg-purple-500/10', title: 'Code', desc: 'Programming help' },
+            ].map((item) => (
+              <div 
+                key={item.icon} 
+                className="bg-ios-gray-bg border border-gray-200/60 p-4 rounded-2xl hover:border-hushh-blue/30 transition-colors"
+              >
+                <div className={`w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center mb-3`}>
+                  <span className={`material-symbols-outlined ${item.color}`}>{item.icon}</span>
+                </div>
+                <h5 className="font-medium text-sm">{item.title}</h5>
+                <p className="text-[10px] text-gray-500 font-light mt-1">{item.desc}</p>
+              </div>
             ))}
           </div>
-          <div className="border-t pt-6" style={{ borderColor: C.divider }}>
-            <div className="flex items-center gap-4 flex-wrap text-sm mb-3">
-              <Link to="/privacy-policy" className="hover:opacity-60" style={{ color: C.primary }}>
-                Privacy Policy
-              </Link>
-              <span style={{ color: C.divider }}>•</span>
-              <span style={{ color: C.primary }}>Terms of Service</span>
-            </div>
-            <p className="text-xs font-light" style={{ color: C.textSub }}>
-              Hushh Technologies LLC, Kirkland, Washington
-            </p>
-            <p className="text-xs font-light mt-1" style={{ color: C.textSub }}>
-              © {new Date().getFullYear()}, All rights reserved.
-            </p>
+        </section>
+
+        {/* ── Coming Soon Section ── */}
+        <section className="py-8">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-2 font-medium">Coming Soon</p>
+          <h2 className="text-xl md:text-2xl font-medium mb-6 tracking-tight font-serif" style={playfair}>
+            More Agents
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { name: 'Kai', desc: 'Investment analysis & market insights', icon: 'trending_up' },
+              { name: 'Luna', desc: 'Document processing & summaries', icon: 'description' },
+            ].map((agent) => (
+              <div 
+                key={agent.name}
+                className="bg-ios-gray-bg border border-gray-200/60 p-5 rounded-2xl flex items-center gap-4 opacity-60"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-gray-200/60 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-gray-400">{agent.icon}</span>
+                </div>
+                <div>
+                  <h5 className="font-medium text-sm flex items-center gap-2">
+                    {agent.name}
+                    <span className="text-[8px] uppercase tracking-wider bg-gray-200 px-2 py-0.5 rounded-full text-gray-500">
+                      Soon
+                    </span>
+                  </h5>
+                  <p className="text-[11px] text-gray-500 font-light mt-0.5">{agent.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        </footer>
-      </DashedSection>
+        </section>
 
-      {/* Bottom spacing */}
-      <div className="h-8" />
+        {/* ── Primary CTA ── */}
+        <section className="py-8">
+          <HushhTechCta
+            onClick={() => navigate('/hushh-agents/chat')}
+            variant={HushhTechCtaVariant.BLACK}
+          >
+            <span className="material-symbols-outlined">chat</span>
+            Start Chatting with Hushh
+          </HushhTechCta>
+        </section>
+      </main>
 
-      {/* ═══ Delete Account Modal — Production glassmorphism (reused from main app) ═══ */}
-      <DeleteAccountModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onAccountDeleted={handleAccountDeleted}
-      />
+      {/* ═══ Custom Agents Footer ═══ */}
+      <footer className="border-t border-gray-100 px-6 py-8">
+        <div className="max-w-2xl mx-auto flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[14px] text-hushh-blue">lock</span>
+            <span className="text-[10px] text-gray-400 tracking-wide uppercase font-medium">
+              Secure • Private • No Data Stored
+            </span>
+          </div>
+          <p className="text-[10px] text-gray-400 text-center">
+            Powered by Hushh Intelligence & Google Cloud AI
+          </p>
+          <p className="text-[9px] text-gray-300">
+            © {new Date().getFullYear()} Hushh Technologies
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

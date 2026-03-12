@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import config from '../../resources/config/config';
-import OnboardingShell from '../../components/OnboardingShell';
+import { useFooterVisibility } from '../../utils/useFooterVisibility';
+import HushhTechBackHeader from '../../components/hushh-tech-back-header/HushhTechBackHeader';
+import HushhTechCta, { HushhTechCtaVariant } from '../../components/hushh-tech-cta/HushhTechCta';
 
 // Types
 interface TimeSlot { startTime: string; endTime: string; available: boolean; }
@@ -17,6 +19,7 @@ function MeetCeoPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hushhCoins, setHushhCoins] = useState(0);
+  const isFooterVisible = useFooterVisibility();
 
   // Coupon state
   const [showCoupon, setShowCoupon] = useState(false);
@@ -188,276 +191,295 @@ function MeetCeoPage() {
   const handleContinue = () => navigate('/hushh-user-profile');
   const handleBack = () => navigate('/onboarding/step-13');
 
-  // Determine primary action for OnboardingShell
-  const getContinueLabel = () => {
-    if (paymentState === 'not_paid') return loading ? 'Redirecting...' : 'Verify & Unlock — $1';
-    if (paymentState === 'paid') return bookingInProgress ? 'Booking...' : selectedSlot ? 'Confirm Booking' : 'Select a Time';
-    return 'Continue to Profile';
-  };
-
-  const handlePrimaryAction = () => {
-    if (paymentState === 'not_paid') handlePayment();
-    else if (paymentState === 'paid') {
-      if (selectedSlot) handleBookMeeting();
-    }
-    else if (paymentState === 'booked') handleContinue();
-  };
-
-  const isContinueDisabled = (paymentState === 'not_paid' && loading) ||
-    (paymentState === 'paid' && (!selectedSlot || bookingInProgress));
-
   /* ── Shimmer Loader ── */
   if (paymentState === 'loading' || paymentState === 'verifying') {
     return (
-      <OnboardingShell
-        step={14}
-        totalSteps={14}
-        onBack={handleBack}
-        onClose={() => navigate('/dashboard')}
-        hideContinueBtn
-      >
-        <div className="flex-1 flex items-center justify-center py-20">
+      <div className="bg-white min-h-screen flex flex-col antialiased selection:bg-black selection:text-white">
+        <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
+        <div className="flex-1 flex items-center justify-center px-6">
           <div className="text-center">
-            <div className="w-10 h-10 mx-auto mb-4 border-4 border-[#EEE9E0] border-t-[#AA4528] rounded-full animate-spin" />
-            <p className="text-[14px] text-[#8C8479] font-medium">{paymentState === 'verifying' ? 'Verifying payment...' : 'Loading...'}</p>
+            <div className="w-14 h-14 mx-auto mb-6 rounded-full border-4 border-gray-200 border-t-black animate-spin" />
+            <p className="text-sm text-gray-500 font-medium lowercase">{paymentState === 'verifying' ? 'verifying payment...' : 'loading...'}</p>
           </div>
         </div>
-      </OnboardingShell>
+      </div>
     );
   }
 
   /* ── RENDER ── */
   return (
-    <OnboardingShell
-      step={14}
-      totalSteps={14}
-      onBack={handleBack}
-      onClose={() => navigate('/dashboard')}
-      continueLabel={getContinueLabel()}
-      onContinue={handlePrimaryAction}
-      continueDisabled={isContinueDisabled}
-      continueLoading={loading || bookingInProgress}
-    >
-      <div className="mb-6">
-        <h3 className="text-[13px] tracking-wide text-[#AA4528] uppercase mb-2 font-semibold">Verification</h3>
-        <h1 className="text-[2.2rem] md:text-[2.6rem] font-medium leading-tight text-[#151513] mb-3" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
-          Meet your fund manager
-        </h1>
-        <p className="text-[15px] text-[#8C8479] leading-relaxed">
-          Book a 1-on-1 session for personalized investment strategies.
-        </p>
-      </div>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-black selection:text-white">
+      <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
-      {error && (
-        <div className="mb-6 p-3 rounded-md bg-red-50 border border-red-100 text-[14px] text-red-700">
-          {error}
-        </div>
-      )}
+      <main className="px-6 flex-grow max-w-md mx-auto w-full pb-48">
+        {/* ── Title Section ── */}
+        <section className="py-8">
+          <h3 className="text-[11px] tracking-wide text-gray-500 lowercase mb-4 font-semibold">verification</h3>
+          <h1 className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight lowercase" style={{ fontFamily: "'Playfair Display', serif" }}>
+            meet your
+            <br />
+            <span className="text-gray-400 italic font-normal">fund manager</span>
+          </h1>
+        </section>
 
-      {/* ═══ NOT PAID STATE ═══ */}
-      {paymentState === 'not_paid' && (
-        <div className="space-y-6">
-          <div className="flex items-center gap-4 py-4 border-b border-[#EEE9E0]">
-            <div className="w-14 h-14 rounded-full bg-[#AA4528] flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-white text-2xl" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>person</span>
+        {/* Error */}
+        {error && (
+          <div className="mb-6 flex items-center gap-3 py-4 px-1 border-b border-red-100">
+            <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-red-500 text-lg" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>error</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <span className="text-[16px] font-semibold text-[#151513] block">Manish Sainani</span>
-              <span className="text-[14px] text-[#8C8479]">Hedge Fund Manager · 1-hour session</span>
-            </div>
+            <p className="text-sm font-medium text-red-700 lowercase">{error}</p>
           </div>
+        )}
 
-          <div className="bg-[#F7F5F0] rounded-md p-5 border border-[#EEE9E0]">
-            <p className="text-[15px] text-[#151513] leading-relaxed mb-3">
-              A personal consultation with Manish typically costs <span className="font-bold">$3,000</span> per session.
-            </p>
-            <p className="text-[15px] text-[#151513] leading-relaxed">
-              Because you've completed the full Hushh KYC onboarding, you've unlocked this as an <span className="font-semibold text-[#AA4528]">exclusive benefit</span> — available for just <span className="font-bold">$1</span>.
-            </p>
-          </div>
-
-          <section className="space-y-0">
-            <h3 className="text-[13px] tracking-wide text-[#8C8479] uppercase font-semibold mb-2">What you unlock</h3>
-
-            <div className="py-4 border-b border-[#EEE9E0] flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#FDF9F7] flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#AA4528] text-lg">calendar_month</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-[15px] font-semibold text-[#151513] block">1-hour private consultation</span>
-                <span className="text-[13px] text-[#8C8479]">With Manish Sainani</span>
-              </div>
-              <span className="text-[13px] font-medium text-[#8C8479] line-through">$3,000</span>
-            </div>
-
-            <div className="py-4 border-b border-[#EEE9E0] flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#FDF9F7] flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#AA4528] text-lg">monetization_on</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-[15px] font-semibold text-[#151513] block">300,000 Hushh Coins</span>
-                <span className="text-[13px] text-[#8C8479]">Credited instantly</span>
-              </div>
-            </div>
-
-            <div className="py-4 border-b border-[#EEE9E0] flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#FDF9F7] flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#AA4528] text-lg">verified</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-[15px] font-semibold text-[#151513] block">KYC Verified Badge</span>
-                <span className="text-[13px] text-[#8C8479]">Identity verification complete</span>
-              </div>
-            </div>
-          </section>
-
-          <div className="bg-[#F7F5F0] rounded-md p-5 border border-[#EEE9E0] text-center">
-            <span className="text-[13px] tracking-wide text-[#8C8479] uppercase font-semibold">Your price today</span>
-            <div className="flex items-baseline justify-center gap-3 mt-1">
-              <span className="text-3xl font-bold text-[#151513] tracking-tight">$1</span>
-              <span className="text-[15px] text-[#8C8479] line-through">$3,000</span>
-            </div>
-          </div>
-
-          <div>
-            <button onClick={() => setShowCoupon(!showCoupon)} className="w-full flex items-center justify-center gap-1.5 py-2 text-[14px] text-[#AA4528] font-semibold hover:opacity-80 transition-opacity">
-              <span className="material-symbols-outlined text-lg">confirmation_number</span>
-              {showCoupon ? 'Hide coupon code' : 'Have a coupon code?'}
-            </button>
-
-            {showCoupon && (
-              <div className="mt-3">
-                <div className="flex gap-2">
-                  <input
-                    type="text" value={couponCode} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(null); }}
-                    placeholder="Enter coupon code"
-                    className="flex-1 h-[50px] px-4 rounded-md bg-white border border-[#EEE9E0] text-[16px] text-[#151513] placeholder-[#8C8479] focus:outline-none focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] transition-all font-mono tracking-widest uppercase"
-                    autoCapitalize="characters" autoComplete="off"
-                  />
-                  <button onClick={handleCouponRedeem} disabled={couponLoading || !couponCode.trim()}
-                    className="h-[50px] px-6 rounded-md bg-[#151513] text-white text-[15px] font-semibold disabled:bg-gray-300 transition-all cursor-pointer">
-                    {couponLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Apply'}
-                  </button>
+        {/* ═══ NOT PAID STATE ═══ */}
+        {paymentState === 'not_paid' && (
+          <>
+            {/* Manager intro */}
+            <div className="py-5 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-black flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-white text-2xl" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>person</span>
                 </div>
-                {couponError && <p className="text-[13px] text-red-600 mt-2 font-medium">{couponError}</p>}
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-gray-900 block">Manish Sainani</span>
+                  <span className="text-xs text-gray-500 font-medium lowercase">hedge fund manager · 1-hour private session</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Story card */}
+            <div className="my-6 bg-gray-50 rounded-2xl p-6 border border-gray-200">
+              <p className="text-sm text-gray-700 leading-relaxed mb-3 lowercase">
+                a personal consultation with manish typically costs <span className="font-bold text-gray-900">$3,000</span> per session.
+              </p>
+              <p className="text-sm text-gray-700 leading-relaxed mb-3 lowercase">
+                because you've completed the full hushh kyc onboarding, you've unlocked this as an <span className="font-semibold text-gray-900">exclusive benefit</span> — available for just <span className="font-bold text-black">$1</span>.
+              </p>
+              <p className="text-xs text-gray-500 leading-relaxed lowercase">
+                your opportunity to sit 1-on-1 with a fund manager for investment strategies, portfolio allocation, and personalized guidance.
+              </p>
+            </div>
+
+            {/* What you unlock — list style */}
+            <section className="space-y-0 mb-6">
+              <div className="py-4">
+                <h3 className="text-[11px] tracking-wide text-gray-500 lowercase font-semibold">what you unlock</h3>
+              </div>
+
+              <div className="py-5 border-b border-gray-200">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-white text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>calendar_month</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-gray-900 lowercase block">1-hour private consultation</span>
+                    <span className="text-xs text-gray-500 font-medium lowercase">with manish sainani</span>
+                  </div>
+                  <span className="text-xs font-medium text-gray-400 line-through">$3,000</span>
+                </div>
+              </div>
+
+              <div className="py-5 border-b border-gray-200">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-gray-700 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>monetization_on</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-gray-900 lowercase block">300,000 hushh coins</span>
+                    <span className="text-xs text-gray-500 font-medium lowercase">credited instantly</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="py-5 border-b border-gray-200">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-gray-700 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-gray-900 lowercase block">kyc verified badge</span>
+                    <span className="text-xs text-gray-500 font-medium lowercase">identity verification complete</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Price card */}
+            <section className="mb-6">
+              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+                <div className="flex flex-col items-center text-center gap-1">
+                  <span className="text-[11px] tracking-wide text-gray-500 lowercase font-semibold">your price today</span>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-4xl font-bold text-black tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>$1</span>
+                    <span className="text-sm text-gray-400 line-through">$3,000</span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 lowercase font-medium mt-1">exclusive kyc onboarding benefit</span>
+                </div>
+              </div>
+            </section>
+
+            {/* CTA */}
+            <section className="pb-6 space-y-3">
+              <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={handlePayment} disabled={loading}>
+                {loading ? 'Redirecting...' : 'Verify & Unlock — $1'}
+              </HushhTechCta>
+            </section>
+
+            {/* Coupon Section */}
+            <div className="mb-6">
+              <button onClick={() => setShowCoupon(!showCoupon)} className="w-full flex items-center justify-center gap-1.5 py-2 text-sm text-gray-700 font-semibold lowercase active:opacity-60">
+                <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'wght' 400" }}>confirmation_number</span>
+                {showCoupon ? 'hide coupon code' : 'have a coupon code?'}
+              </button>
+
+              {showCoupon && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text" value={couponCode} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(null); }}
+                      placeholder="enter coupon code"
+                      className="flex-1 h-12 px-4 rounded-xl bg-white border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-black focus:ring-1 focus:ring-black font-mono tracking-widest lowercase"
+                      autoCapitalize="characters" autoComplete="off"
+                    />
+                    <button onClick={handleCouponRedeem} disabled={couponLoading || !couponCode.trim()}
+                      className="h-12 px-5 rounded-xl bg-black text-white text-sm font-semibold disabled:bg-gray-300 active:scale-[0.97] transition-all">
+                      {couponLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'apply'}
+                    </button>
+                  </div>
+                  {couponError && <p className="text-xs text-red-500 text-center font-medium lowercase">{couponError}</p>}
+                </div>
+              )}
+            </div>
+
+            {/* Security badge */}
+            <section className="flex flex-col items-center text-center gap-1 pb-8">
+              <div className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[12px] text-gray-600">lock</span>
+                <span className="text-[10px] text-gray-600 tracking-wide uppercase font-medium">secure payment</span>
+              </div>
+              <p className="text-[10px] text-gray-400 lowercase font-medium">powered by stripe</p>
+            </section>
+          </>
+        )}
+
+        {/* ═══ PAID STATE — Calendar Booking ═══ */}
+        {paymentState === 'paid' && (
+          <>
+            <div className="py-5 border-b border-gray-200 mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-green-50 border border-green-200 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-green-600 text-2xl" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>check_circle</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-gray-900 block lowercase">you're verified!</span>
+                  <span className="text-xs text-gray-500 font-medium lowercase"><span className="font-bold text-gray-900">{hushhCoins.toLocaleString()} hushh coins</span> credited</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6 bg-gray-50 rounded-2xl p-5 border border-gray-200 text-center">
+              <span className="text-sm font-semibold text-gray-900 lowercase block mb-1">schedule your consultation</span>
+              <span className="text-xs text-gray-500 font-medium lowercase">book a 1-hour session with {calendarData?.ceo.name || 'manish sainani'}</span>
+              {calendarData?.timezone && <p className="text-[10px] text-gray-400 mt-1 lowercase">{calendarData.timezone}</p>}
+            </div>
+
+            {loadingSlots && (
+              <div className="flex flex-col items-center py-12">
+                <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin mb-3" />
+                <p className="text-xs text-gray-500 lowercase">loading times...</p>
               </div>
             )}
-          </div>
 
-          <div className="flex items-center justify-center gap-1.5 pt-2">
-            <span className="material-symbols-outlined text-[14px] text-[#8C8479]">lock</span>
-            <span className="text-[12px] text-[#8C8479] font-medium">Secure payment powered by Stripe</span>
-          </div>
-        </div>
-      )}
-
-      {/* ═══ PAID STATE ═══ */}
-      {paymentState === 'paid' && (
-        <div className="space-y-6">
-          <div className="py-4 border-b border-[#EEE9E0] flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-[#E5F3ED] border border-[#B3DEC9] flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[#15803D] text-2xl" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>check_circle</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="text-[16px] font-semibold text-[#151513] block">You're verified!</span>
-              <span className="text-[14px] text-[#8C8479]"><span className="font-bold text-[#151513]">{hushhCoins.toLocaleString()} Hushh Coins</span> credited</span>
-            </div>
-          </div>
-
-          <div className="bg-[#F7F5F0] rounded-md p-4 border border-[#EEE9E0] text-center">
-            <span className="text-[15px] font-semibold text-[#151513] block mb-1">Schedule your consultation</span>
-            <span className="text-[14px] text-[#8C8479]">Book a 1-hour session with {calendarData?.ceo.name || 'Manish Sainani'}</span>
-            {calendarData?.timezone && <p className="text-[13px] text-[#8C8479] mt-2">{calendarData.timezone}</p>}
-          </div>
-
-          {loadingSlots && (
-            <div className="flex flex-col items-center py-10">
-              <div className="w-10 h-10 border-4 border-[#EEE9E0] border-t-[#AA4528] rounded-full animate-spin mb-4" />
-              <p className="text-[14px] text-[#8C8479]">Loading available times...</p>
-            </div>
-          )}
-
-          {!loadingSlots && calendarData && (
-            <div className="space-y-6">
-              <div className="overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none' }}>
-                <div className="flex gap-2">
-                  {calendarData.availability.map((day) => {
-                    const d = new Date(day.date);
-                    const sel = selectedDate === day.date;
-                    const has = day.slots.some(s => s.available);
-                    return (
-                      <button key={day.date} onClick={() => { setSelectedDate(day.date); setSelectedSlot(null); }} disabled={!has}
-                        className={`shrink-0 flex flex-col items-center p-3 rounded-md min-w-[68px] border-[1.5px] transition-all cursor-pointer ${sel ? 'border-[#AA4528] bg-[#FDF9F7]' : has ? 'border-[#EEE9E0] bg-white hover:border-[#AA4528]' : 'border-transparent opacity-40 bg-gray-50'}`}>
-                        <span className={`text-[11px] font-medium uppercase ${sel ? 'text-[#AA4528]' : 'text-[#8C8479]'}`}>{d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                        <span className={`text-[20px] font-bold ${sel ? 'text-[#AA4528]' : 'text-[#151513]'}`}>{d.getDate()}</span>
-                        <span className={`text-[11px] ${sel ? 'text-[#AA4528]' : 'text-[#8C8479]'}`}>{d.toLocaleDateString('en-US', { month: 'short' })}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {selectedDate && (
-                <div className="rounded-md border border-[#EEE9E0] p-4 bg-white">
-                  <p className="text-[14px] font-semibold text-[#151513] mb-3">Available Times</p>
-                  <div className="grid grid-cols-3 gap-3">
-                    {calendarData.availability.find(d => d.date === selectedDate)?.slots.filter(s => s.available).map(slot => {
-                      const t = new Date(slot.startTime);
-                      const sel = selectedSlot?.startTime === slot.startTime;
+            {!loadingSlots && calendarData && (
+              <div className="space-y-4 mb-8">
+                {/* Date pills */}
+                <div className="overflow-x-auto pb-2 -mx-2 px-2">
+                  <div className="flex gap-2">
+                    {calendarData.availability.map((day) => {
+                      const d = new Date(day.date);
+                      const sel = selectedDate === day.date;
+                      const has = day.slots.some(s => s.available);
                       return (
-                        <button key={slot.startTime} onClick={() => setSelectedSlot(slot)}
-                          className={`py-2 px-2 rounded-md text-[13px] font-semibold transition-all cursor-pointer ${sel ? 'bg-[#151513] text-white border-[1.5px] border-[#151513]' : 'bg-[#F7F5F0] text-[#151513] border-[1.5px] border-transparent hover:border-[#AA4528]'}`}>
-                          {t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                        <button key={day.date} onClick={() => { setSelectedDate(day.date); setSelectedSlot(null); }} disabled={!has}
+                          className={`shrink-0 flex flex-col items-center p-2.5 rounded-xl min-w-[62px] border-2 transition-all ${sel ? 'border-black bg-gray-50' : has ? 'border-gray-200 active:bg-gray-50' : 'border-transparent opacity-40'}`}>
+                          <span className="text-[10px] font-medium text-gray-500 uppercase">{d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                          <span className={`text-[18px] font-bold ${sel ? 'text-black' : 'text-gray-900'}`}>{d.getDate()}</span>
+                          <span className="text-[10px] text-gray-500">{d.toLocaleDateString('en-US', { month: 'short' })}</span>
                         </button>
                       );
                     })}
                   </div>
-                  {calendarData.availability.find(d => d.date === selectedDate)?.slots.filter(s => s.available).length === 0 && (
-                    <p className="text-[14px] text-[#8C8479] text-center py-6">No slots available on this date.</p>
-                  )}
                 </div>
-              )}
 
-              {selectedSlot && (
-                <div className="py-4 border-t border-b border-[#EEE9E0] flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#FDF9F7] flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[#AA4528] text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>event_available</span>
+                {/* Time slots */}
+                {selectedDate && (
+                  <div className="rounded-xl border border-gray-200 p-3">
+                    <p className="text-xs font-semibold text-gray-900 mb-2 lowercase">available times</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {calendarData.availability.find(d => d.date === selectedDate)?.slots.filter(s => s.available).map(slot => {
+                        const t = new Date(slot.startTime);
+                        const sel = selectedSlot?.startTime === slot.startTime;
+                        return (
+                          <button key={slot.startTime} onClick={() => setSelectedSlot(slot)}
+                            className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all lowercase ${sel ? 'bg-black text-white' : 'bg-gray-50 text-gray-900 active:bg-gray-200'}`}>
+                            {t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {calendarData.availability.find(d => d.date === selectedDate)?.slots.filter(s => s.available).length === 0 && (
+                      <p className="text-xs text-gray-400 text-center py-4 lowercase">no slots available</p>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-[15px] font-semibold text-[#151513]">{new Date(selectedSlot.startTime).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                    <p className="text-[14px] text-[#AA4528] font-medium">{new Date(selectedSlot.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} – {new Date(selectedSlot.endTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {!selectedSlot && (
-                <div className="flex justify-center pt-2">
-                  <button onClick={handleContinue} className="text-[14px] font-semibold text-[#AA4528] hover:underline cursor-pointer">
-                    I'll schedule this later
-                  </button>
-                </div>
-              )}
+                {/* Selected summary */}
+                {selectedSlot && (
+                  <div className="py-4 px-1 border-b border-gray-200 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-white text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>event_available</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 lowercase">{new Date(selectedSlot.startTime).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                      <p className="text-xs text-gray-500 lowercase">{new Date(selectedSlot.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} – {new Date(selectedSlot.endTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
+                    </div>
+                  </div>
+                )}
+
+                <section className="space-y-3 pt-4">
+                  <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={handleBookMeeting} disabled={!selectedSlot || bookingInProgress}>
+                    {bookingInProgress ? 'Booking...' : selectedSlot ? 'Confirm Booking' : 'Select a Time'}
+                  </HushhTechCta>
+                  <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={handleContinue}>
+                    I'll Book Later
+                  </HushhTechCta>
+                </section>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ═══ BOOKED STATE ═══ */}
+        {paymentState === 'booked' && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
+            <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-green-50 border border-green-200 flex items-center justify-center">
+              <span className="material-symbols-outlined text-green-600 text-[44px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>task_alt</span>
             </div>
-          )}
-        </div>
-      )}
+            <h1 className="text-3xl font-normal text-black tracking-tight mb-2 lowercase" style={{ fontFamily: "'Playfair Display', serif" }}>all set!</h1>
+            <p className="text-sm text-gray-500 mb-1 lowercase">your consultation is scheduled with</p>
+            <p className="text-base font-semibold text-black">Manish Sainani</p>
+            <p className="text-xs text-gray-500 mt-1 lowercase">{hushhCoins.toLocaleString()} hushh coins earned 🪙</p>
 
-      {/* ═══ BOOKED STATE ═══ */}
-      {paymentState === 'booked' && (
-        <div className="flex-1 flex flex-col items-center justify-center text-center py-10">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#E5F3ED] border border-[#B3DEC9] flex items-center justify-center">
-            <span className="material-symbols-outlined text-[#15803D] text-[40px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>task_alt</span>
+            <section className="w-full space-y-3 mt-8">
+              <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={handleContinue}>
+                Continue to Profile
+              </HushhTechCta>
+            </section>
           </div>
-          <h1 className="text-[2rem] font-medium text-[#151513] mb-3" style={{ fontFamily: 'var(--font-display)' }}>All Set!</h1>
-          <p className="text-[15px] text-[#8C8479] mb-1">Your consultation is scheduled with</p>
-          <p className="text-[18px] font-semibold text-[#151513] mb-3">Manish Sainani</p>
-          <div className="inline-flex items-center gap-2 bg-[#F7F5F0] px-3 py-1.5 rounded-full border border-[#EEE9E0] mt-2">
-            <span className="text-[16px]">🪙</span>
-            <span className="text-[13px] font-semibold text-[#151513]">{hushhCoins.toLocaleString()} Hushh Coins earned</span>
-          </div>
-        </div>
-      )}
-    </OnboardingShell>
+        )}
+      </main>
+    </div>
   );
 }
 

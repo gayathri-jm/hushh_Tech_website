@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
-import OnboardingShell from '../../components/OnboardingShell';
+import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { useLocationDropdowns } from '../../hooks/useLocationDropdowns';
 import { locationService } from '../../services/location/locationService';
 import { SearchableSelect } from '../../components/onboarding/SearchableSelect';
@@ -44,6 +44,7 @@ const validateZip = (v: string) => {
 
 export default function OnboardingStep8() {
   const navigate = useNavigate();
+  const isFooterVisible = useFooterVisibility();
   const dropdowns = useLocationDropdowns();
 
   const [addressLine1, setAddressLine1] = useState('');
@@ -60,6 +61,12 @@ export default function OnboardingStep8() {
   /* ─── Enable page-level scrolling ─── */
   useEffect(() => {
     window.scrollTo(0, 0);
+    document.documentElement.classList.add('onboarding-page-scroll');
+    document.body.classList.add('onboarding-page-scroll');
+    return () => {
+      document.documentElement.classList.remove('onboarding-page-scroll');
+      document.body.classList.remove('onboarding-page-scroll');
+    };
   }, []);
 
   /* ─── Auto-detect location ─── */
@@ -87,7 +94,7 @@ export default function OnboardingStep8() {
       );
 
       if (userId) {
-        locationService.saveLocationToOnboarding(userId, result.data).catch(() => { });
+        locationService.saveLocationToOnboarding(userId, result.data).catch(() => {});
       }
 
       setDetectionStatus(result.data.city || result.data.country || 'Location detected');
@@ -212,197 +219,218 @@ export default function OnboardingStep8() {
      RENDER
      ═══════════════════════════════════════════════ */
   return (
-    <OnboardingShell
-      step={DISPLAY_STEP}
-      totalSteps={TOTAL_STEPS}
-      onBack={handleBack}
-      onClose={() => navigate('/dashboard')}
-      continueLabel={loading ? 'Saving…' : 'Continue'}
-      onContinue={handleContinue}
-      continueDisabled={!isValid || loading}
-      continueLoading={loading}
+    <div
+      className="bg-white min-h-[100dvh]"
+      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}
     >
-      {/* ── Title ── */}
-      <div className="mb-8">
-        <h1
-          className="text-[2.2rem] md:text-[2.6rem] font-medium leading-tight text-[#151513] mb-3"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
-        >
-          Enter your address
-        </h1>
-        <p className="text-[15px] text-[#8C8479] leading-relaxed">
-          Please provide your primary residence address.
-        </p>
-      </div>
+      {/* ═══ iOS Navigation Bar ═══ */}
+      <nav
+        className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 12px) + 4px)', minHeight: '48px' }}
+      >
+        <button onClick={handleBack} className="text-[#007AFF] flex items-center -ml-2 active:opacity-50 transition-opacity" aria-label="Go back">
+          <span className="material-symbols-outlined text-3xl -mr-1" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>chevron_left</span>
+          <span className="text-[17px] leading-none pb-[2px]">Back</span>
+        </button>
+        <span className="font-semibold text-[17px] text-black">Setup</span>
+        <button onClick={handleSkip} className="text-[17px] text-[#007AFF] font-normal active:opacity-50 transition-opacity">Skip</button>
+      </nav>
 
-      {/* ── Detection status ── */}
-      {(isDetecting || detectionStatus) && (
-        <div className={`flex items-center gap-2 px-4 py-3 rounded-md mb-6 text-[13px] font-medium border ${isDetecting ? 'bg-[#FDF9F7] text-[#AA4528] border-[#EEE9E0]' : 'bg-[#F2F0EB] text-[#8C8479] border-[#EEE9E0]'
+      <main className="max-w-md mx-auto w-full px-4 pt-4 pb-48">
+        {/* ─── Progress Bar ─── */}
+        <div className="mb-6 space-y-2">
+          <span className="text-[13px] text-[#8E8E93] font-medium uppercase tracking-wide">Onboarding Progress</span>
+          <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-[#007AFF] rounded-full transition-all duration-500" style={{ width: `${PROGRESS_PCT}%` }} />
+          </div>
+          <div className="flex justify-between items-center text-[13px] text-[#8E8E93] font-normal">
+            <span className="text-[#007AFF] font-medium">{PROGRESS_PCT}% complete</span>
+            <span>Step {DISPLAY_STEP}/{TOTAL_STEPS}</span>
+          </div>
+        </div>
+
+        {/* ─── Title ─── */}
+        <div className="mb-8 space-y-2">
+          <h1 className="text-[34px] leading-[41px] font-bold text-black tracking-tight">
+            Enter your address
+          </h1>
+          <p className="text-[17px] text-gray-500 leading-relaxed">
+            Please provide your primary residence address.
+          </p>
+        </div>
+
+        {/* ─── Detection status ─── */}
+        {(isDetecting || detectionStatus) && (
+          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl mb-4 text-sm font-medium ${
+            isDetecting ? 'bg-blue-50 text-[#007AFF]' : 'bg-green-50 text-green-600'
           }`}>
-          {isDetecting && (
-            <span className="h-1.5 w-1.5 rounded-full bg-[#AA4528] animate-pulse" aria-hidden="true" />
-          )}
-          <span>{detectionStatus}</span>
+            {isDetecting && <div className="animate-spin h-4 w-4 border-2 border-[#007AFF] border-t-transparent rounded-full" />}
+            <span>{detectionStatus}</span>
+          </div>
+        )}
+
+        {/* ─── Use my current location ─── */}
+        <div className="mb-8">
+          <button
+            type="button"
+            onClick={handleDetectClick}
+            disabled={isDetecting}
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[#007AFF]/10 rounded-xl active:opacity-70 transition-opacity disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-[#007AFF] text-xl" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>near_me</span>
+            <span className="text-[17px] font-medium text-[#007AFF]">Use my current location</span>
+          </button>
+        </div>
+
+        {/* ─── Error ─── */}
+        {error && (
+          <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700">{error}</div>
+        )}
+
+        {/* ─── Address Lines — iOS Grouped Table ─── */}
+        <div className="overflow-hidden rounded-[10px] bg-white mb-6">
+          <div className="pl-4 pr-4 py-3 flex border-b border-[#C6C6C8]/40">
+            <div className="w-1/3 min-w-[120px] text-[17px] text-black font-normal shrink-0">Address line 1</div>
+            <input
+              type="text"
+              value={addressLine1}
+              onChange={(e) => {
+                setAddressLine1(e.target.value);
+                if (touched.addressLine1) setErrors((p) => ({ ...p, addressLine1: validateAddress(e.target.value) }));
+              }}
+              onBlur={() => handleBlur('addressLine1', addressLine1)}
+              placeholder="Street address"
+              className="flex-1 bg-transparent border-0 p-0 text-[17px] text-black placeholder-gray-400 focus:ring-0 text-right outline-none"
+              autoComplete="address-line1"
+            />
+          </div>
+          <div className="pl-4 pr-4 py-3 flex">
+            <div className="w-1/3 min-w-[120px] text-[17px] text-black font-normal shrink-0">Address line 2</div>
+            <input
+              type="text"
+              value={addressLine2}
+              onChange={(e) => setAddressLine2(e.target.value)}
+              placeholder="Apt, Suite, Bldg (Optional)"
+              className="flex-1 bg-transparent border-0 p-0 text-[17px] text-black placeholder-gray-400 focus:ring-0 text-right outline-none"
+              autoComplete="address-line2"
+            />
+          </div>
+        </div>
+
+        {touched.addressLine1 && errors.addressLine1 && (
+          <p className="text-xs text-red-500 -mt-4 mb-4 px-4">{errors.addressLine1}</p>
+        )}
+
+        {/* ─── Country / State / City / ZIP — iOS Grouped Table ─── */}
+        <div className="overflow-hidden rounded-[10px] bg-white mb-2">
+          {/* Country */}
+          <div className="border-b border-[#C6C6C8]/40">
+            <SearchableSelect
+              id="country"
+              label="Country"
+              value={dropdowns.country}
+              options={dropdowns.countries.map((c) => ({ value: c.isoCode, label: c.name }))}
+              onChange={dropdowns.setCountry}
+              placeholder="Search country..."
+              required
+              autoComplete="country"
+            />
+          </div>
+
+          {/* State */}
+          <div className="border-b border-[#C6C6C8]/40">
+            <SearchableSelect
+              id="state"
+              label="State / Province"
+              value={dropdowns.state}
+              options={dropdowns.states.map((s) => ({ value: s.isoCode, label: s.name }))}
+              onChange={dropdowns.setState}
+              placeholder="Search state..."
+              disabled={!dropdowns.country}
+              loading={dropdowns.loadingStates}
+              loadError={dropdowns.statesError}
+              onRetry={dropdowns.retryStates}
+              required
+              autoComplete="address-level1"
+            />
+          </div>
+
+          {/* City */}
+          <div className="border-b border-[#C6C6C8]/40">
+            <SearchableSelect
+              id="city"
+              label="City"
+              value={dropdowns.city}
+              options={dropdowns.cities.map((c) => ({ value: c.name, label: c.name }))}
+              onChange={dropdowns.setCity}
+              placeholder="Search city..."
+              disabled={!dropdowns.state}
+              loading={dropdowns.loadingCities}
+              loadError={dropdowns.citiesError}
+              onRetry={dropdowns.retryCities}
+              required
+              autoComplete="address-level2"
+            />
+          </div>
+
+          {/* ZIP Code */}
+          <div className="pl-4 pr-4 py-3 flex">
+            <div className="w-1/3 min-w-[90px] text-[17px] text-black font-normal shrink-0">ZIP Code</div>
+            <input
+              type="text"
+              value={zipCode}
+              inputMode="text"
+              onChange={(e) => {
+                const next = e.target.value.slice(0, 10);
+                setZipCode(next);
+                if (touched.zipCode) setErrors((p) => ({ ...p, zipCode: validateZip(next) }));
+              }}
+              onBlur={() => handleBlur('zipCode', zipCode)}
+              placeholder="e.g. 10001"
+              className="flex-1 bg-transparent border-0 p-0 text-[17px] text-black placeholder-gray-400 focus:ring-0 text-right outline-none"
+              autoComplete="postal-code"
+            />
+          </div>
+        </div>
+
+        {touched.zipCode && errors.zipCode ? (
+          <p className="text-xs text-red-500 px-4 mb-4">{errors.zipCode}</p>
+        ) : (
+          <p className="text-[13px] text-gray-500 px-4 mb-4">
+            Supports numeric and alphanumeric codes based on region selection.
+          </p>
+        )}
+      </main>
+
+      {/* ═══ Fixed Footer — Skip + Continue ═══ */}
+      {!isFooterVisible && (
+        <div
+          className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-200 px-4 py-4 z-40"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+          data-onboarding-footer
+        >
+          <div className="max-w-md mx-auto flex items-center gap-3">
+            <button
+              onClick={handleSkip}
+              className="flex-1 h-[50px] rounded-xl bg-gray-100 text-[#007AFF] font-semibold text-[17px] active:scale-[0.98] transition-transform flex items-center justify-center"
+            >
+              Skip
+            </button>
+            <button
+              onClick={handleContinue}
+              disabled={!isValid || loading}
+              data-onboarding-cta
+              className={`flex-[2] h-[50px] rounded-xl font-semibold text-[17px] shadow-sm active:scale-[0.98] transition-all flex items-center justify-center ${
+                isValid && !loading
+                  ? 'bg-[#007AFF] text-white shadow-lg shadow-blue-500/30'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {loading ? 'Saving...' : 'Continue'}
+            </button>
+          </div>
         </div>
       )}
-
-      {/* ── Use my current location ── */}
-      <div className="mb-8">
-        <button
-          type="button"
-          onClick={handleDetectClick}
-          disabled={isDetecting}
-          className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-white border border-[#EEE9E0] hover:bg-[#F7F5F0] rounded-md transition-colors disabled:opacity-50"
-        >
-          <span className="material-symbols-outlined text-[#AA4528] text-[20px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>near_me</span>
-          <span className="text-[14px] font-semibold text-[#151513]">Use my current location</span>
-        </button>
-      </div>
-
-      {/* ── Error ── */}
-      {error && (
-        <div className="mb-6 p-3 rounded-md bg-red-50 border border-red-100 text-[14px] text-red-700">
-          {error}
-        </div>
-      )}
-
-      {/* ── Address Fields ── */}
-      <div className="flex flex-col gap-5 mb-8">
-        {/* Address Line 1 */}
-        <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8C8479] mb-2">
-            Address line 1
-          </label>
-          <input
-            type="text"
-            value={addressLine1}
-            onChange={(e) => {
-              setAddressLine1(e.target.value);
-              if (touched.addressLine1) setErrors((p) => ({ ...p, addressLine1: validateAddress(e.target.value) }));
-            }}
-            onBlur={() => handleBlur('addressLine1', addressLine1)}
-            placeholder="Street address"
-            className={`w-full bg-white border ${touched.addressLine1 && errors.addressLine1 ? 'border-red-300' : 'border-[#EEE9E0]'} rounded-md py-3 px-4 text-[15px] text-[#151513] placeholder-[#C4BFB5] focus:outline-none focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20 transition-all`}
-            autoComplete="address-line1"
-          />
-          {touched.addressLine1 && errors.addressLine1 && (
-            <p className="text-[12px] text-red-500 mt-1.5">{errors.addressLine1}</p>
-          )}
-        </div>
-
-        {/* Address Line 2 */}
-        <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8C8479] mb-2">
-            Address line 2
-          </label>
-          <input
-            type="text"
-            value={addressLine2}
-            onChange={(e) => setAddressLine2(e.target.value)}
-            placeholder="Apt, Suite, Bldg (Optional)"
-            className="w-full bg-white border border-[#EEE9E0] rounded-md py-3 px-4 text-[15px] text-[#151513] placeholder-[#C4BFB5] focus:outline-none focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20 transition-all"
-            autoComplete="address-line2"
-          />
-        </div>
-
-        {/* Country */}
-        <div className="onboarding-select-wrapper">
-          <SearchableSelect
-            id="country"
-            label="Country"
-            value={dropdowns.country}
-            options={dropdowns.countries.map((c) => ({ value: c.isoCode, label: c.name }))}
-            onChange={dropdowns.setCountry}
-            placeholder="Search country..."
-            required
-            autoComplete="country"
-          />
-        </div>
-
-        {/* State */}
-        <div className="onboarding-select-wrapper">
-          <SearchableSelect
-            id="state"
-            label="State / Province"
-            value={dropdowns.state}
-            options={dropdowns.states.map((s) => ({ value: s.isoCode, label: s.name }))}
-            onChange={dropdowns.setState}
-            placeholder="Search state..."
-            disabled={!dropdowns.country}
-            loading={dropdowns.loadingStates}
-            loadError={dropdowns.statesError}
-            onRetry={dropdowns.retryStates}
-            required
-            autoComplete="address-level1"
-          />
-        </div>
-
-        {/* City */}
-        <div className="onboarding-select-wrapper">
-          <SearchableSelect
-            id="city"
-            label="City"
-            value={dropdowns.city}
-            options={dropdowns.cities.map((c) => ({ value: c.name, label: c.name }))}
-            onChange={dropdowns.setCity}
-            placeholder="Search city..."
-            disabled={!dropdowns.state}
-            loading={dropdowns.loadingCities}
-            loadError={dropdowns.citiesError}
-            onRetry={dropdowns.retryCities}
-            required
-            autoComplete="address-level2"
-          />
-        </div>
-
-        {/* ZIP Code */}
-        <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8C8479] mb-2">
-            ZIP Code
-          </label>
-          <input
-            type="text"
-            value={zipCode}
-            inputMode="text"
-            onChange={(e) => {
-              const next = e.target.value.slice(0, 10);
-              setZipCode(next);
-              if (touched.zipCode) setErrors((p) => ({ ...p, zipCode: validateZip(next) }));
-            }}
-            onBlur={() => handleBlur('zipCode', zipCode)}
-            placeholder="e.g. 10001"
-            className={`w-full bg-white border ${touched.zipCode && errors.zipCode ? 'border-red-300' : 'border-[#EEE9E0]'} rounded-md py-3 px-4 text-[15px] text-[#151513] placeholder-[#C4BFB5] focus:outline-none focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20 transition-all`}
-            autoComplete="postal-code"
-          />
-          {touched.zipCode && errors.zipCode ? (
-            <p className="text-[12px] text-red-500 mt-1.5">{errors.zipCode}</p>
-          ) : (
-            <p className="text-[12px] text-[#8C8479] mt-1.5">
-              Supports numeric and alphanumeric codes based on region selection.
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* ── Bottom CTA ── */}
-      <div className="mt-8 pt-6 border-t border-[#F2F0EB] flex gap-3">
-        <button
-          onClick={handleSkip}
-          className="flex-1 py-3.5 rounded-md text-[14px] font-semibold text-[#8C8479] bg-[#F2F0EB] hover:bg-[#EEE9E0] transition-colors"
-        >
-          Skip
-        </button>
-        <button
-          onClick={handleContinue}
-          disabled={!isValid || loading}
-          className={`flex-[2] py-3.5 rounded-md text-[14px] font-semibold transition-all ${isValid && !loading
-            ? 'bg-[#AA4528] text-white hover:bg-[#8C3720] active:scale-[0.99]'
-            : 'bg-[#EEE9E0] text-[#C4BFB5] cursor-not-allowed'
-            }`}
-        >
-          {loading ? 'Saving…' : 'Continue'}
-        </button>
-      </div>
-    </OnboardingShell>
+    </div>
   );
 }

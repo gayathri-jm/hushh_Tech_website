@@ -40,7 +40,7 @@ export default function OnboardingStep8() {
   } = useStep8Logic();
 
   return (
-    <div className="bg-[#faf9f6] text-[#151513] min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
@@ -55,7 +55,7 @@ export default function OnboardingStep8() {
           </div>
           <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-fr-rust transition-all duration-500"
+              className="h-full bg-hushh-blue transition-all duration-500"
               style={{ width: `${PROGRESS_PCT}%` }}
             />
           </div>
@@ -67,14 +67,14 @@ export default function OnboardingStep8() {
             Residence
           </h3>
           <h1
-            className="text-[2.75rem] leading-[1.1] text-[#151513] tracking-tight"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
+            className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             Enter Your
             <br />
-            <span className="text-gray-400 italic font-medium">Address</span>
+            <span className="text-gray-400 italic font-light">Address</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-medium">
+          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-light">
             Please provide your primary residence address.
           </p>
         </section>
@@ -84,7 +84,7 @@ export default function OnboardingStep8() {
           <div className="flex items-center gap-3 py-4 px-1 mb-4 border-b border-gray-100">
             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
               {isDetecting ? (
-                <div className="animate-spin h-5 w-5 border-2 border-fr-rust border-t-transparent rounded-full" />
+                <div className="animate-spin h-5 w-5 border-2 border-hushh-blue border-t-transparent rounded-full" />
               ) : (
                 <span
                   className="material-symbols-outlined text-ios-green text-lg"
@@ -314,7 +314,7 @@ export default function OnboardingStep8() {
               {errors.zipCode}
             </p>
           ) : (
-            <p className="text-[10px] text-gray-400 pl-14 pt-1 font-medium">
+            <p className="text-[10px] text-gray-400 pl-14 pt-1 font-light">
               Supports numeric and alphanumeric codes based on region.
             </p>
           )}
@@ -341,7 +341,7 @@ export default function OnboardingStep8() {
         {/* ── Trust Badges ── */}
         <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px] text-fr-rust">
+            <span className="material-symbols-outlined text-[12px] text-hushh-blue">
               lock
             </span>
             <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">

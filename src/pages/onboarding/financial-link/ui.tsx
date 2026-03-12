@@ -20,6 +20,8 @@ export default function OnboardingFinancialLink() {
     plaidStep,
     institution,
     isDone,
+    canProceed,
+    isProcessing,
     isButtonDisabled,
     buttonText,
     error,
@@ -29,10 +31,12 @@ export default function OnboardingFinancialLink() {
     accountGroups,
     totalBalance,
     identityInfo,
+    investmentHoldings,
     /* Actions */
     handleButtonClick,
-    handleReconnect,
     handleSkip,
+    openPlaidLink,
+    retry,
   } = useFinancialLinkLogic();
 
   /* Loading state */
@@ -40,7 +44,7 @@ export default function OnboardingFinancialLink() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center px-6">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-fr-rust border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-hushh-blue border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-gray-500 text-center">
             Preparing your secure onboarding...
           </p>
@@ -50,10 +54,10 @@ export default function OnboardingFinancialLink() {
   }
 
   return (
-    <div className="bg-[#faf9f6] text-[#151513] min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* Header — back + FAQs */}
       <HushhTechBackHeader
-        onBackClick={() => navigate('/')}
+        onBackClick={() => navigate(-1)}
         rightLabel="FAQs"
       />
 
@@ -62,14 +66,14 @@ export default function OnboardingFinancialLink() {
         {/* Title Section */}
         <section className="space-y-6 mb-12">
           <h2
-            className="text-[36px] leading-[1.2] text-[#151513]"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
+            className="text-[36px] leading-[1.2] text-gray-900 font-serif"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             Verify Your
             <br />
-            <span className="text-gray-400 italic font-medium">Financial Profile.</span>
+            <span className="text-gray-400 italic font-light">Financial Profile.</span>
           </h2>
-          <p className="text-gray-400 text-[14px] leading-relaxed max-w-[90%] font-medium">
+          <p className="text-gray-400 text-[14px] leading-relaxed max-w-[90%] font-light">
             {isDone && institution
               ? `Connected to ${institution.name}. You can continue to the next step.`
               : "We'll securely check your financial profile before starting KYC verification to ensure compliance."}
@@ -197,11 +201,12 @@ export default function OnboardingFinancialLink() {
                   <span className="font-medium text-gray-900 text-[15px]">
                     {row.title}
                   </span>
-                  <span className={`text-[13px] font-medium ${row.status === 'success' ? 'text-gray-700 font-medium' : 'text-gray-400'
-                    }`}>
+                  <span className={`text-[13px] font-light ${
+                    row.status === 'success' ? 'text-gray-700 font-medium' : 'text-gray-400'
+                  }`}>
                     {row.status === 'loading' && (
                       <span className="inline-flex items-center gap-1">
-                        <span className="w-3 h-3 border border-fr-rust border-t-transparent rounded-full animate-spin inline-block" />
+                        <span className="w-3 h-3 border border-hushh-blue border-t-transparent rounded-full animate-spin inline-block" />
                         {row.subtitle}
                       </span>
                     )}
@@ -263,24 +268,11 @@ export default function OnboardingFinancialLink() {
             {buttonText}
           </HushhTechCta>
 
-          {/* Reconnect — only shown after bank is connected */}
-          {isDone && (
-            <button
-              onClick={handleReconnect}
-              className="w-full py-3 flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-              aria-label="Reconnect or change bank account"
-              tabIndex={0}
-            >
-              <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'wght' 300" }}>sync</span>
-              Reconnect / Change Bank
-            </button>
-          )}
-
           <HushhTechCta
             variant={HushhTechCtaVariant.WHITE}
             onClick={handleSkip}
           >
-            Skip for now
+            Skip
           </HushhTechCta>
         </section>
       </main>

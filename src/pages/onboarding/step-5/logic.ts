@@ -141,51 +141,50 @@ export function useStep5Logic() {
         setSelectedAccountType('individual');
       }
 
-      /* ── Pre-populate phone from Plaid identity or saved data ── */
+      /* ── Pre-populate phone from Plaid identity if not already saved ── */
       let hasPhoneFromOnboarding = false;
-      const savedPhone = onboardingData?.phone_number ? String(onboardingData.phone_number).replace(/\D/g, '') : '';
 
-      if (savedPhone) {
-        setPhoneNumber(savedPhone);
+      if (onboardingData?.phone_number) {
+        setPhoneNumber(String(onboardingData.phone_number).replace(/\D/g, ''));
         hasPhoneFromOnboarding = true;
       }
 
-      /* Always check Plaid identity data for phone — either to pre-fill or to mark as bank-verified */
+      /* Try Plaid identity data for phone pre-fill (only if no phone saved yet) */
       let plaidSetDialCode = false;
-      try {
-        const { data: financialData } = await config.supabaseClient
-          .from('user_financial_data')
-          .select('identity_data')
-          .eq('user_id', user.id)
-          .maybeSingle();
+      if (!hasPhoneFromOnboarding) {
+        try {
+          const { data: financialData } = await config.supabaseClient
+            .from('user_financial_data')
+            .select('identity_data')
+            .eq('user_id', user.id)
+            .maybeSingle();
 
-        if (financialData?.identity_data) {
-          const identityData = financialData.identity_data as any;
-          const accounts = identityData?.accounts || [];
-          const owners = accounts[0]?.owners || [];
-          const owner = owners[0];
+          if (financialData?.identity_data) {
+            const identityData = financialData.identity_data as any;
+            const accounts = identityData?.accounts || [];
+            const owners = accounts[0]?.owners || [];
+            const owner = owners[0];
 
-          if (owner?.phone_numbers?.length) {
-            const bankPhone = owner.phone_numbers[0]?.data;
-            if (bankPhone) {
-              const parsed = parseInternationalPhone(String(bankPhone));
-              if (parsed) {
-                if (!hasPhoneFromOnboarding) {
-                  /* No saved phone yet — pre-fill from Plaid */
+            if (owner?.phone_numbers?.length) {
+              // Use the first (primary) phone number from bank
+              const bankPhone = owner.phone_numbers[0]?.data;
+              if (bankPhone) {
+                const parsed = parseInternationalPhone(String(bankPhone));
+                if (parsed) {
                   setPhoneNumber(parsed.localNumber);
+                  setCountryCode(parsed.dialCode);
+                  const matched = PHONE_DIAL_CODES.find((o) => o.code === parsed.dialCode);
+                  if (matched) setSelectedDialCountryIso(matched.iso);
+                  setIsPreFilledFromBank(true);
+                  plaidSetDialCode = true;
+                  console.log('[Step5] Phone pre-filled from Plaid identity:', parsed.dialCode, parsed.localNumber.slice(0, 3) + '***');
                 }
-                setCountryCode(parsed.dialCode);
-                const matched = PHONE_DIAL_CODES.find((o) => o.code === parsed.dialCode);
-                if (matched) setSelectedDialCountryIso(matched.iso);
-                setIsPreFilledFromBank(true);
-                plaidSetDialCode = true;
-                console.log('[Step5] Phone from Plaid identity:', parsed.dialCode, parsed.localNumber.slice(0, 3) + '***');
               }
             }
           }
+        } catch (err) {
+          console.warn('[Step5] Plaid identity fetch failed (ignoring):', err);
         }
-      } catch (err) {
-        console.warn('[Step5] Plaid identity fetch failed (ignoring):', err);
       }
 
       /* Only run dial code detection if Plaid didn't already set it */

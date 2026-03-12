@@ -14,7 +14,7 @@ import { Box, Text, Flex, Progress } from '@chakra-ui/react';
 
 /* iOS 17+ System Design Tokens */
 const IOS = {
-  primary: '#AA4528',
+  primary: '#007AFF',
   text: '#000000',
   textSecondary: '#8E8E93',
   labelSecondary: 'rgba(60, 60, 67, 0.6)',
@@ -86,10 +86,10 @@ const IOSStatusBar: React.FC = () => {
 
         {/* WiFi */}
         <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-          <path d="M8 12C8.55228 12 9 11.5523 9 11C9 10.4477 8.55228 10 8 10C7.44772 10 7 10.4477 7 11C7 11.5523 7.44772 12 8 12Z" fill={IOS.text} />
-          <path d="M5.5 8.5C6.33 7.67 7.42 7.25 8 7.25C8.58 7.25 9.67 7.67 10.5 8.5" stroke={IOS.text} strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M3 6C4.66 4.34 6.34 3.5 8 3.5C9.66 3.5 11.34 4.34 13 6" stroke={IOS.text} strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M0.5 3.5C2.83 1.17 5.42 0 8 0C10.58 0 13.17 1.17 15.5 3.5" stroke={IOS.text} strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M8 12C8.55228 12 9 11.5523 9 11C9 10.4477 8.55228 10 8 10C7.44772 10 7 10.4477 7 11C7 11.5523 7.44772 12 8 12Z" fill={IOS.text}/>
+          <path d="M5.5 8.5C6.33 7.67 7.42 7.25 8 7.25C8.58 7.25 9.67 7.67 10.5 8.5" stroke={IOS.text} strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M3 6C4.66 4.34 6.34 3.5 8 3.5C9.66 3.5 11.34 4.34 13 6" stroke={IOS.text} strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M0.5 3.5C2.83 1.17 5.42 0 8 0C10.58 0 13.17 1.17 15.5 3.5" stroke={IOS.text} strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
 
         {/* Battery */}
@@ -266,7 +266,7 @@ export const IOSOnboardingShell: React.FC<IOSOnboardingShellProps> = ({
                 value={(currentStep / totalSteps) * 100}
                 size="xs"
                 borderRadius="full"
-                bg="rgba(170,69,40,0.12)"
+                bg="rgba(0,122,255,0.12)"
                 sx={{
                   '& > div': {
                     bg: IOS.primary,

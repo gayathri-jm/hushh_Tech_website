@@ -5,11 +5,6 @@
  * - Auth session check & redirect
  * - OAuth sign-up handlers (Apple, Google)
  * - Loading state management
- *
- * After signup, redirect to "/" (home).
- * GlobalNDAGate handles NDA enforcement automatically —
- * no need to redirect to /hushh-user-profile and bounce through
- * ProtectedRoute → onboarding → NDA gate (which caused 3 redirects).
  */
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -30,10 +25,10 @@ export const useSignupLogic = (): SignupLogic => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
-  // Redirect path — defaults to "/" so GlobalNDAGate can handle NDA check
+  // Stable redirect path — computed once from URL params
   const redirectPath = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get("redirect") || "/";
+    return params.get("redirect") || "/hushh-user-profile";
   }, []);
 
   /* Auth session listener — redirect if already logged in */

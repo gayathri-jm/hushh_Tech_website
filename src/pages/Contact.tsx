@@ -1,9 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import emailjs from "@emailjs/browser";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { MapPin, Phone, Clock, Send } from "lucide-react";
+import {
+  Container,
+  Box,
+  Heading,
+  Text,
+  VStack,
+  HStack,
+  Grid,
+  GridItem,
+  Input,
+  Textarea,
+  Select,
+  Button,
+  FormControl,
+  FormLabel,
+  Icon,
+  Flex,
+  Link as ChakraLink,
+} from "@chakra-ui/react";
+import { MapPin, Phone, Clock } from "lucide-react";
 
 const reasonOptions = [
   "Infrastructure Consultation",
@@ -17,6 +36,12 @@ emailjs.init("_TMzDc8Bfy6riSfzq");
 export default function Contact() {
   const [num1, setNum1] = useState<number>(0);
   const [num2, setNum2] = useState<number>(0);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [number, setNumber] = useState("");
+  const [subject, setSubject] = useState(null);
+  const [message, setMessage] = useState("");
+
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -27,10 +52,11 @@ export default function Contact() {
     captcha: ''
   });
 
+  
+
   const [captchaError, setCaptchaError] = useState<string>('');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const formRef = useRef<HTMLFormElement>(null);
+  const form = useRef<HTMLFormElement>(null);
 
   const generateRandomNumbers = () => {
     const randomNum1 = Math.floor(Math.random() * 100);
@@ -52,14 +78,12 @@ export default function Contact() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     const userCaptcha = parseInt(formData.captcha, 10);
     const correctAnswer = num1 + num2;
 
     if (userCaptcha !== correctAnswer) {
       setCaptchaError('Incorrect sum. Please try again.');
-      setLoading(false);
       return;
     } else {
       setCaptchaError('');
@@ -80,207 +104,283 @@ export default function Contact() {
 
     emailjs.send(serviceId, templateId, templateParams, userId)
       .then((result) => {
+        console.log('Email sent successfully:', result.text);
         toast.success('Email sent successfully!');
         navigate('/');
       }, (error) => {
+        console.error('Failed to send email:', error.text);
         toast.error('Failed to send email. Please try again later');
-      })
-      .finally(() => setLoading(false));
+      });
   };
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-[#151515] font-['Source_Sans_Pro',sans-serif] pt-32 pb-24 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="text-center mb-16 space-y-6">
-          <h1 className="text-5xl md:text-7xl font-['Ivar_Headline',serif] font-medium leading-tight">
-            Get in <span className="text-[#AA4528] italic">Touch</span>
-          </h1>
-          <p className="text-xl text-[#666] max-w-2xl mx-auto leading-relaxed">
-            Ready to transform your investment strategy? We'd love to hear from you.
-          </p>
-          <p className="text-sm text-[#888]">
-            For career-related inquiries, please visit our{' '}
-            <a href="/career" className="text-[#AA4528] font-bold hover:underline">Jobs page</a>.
-          </p>
-        </div>
+    <Container maxW="container.xl" py={12} px={{ base: 4, md: 6 }}>
+      {/* Main Header */}
+      <Box textAlign="center" mb={8}>
+        <Heading 
+          as="h1" 
+          size={{ base: "2xl", md: "3xl" }} 
+          mb={4}
+          letterSpacing="tight"
+          fontWeight="500"
+        >
+          <Text as="span" color="black">Get in </Text>
+          <Text 
+            as="span" 
+            sx={{
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+              display: "inline",
+              backgroundImage: "linear-gradient(to right, #00A9E0, #6DD3EF)"
+            }}
+          >
+            Touch
+          </Text>
+        </Heading>
+        
+        <Text 
+          fontSize={{ base: "md", md: "lg" }} 
+          maxW="3xl" 
+          mx="auto" 
+          color="gray.600"
+        >
+          Ready to transform your investment strategy? We'd love to hear from you.
+        </Text>
+        
+        <Text mt={4} fontSize={{ base: "md", md: "md" }} color="gray.600">
+          For career-related inquiries, please visit our{' '}
+          <ChakraLink
+            href="/career"
+            // target="_blank"
+            rel="noopener noreferrer"
+            color="#0AADBC"
+            fontWeight="medium"
+            _hover={{ textDecoration: 'underline' }}
+          >
+            Jobs page
+          </ChakraLink>. 
+          For all other inquiries, please submit the form below.
+        </Text>
+      </Box>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Contact Information Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white p-10 rounded-[2rem] border border-black/5 shadow-sm space-y-10">
-              <h2 className="text-2xl font-['Ivar_Headline',serif] font-medium">Contact Information</h2>
-
-              <div className="space-y-8">
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 bg-[#AA4528]/10 rounded-full flex items-center justify-center shrink-0">
-                    <MapPin className="w-5 h-5 text-[#AA4528]" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm uppercase tracking-widest text-[#666] mb-1">Address</h4>
-                    <p className="text-lg">1021 5th St W<br />Kirkland, WA 98033</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 bg-[#AA4528]/10 rounded-full flex items-center justify-center shrink-0">
-                    <Phone className="w-5 h-5 text-[#AA4528]" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm uppercase tracking-widest text-[#666] mb-1">Phone</h4>
-                    <p className="text-lg">(888) 462-1726</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 bg-[#AA4528]/10 rounded-full flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5 text-[#AA4528]" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm uppercase tracking-widest text-[#666] mb-1">Office Hours</h4>
-                    <p className="text-lg">Monday – Friday<br />9:00 AM – 6:00 PM PST</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[#151515] p-10 rounded-[2rem] text-white shadow-xl relative overflow-hidden group">
-              <div className="relative z-10 space-y-6">
-                <h3 className="text-3xl font-['Ivar_Headline',serif] font-medium">Ready to Invest?</h3>
-                <p className="opacity-70 leading-relaxed">
-                  Join forward-thinking investors who are already benefiting from our
-                  AI-driven approach to wealth creation.
-                </p>
-                <button
-                  onClick={() => navigate('/about/leadership')}
-                  className="bg-[#AA4528] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#C15438] transition-all"
-                >
-                  Learn Strategy
-                </button>
-              </div>
-              <div className="absolute top-[-20%] right-[-20%] w-64 h-64 bg-[#AA4528] rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity"></div>
-            </div>
-          </div>
-
-          {/* Contact Form */}
-          <div className="lg:col-span-2 bg-white p-10 md:p-16 rounded-[2.5rem] border border-black/5 shadow-sm">
-            <h2 className="text-3xl font-['Ivar_Headline',serif] font-medium mb-10">Send us a Message</h2>
-
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">Full Name</label>
-                <input
-                  type="text"
+      {/* Contact Form and Information */}
+      <Grid 
+        templateColumns={{ base: "1fr", md: "1fr 1fr" }} 
+        gap={8} 
+        mt={10}
+        maxW="container.lg"
+        mx="auto"
+      >
+        {/* Contact Form */}
+        <GridItem 
+          as={Box} 
+          p={8} 
+          borderWidth="1px" 
+          borderRadius="lg" 
+          borderColor="gray.200" 
+          bg="white"
+          boxShadow="sm"
+        >
+          <Heading as="h2" size="lg" mb={6}>
+            Send us a Message
+          </Heading>
+          
+          <form ref={form} onSubmit={handleSubmit}>
+            <VStack spacing={4} align="stretch">
+              <FormControl isRequired>
+                <FormLabel fontWeight="medium">Full Name</FormLabel>
+                <Input 
                   name="name"
-                  required
                   placeholder="Enter your full name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full h-14 px-6 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all placeholder:text-gray-300"
+                  size="md"
+                  borderColor="gray.300"
+                  _hover={{ borderColor: "gray.400" }}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">Company (Optional)</label>
-                <input
-                  type="text"
+              </FormControl>
+              
+              <FormControl>
+                <FormLabel fontWeight="medium">Company</FormLabel>
+                <Input 
                   name="company"
-                  placeholder="Enter your company name"
+                  placeholder="Enter your company name (optional)"
                   value={formData.company}
                   onChange={handleChange}
-                  className="w-full h-14 px-6 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all placeholder:text-gray-300"
+                  size="md"
+                  borderColor="gray.300"
+                  _hover={{ borderColor: "gray.400" }}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">Email Address</label>
-                <input
-                  type="email"
+              </FormControl>
+              
+              <FormControl isRequired>
+                <FormLabel fontWeight="medium">Email Address</FormLabel>
+                <Input 
                   name="email"
-                  required
+                  type="email"
                   placeholder="Enter your email address"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full h-14 px-6 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all placeholder:text-gray-300"
+                  size="md"
+                  borderColor="gray.300"
+                  _hover={{ borderColor: "gray.400" }}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">Phone Number (Optional)</label>
-                <input
-                  type="tel"
+              </FormControl>
+              
+              <FormControl>
+                <FormLabel fontWeight="medium">Phone Number</FormLabel>
+                <Input 
                   name="phone"
-                  placeholder="Enter your phone number"
+                  placeholder="Enter your phone number (optional)"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full h-14 px-6 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all placeholder:text-gray-300"
+                  size="md"
+                  borderColor="gray.300"
+                  _hover={{ borderColor: "gray.400" }}
                 />
-              </div>
-
-              <div className="md:col-span-2 space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">Reason for Contact</label>
-                <select
+              </FormControl>
+              
+              <FormControl isRequired>
+                <FormLabel fontWeight="medium">Reason for Contact</FormLabel>
+                <Select 
                   name="reason"
-                  required
+                  placeholder="Select a reason"
                   value={formData.reason}
                   onChange={handleChange}
-                  className="w-full h-14 px-6 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all"
+                  size="md"
+                  borderColor="gray.300"
+                  _hover={{ borderColor: "gray.400" }}
                 >
-                  <option value="">Select a reason</option>
                   {reasonOptions.map((option) => (
-                    <option key={option} value={option}>{option}</option>
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
-                </select>
-              </div>
-
-              <div className="md:col-span-2 space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">Message</label>
-                <textarea
+                </Select>
+              </FormControl>
+              
+              <FormControl isRequired>
+                <FormLabel fontWeight="medium">Message</FormLabel>
+                <Textarea 
                   name="message"
-                  required
                   placeholder="Tell us how we can help you..."
                   value={formData.message}
                   onChange={handleChange}
+                  size="md"
+                  borderColor="gray.300"
+                  _hover={{ borderColor: "gray.400" }}
                   rows={4}
-                  className="w-full p-6 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all placeholder:text-gray-300"
                 />
-              </div>
-
-              <div className="md:col-span-2 space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">What is the sum of {num1} and {num2}?</label>
-                <input
-                  type="number"
+              </FormControl>
+              
+              <FormControl isRequired>
+                <FormLabel fontWeight="medium">What is the sum of {num1} and {num2}?</FormLabel>
+                <Input 
                   name="captcha"
-                  required
                   placeholder="Enter the answer"
                   value={formData.captcha}
                   onChange={handleChange}
-                  className="w-full h-14 px-6 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all placeholder:text-gray-300"
+                  size="md"
+                  borderColor="gray.300"
+                  _hover={{ borderColor: "gray.400" }}
                 />
-                {captchaError && <p className="text-red-600 text-xs font-bold mt-1 uppercase tracking-tight">{captchaError}</p>}
-              </div>
-
-              <div className="md:col-span-2 pt-4">
-                <button
+                {captchaError && (
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {captchaError}
+                  </Text>
+                )}
+              </FormControl>
+              
+              <Box pt={2}>
+                <Button 
                   type="submit"
-                  disabled={loading}
-                  className="w-full py-5 bg-[#AA4528] text-white font-bold rounded-xl hover:bg-[#8e3a22] transition-all shadow-lg flex items-center justify-center gap-3 active:scale-[0.98]"
+                  bg="linear-gradient(to right, #00A9E0, #6DD3EF)"
+                  color="white"
+                  size="md"
+                  px={8}
+                  _hover={{ bg: "cyan.500" }}
+                  width="full"
                 >
-                  {loading ? (
-                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  ) : (
-                    <>
-                      <Send className="w-5 h-5" />
-                      Submit Message
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
+                  Submit Message
+                </Button>
+              </Box>
+            </VStack>
+          </form>
+        </GridItem>
+        
+        {/* Contact Information */}
+        <GridItem>
+          <Box 
+            p={8} 
+            borderWidth="1px" 
+            borderRadius="lg" 
+            borderColor="gray.200" 
+            bg="white"
+            boxShadow="sm"
+            mb={8}
+          >
+            <Heading as="h2" size="lg" mb={6}>
+              Contact Information
+            </Heading>
+            
+            <VStack spacing={6} align="start">
+              <HStack spacing={4} align="flex-start">
+                <Icon as={MapPin} color="red.400" boxSize={5} mt={1} />
+                <Box>
+                  <Text fontWeight="medium">Address</Text>
+                  <Text color="gray.600">1021 5th St W</Text>
+                  <Text color="gray.600">Kirkland, WA 98033</Text>
+                </Box>
+              </HStack>
+              
+              <HStack spacing={4} align="flex-start">
+                <Icon as={Phone} color="red.400" boxSize={5} mt={1} />
+                <Box>
+                  <Text fontWeight="medium">Phone</Text>
+                  <Text color="gray.600">(888) 462-1726</Text>
+                </Box>
+              </HStack>
+              
+              <HStack spacing={4} align="flex-start">
+                <Icon as={Clock} color="red.400" boxSize={5} mt={1} />
+                <Box>
+                  <Text fontWeight="medium">Office Hours</Text>
+                  <Text color="gray.600">Monday - Friday</Text>
+                  <Text color="gray.600">9:00 AM - 6:00 PM PST</Text>
+                </Box>
+              </HStack>
+            </VStack>
+          </Box>
+          
+          <Box 
+            p={8} 
+            borderRadius="lg" 
+            bgGradient="linear(to-r, #2A3B47, #1D2D35)"
+            color="white"
+            boxShadow="md"
+          >
+            <Heading as="h3" size="lg" mb={4}>
+              Ready to Invest?
+            </Heading>
+            <Text mb={6}>
+              Join forward-thinking investors who are already benefiting from our 
+              AI-driven approach to wealth creation.
+            </Text>
+            <Button
+              bg="linear-gradient(to right, #00A9E0, #6DD3EF)"
+              color="white"
+              _hover={{ bg: "cyan.500" }}
+              size="md"
+              onClick={() => navigate('/about/leadership')}
+            >
+              Learn About Our Strategy
+            </Button>
+          </Box>
+        </GridItem>
+      </Grid>
+      
       <ToastContainer />
-    </div>
+    </Container>
   );
 }

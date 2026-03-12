@@ -105,39 +105,6 @@ export const useFinancialLinkLogic = () => {
     return plaid.financialData?.investments?.data?.holdings || [];
   }, [plaid.financialData]);
 
-  /* ─── Investment transactions ─── */
-  const investmentTransactions = useMemo(() => {
-    return plaid.financialData?.investmentTransactions?.data?.investment_transactions || [];
-  }, [plaid.financialData]);
-
-  /* ─── Investment securities ─── */
-  const investmentSecurities = useMemo(() => {
-    return plaid.financialData?.investments?.data?.securities || [];
-  }, [plaid.financialData]);
-
-  /* ─── Bank transactions data ─── */
-  const transactionsData = useMemo(() => {
-    const tx = plaid.financialData?.transactions?.data;
-    if (!tx || !tx.available) return null;
-    return tx;
-  }, [plaid.financialData]);
-
-  /* ─── Liabilities data ─── */
-  const liabilitiesData = useMemo(() => {
-    const liab = plaid.financialData?.liabilities?.data;
-    if (!liab || !liab.available) return null;
-    return liab.liabilities || null;
-  }, [plaid.financialData]);
-
-  /* ─── Income data ─── */
-  const incomeData = useMemo(() => {
-    const income = plaid.financialData?.income?.data;
-    if (!income || !income.available) return null;
-    const bankIncome = income.bank_income || income.bank_income_summary;
-    if (!bankIncome) return null;
-    return bankIncome;
-  }, [plaid.financialData]);
-
   /* ─── UI state derived from Plaid ─── */
   const isProcessing = ['creating_token', 'exchanging', 'fetching'].includes(plaid.step);
   const isInitializing = plaid.step === 'idle' || plaid.step === 'creating_token';
@@ -181,32 +148,6 @@ export const useFinancialLinkLogic = () => {
         status: investmentsStatus,
       },
       {
-        icon: 'paid',
-        title: 'income',
-        subtitle: incomeData
-          ? `income data available`
-          : plaid.step === 'done' ? 'not available' : 'not available',
-        status: incomeData ? 'success' as const : 'idle' as const,
-      },
-      {
-        icon: 'receipt_long',
-        title: 'transactions',
-        subtitle: transactionsData
-          ? `${transactionsData.total_transactions || 0} transactions synced`
-          : investmentTransactions.length > 0
-            ? `${investmentTransactions.length} investment transactions`
-            : plaid.step === 'done' ? 'not available' : 'not available',
-        status: transactionsData || investmentTransactions.length > 0 ? 'success' as const : 'idle' as const,
-      },
-      {
-        icon: 'credit_card',
-        title: 'liabilities',
-        subtitle: liabilitiesData
-          ? `${(liabilitiesData.credit?.length || 0) + (liabilitiesData.student?.length || 0) + (liabilitiesData.mortgage?.length || 0)} accounts`
-          : plaid.step === 'done' ? 'not available' : 'not available',
-        status: liabilitiesData ? 'success' as const : 'idle' as const,
-      },
-      {
         icon: 'badge',
         title: 'identity',
         subtitle: hasIdentity
@@ -215,7 +156,7 @@ export const useFinancialLinkLogic = () => {
         status: hasIdentity ? 'success' as const : 'idle' as const,
       },
     ];
-  }, [plaid, allAccounts, totalBalance, identityInfo, investmentHoldings, incomeData, investmentTransactions, transactionsData, liabilitiesData]);
+  }, [plaid, allAccounts, totalBalance, identityInfo, investmentHoldings]);
 
   /* ─── Main button handler — Plaid flow ─── */
   const handleButtonClick = useCallback(() => {
@@ -242,12 +183,6 @@ export const useFinancialLinkLogic = () => {
       plaid.openPlaidLink();
     }
   }, [isDone, canProceed, plaid, navigate]);
-
-  /* Reconnect — reset Plaid and reopen Link */
-  const handleReconnect = useCallback(() => {
-    console.log('[FinancialLink] User reconnecting / changing bank');
-    plaid.retry();
-  }, [plaid]);
 
   /* Skip — let user proceed without linking bank */
   const handleSkip = useCallback(() => {
@@ -278,7 +213,6 @@ export const useFinancialLinkLogic = () => {
     investmentHoldings,
     /* Actions */
     handleButtonClick,
-    handleReconnect,
     handleSkip,
     openPlaidLink: plaid.openPlaidLink,
     retry: plaid.retry,

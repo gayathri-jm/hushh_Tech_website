@@ -2,116 +2,266 @@ import React from 'react';
 import { Link, Routes, Route, useLocation } from 'react-router-dom';
 import { careers } from '../../data/career';
 import JobDetails from './JobDetails';
+import './Career.css';
+import { 
+  Container, 
+  Box, 
+  Heading, 
+  Text, 
+  VStack, 
+  HStack, 
+  Icon, 
+  Flex, 
+  Divider, 
+  SimpleGrid,
+  Button
+} from "@chakra-ui/react";
 import { MapPin, Clock, ChevronRight, Rocket, DollarSign, Star } from "lucide-react";
 
 const CareerList = () => {
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-[#151515] font-['Source_Sans_Pro',sans-serif]">
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 max-w-7xl mx-auto text-center">
-        <h1 className="text-5xl md:text-8xl font-['Ivar_Headline',serif] font-medium leading-tight mb-8">
-          Hushh Jobs<br />
-          <span className="font-light italic text-[#434343]">Join Our Team</span>
-        </h1>
-
-        <p className="text-xl md:text-2xl text-[#666] max-w-4xl mx-auto leading-relaxed font-light mb-16">
-          Help us revolutionize the investment industry through cutting-edge AI and quantitative
-          research. We're looking for brilliant minds who share our passion for innovation and
+    <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
+      {/* Main Header */}
+      <Box 
+        textAlign="center" 
+        display="flex"
+        flexDirection="column"
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="90vh"
+        my={0}
+        bg="rgb(255 255 255 / var(--tw-bg-opacity, 1))"
+      >
+        <Heading 
+          as="h1" 
+          lineHeight="1.1"
+          fontWeight="500"
+          mb={{base: 8, md: 0}}
+          display={'flex'}
+          flexDirection={'column'}
+          data-career-heading="true"
+        >
+          <Text 
+            as="span" 
+            className="gradient-text"
+            fontSize={{ base: "4xl", md: "7xl" }}
+            letterSpacing="-0.02em"
+            fontWeight="500"
+          >
+            Hushh Jobs
+          </Text>
+          <Text 
+            as="span" 
+            color="black"
+            fontSize={{ base: "4xl", md: "7xl" }}
+            letterSpacing="-0.02em"
+            fontWeight="300"
+            mt={{base: 2, md: 0}}
+          >  Join Our Team</Text>
+        </Heading>
+        
+        <Text 
+          fontSize={{ base: "md", md: "xl" }} 
+          maxW="3xl" 
+          mx="auto" 
+          
+          color="#6E6E73"
+          lineHeight="1.7"
+          fontWeight="400"
+          fontFamily={'-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,sans-serif'}
+          className='text-xl md:text-2xl text-[#6E6E73] max-w-4xl mx-auto leading-relaxed font-light'
+        >
+          Help us revolutionize the investment industry through cutting-edge AI and quantitative 
+          research. We're looking for brilliant minds who share our passion for innovation and 
           excellence.
-        </p>
-
-        {/* Benefits Strip */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto py-16 border-y border-black/5">
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-[#AA4528]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Rocket className="w-8 h-8 text-[#AA4528]" />
-            </div>
-            <h3 className="text-xl font-['Ivar_Headline',serif] font-medium">Cutting-Edge Tech</h3>
-            <p className="text-[#666] text-sm leading-relaxed">Work with the latest AI and machine learning technologies at scale.</p>
-          </div>
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-[#AA4528]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <DollarSign className="w-8 h-8 text-[#AA4528]" />
-            </div>
-            <h3 className="text-xl font-['Ivar_Headline',serif] font-medium">Competitive Comp</h3>
-            <p className="text-[#666] text-sm leading-relaxed">Top-tier salaries, equity, and comprehensive benefits package.</p>
-          </div>
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-[#AA4528]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Star className="w-8 h-8 text-[#AA4528]" />
-            </div>
-            <h3 className="text-xl font-['Ivar_Headline',serif] font-medium">Growth Ops</h3>
-            <p className="text-[#666] text-sm leading-relaxed">Learn from industry experts and advance your career rapidly.</p>
-          </div>
-        </div>
-      </section>
+        </Text>
+      </Box>
 
       {/* Career Departments */}
-      <section className="py-20 px-4 max-w-5xl mx-auto space-y-16">
+      <VStack spacing={14} align="stretch" maxW="container.lg" mx="auto" bg={'rgb(255 255 255 / var(--tw-bg-opacity, 1))'} opacity={1}>
         {Object.entries(careers).map(([department, jobs]) => (
-          <div key={department} className="space-y-8">
-            <h2 className="text-2xl font-['Ivar_Headline',serif] font-medium border-b border-black/10 pb-4">
-              {department}
-            </h2>
-
-            <div className="space-y-4">
-              {jobs.map((job) => (
-                <Link
-                  key={job.id}
-                  to={`/career/${job.id}`}
-                  className="block p-8 bg-white rounded-2xl border border-black/5 shadow-sm hover:shadow-xl hover:border-[#AA4528] transition-all group"
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="space-y-3">
-                      <h3 className="text-2xl font-['Ivar_Headline',serif] font-medium group-hover:text-[#AA4528] transition-colors">
-                        {job.title}
-                      </h3>
-                      <div className="flex flex-wrap gap-6 text-[#666] text-sm font-medium">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          {job.location}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          Full-time
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-8 h-8 text-[#ccc] group-hover:text-[#AA4528] group-hover:translate-x-1 transition-all" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* Call to Action */}
-      <section className="py-24 px-4 text-center pb-32">
-        <div className="max-w-4xl mx-auto bg-[#151515] text-white p-16 rounded-[3rem] shadow-2xl relative overflow-hidden">
-          <div className="relative z-10">
-            <h2 className="text-4xl font-['Ivar_Headline',serif] font-medium mb-6">Didn't find the right role?</h2>
-            <p className="text-xl opacity-70 mb-10 max-w-2xl mx-auto">
-              We're always looking for exceptional talent. View our full benefits package to see what makes us different.
-            </p>
-            <Link
-              to="/benefits"
-              className="bg-[#AA4528] text-white px-12 py-5 rounded-xl font-bold text-lg hover:bg-[#C15438] hover:scale-105 transition-all inline-block"
+          <Box key={department} bg={'white'} borderRadius={'2xl'} p={8}  >
+            <Heading 
+              as="h2" 
+              fontSize="2xl"
+              color="gray.800" 
+              mb={6} 
+              fontWeight="medium"
             >
-              View Full Benefits Package
-            </Link>
-          </div>
-          {/* Subtle background element */}
-          <div className="absolute top-[-50%] right-[-10%] w-96 h-96 bg-[#AA4528] rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
-        </div>
-      </section>
-    </div>
+              {department}
+            </Heading>
+            <Divider mb={8} borderColor="gray.200" />
+            
+            <VStack spacing={5} align="stretch" >
+              {jobs.map((job) => (
+                <Box 
+                  key={job.id} 
+                  as={Link} 
+                  to={`/career/${job.id}`}
+                  p={6}
+                  bg={'rgb(250 250 250 / var(--tw-bg-opacity, 1))'}
+                  // borderRadius="lg"
+                  // borderWidth="1px"
+                  borderColor="gray.200"
+                  boxShadow="sm"
+                  _hover={{ 
+                    boxShadow: "md",
+                    borderColor: "gray.300",
+                    textDecoration: "none"
+                  }}
+                  transition="all 0.2s"
+                  className="job-card"
+                >
+                  <Flex justify="space-between" align="center">
+                    <Box>
+                      <Heading as="h3" fontSize="xl" fontWeight="500" color="gray.800" mb={3}>
+                        {job.title}
+                      </Heading>
+                      <HStack gap={0} p={0}  alignItems={{base: "flex-start", md: "center"}} textAlign={{base: "left"}} spacing={8} mt={1} display={{base: "flex", md: "none"}} flexDirection={{base: "column", md: "row"}}> 
+                        <HStack spacing={2} >
+                          <Icon as={MapPin} color="gray.500" boxSize={4} />
+                          <Text color="gray.600" fontSize="sm">{job.location}</Text>
+                        </HStack>
+                        <HStack spacing={2} mt={1}>
+                          <Icon as={Clock} color="gray.500" boxSize={4} />
+                          <Text color="gray.600" fontSize="sm">Full-time</Text>
+                        </HStack>
+                      </HStack>
+                    </Box>
+                    <Icon as={ChevronRight} color="gray.400" boxSize={6} />
+                  </Flex>
+                </Box>
+              ))}
+            </VStack>
+          </Box>
+        ))}
+      </VStack>
+
+      {/* Why Work at Hushh Technologies? Section */}
+      <Box mt={24} mb={16}>
+        <Heading 
+          as="h2" 
+          fontSize="3xl"
+          color="gray.800" 
+          mb={16} 
+          textAlign="center"
+          fontWeight="500"
+          letterSpacing="-0.01em"
+        >
+          Why Work at Hushh Technologies?
+        </Heading>
+
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={12} maxW="container.lg" mx="auto">
+          {/* Benefit 1 */}
+          <Box textAlign="center">
+            <Flex 
+              justifyContent="center" 
+              alignItems="center" 
+              mb={5}
+            >
+              <Icon as={Rocket} boxSize={12} color="#FF7171" />
+            </Flex>
+            <Heading 
+              as="h3" 
+              fontSize="xl"
+              color="gray.800" 
+              mb={3}
+              fontWeight="500"
+            >
+              Cutting-Edge Technology
+            </Heading>
+            <Text 
+              color="gray.600"
+              fontSize="md"
+              lineHeight="tall"
+            >
+              Work with the latest AI and machine learning technologies
+            </Text>
+          </Box>
+
+          {/* Benefit 2 */}
+          <Box textAlign="center">
+            <Flex 
+              justifyContent="center" 
+              alignItems="center" 
+              mb={5}
+            >
+              <Icon as={DollarSign} boxSize={12} color="#F8B76B" />
+            </Flex>
+            <Heading 
+              as="h3" 
+              fontSize="xl"
+              color="gray.800" 
+              mb={3}
+              fontWeight="500"
+            >
+              Competitive Compensation
+            </Heading>
+            <Text 
+              color="gray.600"
+              fontSize="md"
+              lineHeight="tall"
+            >
+              Top-tier salaries, equity, and comprehensive benefits
+            </Text>
+          </Box>
+
+          {/* Benefit 3 */}
+          <Box textAlign="center">
+            <Flex 
+              justifyContent="center" 
+              alignItems="center" 
+              mb={5}
+            >
+              <Icon as={Star} boxSize={12} color="#F8ED62" />
+            </Flex>
+            <Heading 
+              as="h3" 
+              fontSize="xl"
+              color="gray.800" 
+              mb={3}
+              fontWeight="500"
+            >
+              Growth Opportunities
+            </Heading>
+            <Text 
+              color="gray.600"
+              fontSize="md"
+              lineHeight="tall"
+            >
+              Learn from industry experts and advance your career
+            </Text>
+          </Box>
+        </SimpleGrid>
+      </Box>
+
+      {/* Benefits Button */}
+      <Flex justifyContent="center" mt={16} mb={10}>
+        <Button
+          as={Link}
+          to="/benefits"
+          bgGradient="linear-gradient(to right, #00A9E0, #6DD3EF)"
+          color="white"
+          px={8}
+          py={5}
+          fontSize="md"
+          fontWeight="500"
+          borderRadius="full"
+          _hover={{ bgGradient: "linear-gradient(to right, #0098cc, #5BC0DC)" }}
+          boxShadow="md"
+          height="auto"
+          className="benefits-button"
+        >
+          View Full Benefits Package
+        </Button>
+      </Flex>
+    </Container>
   );
 };
 
 const Career = () => {
   const location = useLocation();
-
+  
   // Only show the career list on the main career page
   if (location.pathname === '/career') {
     return <CareerList />;

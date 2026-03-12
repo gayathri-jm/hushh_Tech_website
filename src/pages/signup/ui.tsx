@@ -15,8 +15,8 @@ import { FcGoogle } from "react-icons/fc";
 import HushhTechHeader from "../../components/hushh-tech-header/HushhTechHeader";
 import HushhTechFooter from "../../components/hushh-tech-footer/HushhTechFooter";
 
-/* ── Ivar Headline style ── */
-const ivarHeadline = { fontFamily: "var(--font-display)", fontWeight: 500 };
+/* ── Playfair heading style ── */
+const playfair = { fontFamily: "'Playfair Display', serif" };
 
 export default function SignupPage() {
   const { isLoading, isSigningIn, handleAppleSignIn, handleGoogleSignIn } =
@@ -25,7 +25,7 @@ export default function SignupPage() {
   if (isLoading) return null;
 
   return (
-    <div className="bg-[#faf9f6] text-[#151513] min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Common Header ═══ */}
       <HushhTechHeader />
 
@@ -46,11 +46,11 @@ export default function SignupPage() {
         {/* ── Title ── */}
         <section className="pb-10">
           <h1
-            className="text-[2.5rem] leading-[1.1] text-[#151513] tracking-tight text-center"
-            style={ivarHeadline}
+            className="text-[2.5rem] leading-[1.1] font-normal text-black tracking-tight text-center font-serif"
+            style={playfair}
           >
             Create Your{" "}
-            <span className="text-gray-400 italic font-medium">Account.</span>
+            <span className="text-gray-400 italic font-light">Account.</span>
           </h1>
           <p className="text-gray-500 text-sm font-light mt-3 text-center leading-relaxed">
             AI-powered investment insights and long-term wealth.
@@ -64,8 +64,8 @@ export default function SignupPage() {
             onClick={handleAppleSignIn}
             disabled={isSigningIn}
           >
-            <FaApple className="text-lg shrink-0" />
-            <span className="truncate">Continue with Apple</span>
+            <FaApple className="text-lg" />
+            <span>Continue with Apple</span>
           </HushhTechCta>
 
           <HushhTechCta
@@ -73,8 +73,8 @@ export default function SignupPage() {
             onClick={handleGoogleSignIn}
             disabled={isSigningIn}
           >
-            <FcGoogle className="text-lg shrink-0" />
-            <span className="truncate">Continue with Google</span>
+            <FcGoogle className="text-lg" />
+            <span>Continue with Google</span>
           </HushhTechCta>
         </section>
 
@@ -84,7 +84,7 @@ export default function SignupPage() {
             Already have an account?{" "}
             <Link
               to="/login"
-              className="text-fr-rust font-medium underline underline-offset-4 decoration-fr-rust/30 hover:decoration-fr-rust transition-colors"
+              className="text-hushh-blue font-medium underline underline-offset-4 decoration-hushh-blue/30 hover:decoration-hushh-blue transition-colors"
             >
               Log In
             </Link>
@@ -94,7 +94,7 @@ export default function SignupPage() {
         {/* ── Trust Badges ── */}
         <section className="flex flex-col items-center justify-center text-center gap-2 pt-16 pb-4">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px] text-fr-rust">
+            <span className="material-symbols-outlined text-[12px] text-hushh-blue">
               lock
             </span>
             <span className="text-[10px] text-gray-400 tracking-wide uppercase font-medium">

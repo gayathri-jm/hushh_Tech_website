@@ -12,6 +12,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { FaApple } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
+import { FiMessageSquare, FiMic, FiGlobe, FiShield, FiLock } from 'react-icons/fi';
 import { useAuth } from './hooks/useAuth';
 import { HUSHH_BRANDING } from './core/constants';
 import HushhLogo from '../components/images/Hushhogo.png';
@@ -21,11 +22,6 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
 const VoicePage = lazy(() => import('./pages/VoicePage'));
 const CodePage = lazy(() => import('./pages/CodePage'));
-const KirklandAgentsPage = lazy(() => import('./pages/KirklandAgentsPage'));
-const AgentDetailPage = lazy(() => import('./pages/AgentDetailPage'));
-const AgentChatPage = lazy(() => import('./pages/AgentChatPage'));
-const AgentOnboardPage = lazy(() => import('./pages/AgentOnboardPage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
 
 // Playfair heading style
 const playfair = { fontFamily: "'Playfair Display', serif" };
@@ -34,7 +30,7 @@ const playfair = { fontFamily: "'Playfair Display', serif" };
 const LoadingScreen: React.FC = () => (
   <div className="min-h-screen bg-white flex items-center justify-center">
     <div className="text-center">
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-fr-rust to-[#8B3820] flex items-center justify-center mx-auto mb-4 animate-pulse">
+      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-hushh-blue to-blue-600 flex items-center justify-center mx-auto mb-4 animate-pulse">
         <span className="text-white text-2xl font-bold">H</span>
       </div>
       <p className="text-gray-400 text-sm">Loading {HUSHH_BRANDING.FULL_NAME}...</p>
@@ -52,7 +48,7 @@ const LoginScreen: React.FC<{
   <div className="min-h-screen bg-white text-gray-900 antialiased flex flex-col">
     {/* Desktop: Two-column layout, Mobile: Single column */}
     <div className="flex-grow flex flex-col lg:flex-row">
-
+      
       {/* Left Panel - Branding (Desktop only) */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-gray-900 via-gray-800 to-black p-12 flex-col justify-between">
         <div>
@@ -63,22 +59,22 @@ const LoginScreen: React.FC<{
             <span className="text-white text-xl font-medium" style={playfair}>Hushh</span>
           </Link>
         </div>
-
+        
         <div className="space-y-8">
           <h1 className="text-5xl xl:text-6xl text-white font-normal leading-tight" style={playfair}>
             Your Private<br />
             <span className="text-gray-400 italic">AI Companions</span>
           </h1>
           <p className="text-gray-400 text-lg max-w-md leading-relaxed">
-            Intelligent conversations in Hindi, English, and Tamil.
+            Intelligent conversations in Hindi, English, and Tamil. 
             Powered by advanced AI, designed for you.
           </p>
-
+          
           {/* Feature List - Desktop */}
           <div className="space-y-4 pt-4">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-xl">chat</span>
+                <FiMessageSquare className="w-5 h-5 text-white" />
               </div>
               <div>
                 <p className="text-white font-medium">Natural Conversations</p>
@@ -87,7 +83,7 @@ const LoginScreen: React.FC<{
             </div>
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-xl">mic</span>
+                <FiMic className="w-5 h-5 text-white" />
               </div>
               <div>
                 <p className="text-white font-medium">Voice Chat <span className="text-xs text-gray-500 ml-1">Pro</span></p>
@@ -96,7 +92,7 @@ const LoginScreen: React.FC<{
             </div>
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-xl">translate</span>
+                <FiGlobe className="w-5 h-5 text-white" />
               </div>
               <div>
                 <p className="text-white font-medium">Multi-lingual</p>
@@ -105,20 +101,20 @@ const LoginScreen: React.FC<{
             </div>
           </div>
         </div>
-
+        
         <div className="flex items-center gap-2 text-gray-500 text-sm">
-          <span className="material-symbols-outlined text-base">shield</span>
+          <FiShield className="w-4 h-4" />
           <span>Your data stays private and secure</span>
         </div>
       </div>
-
+      
       {/* Right Panel - Login Form */}
       <main className="flex-grow lg:w-1/2 px-6 lg:px-12 xl:px-20 flex flex-col justify-center py-12 lg:py-0">
         <div className="max-w-md mx-auto w-full">
           {/* Logo - Mobile only */}
           <section className="flex justify-center pt-8 pb-6 lg:hidden">
             <Link to="/">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-fr-rust to-[#8B3820] flex items-center justify-center overflow-hidden border border-black/5">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-hushh-blue to-blue-600 flex items-center justify-center overflow-hidden border border-black/5">
                 <img src={HushhLogo} alt="Hushh Logo" className="w-10 h-10 object-contain" />
               </div>
             </Link>
@@ -173,19 +169,19 @@ const LoginScreen: React.FC<{
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="p-3 rounded-xl bg-gray-50">
                 <div className="flex justify-center mb-2">
-                  <span className="material-symbols-outlined text-xl text-gray-600">chat</span>
+                  <FiMessageSquare className="w-5 h-5 text-gray-600" />
                 </div>
                 <p className="text-xs text-gray-600">Text Chat</p>
               </div>
               <div className="p-3 rounded-xl bg-gray-50">
                 <div className="flex justify-center mb-2">
-                  <span className="material-symbols-outlined text-xl text-gray-600">mic</span>
+                  <FiMic className="w-5 h-5 text-gray-600" />
                 </div>
                 <p className="text-xs text-gray-600">Voice (Pro)</p>
               </div>
               <div className="p-3 rounded-xl bg-gray-50">
                 <div className="flex justify-center mb-2">
-                  <span className="material-symbols-outlined text-xl text-gray-600">translate</span>
+                  <FiGlobe className="w-5 h-5 text-gray-600" />
                 </div>
                 <p className="text-xs text-gray-600">Multi-lingual</p>
               </div>
@@ -195,7 +191,7 @@ const LoginScreen: React.FC<{
           {/* Trust Badge */}
           <section className="flex flex-col items-center lg:items-start justify-center text-center lg:text-left gap-2 pt-4 pb-4">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-base text-gray-400">lock</span>
+              <FiLock className="w-4 h-4 text-gray-400" />
               <span className="text-xs text-gray-400 tracking-wide uppercase font-medium">
                 Private & Secure
               </span>
@@ -224,12 +220,15 @@ const LoginScreen: React.FC<{
   </div>
 );
 
-// Auth-gated wrapper — redirects to login if not authenticated
-const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading, signIn, error } = useAuth();
+const App: React.FC = () => {
+  const { isAuthenticated, isLoading, user, signIn, signOut, error } = useAuth();
 
-  if (isLoading) return <LoadingScreen />;
+  // Loading state
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
+  // Not authenticated - show login
   if (!isAuthenticated) {
     return (
       <LoginScreen
@@ -241,14 +240,11 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     );
   }
 
-  return <>{children}</>;
-};
-
-const App: React.FC = () => {
+  // Authenticated - show app
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
-        {/* Home - Public landing page (no auth gate) */}
+        {/* Home - Agent Selection */}
         <Route
           index
           element={<HomePage />}
@@ -260,46 +256,16 @@ const App: React.FC = () => {
           element={<VoicePage />}
         />
 
-        {/* Code Generation */}
+        {/* Code Generation - Claude Opus 4.5 */}
         <Route
           path="code"
           element={<CodePage />}
-        />
-
-        {/* Kirkland Agents - Listing */}
-        <Route
-          path="kirkland"
-          element={<KirklandAgentsPage />}
-        />
-
-        {/* Kirkland Agent - Detail */}
-        <Route
-          path="kirkland/:agentId"
-          element={<AgentDetailPage />}
-        />
-
-        {/* Kirkland Agent - Chat (Gemini-powered) */}
-        <Route
-          path="kirkland/:agentId/chat"
-          element={<AgentChatPage />}
         />
 
         {/* Chat with specific agent */}
         <Route
           path="chat/:agentId"
           element={<ChatPage />}
-        />
-
-        {/* Agent Onboarding Form */}
-        <Route
-          path="onboard"
-          element={<AgentOnboardPage />}
-        />
-
-        {/* Dedicated Login Page (stays within /hushh-agents) */}
-        <Route
-          path="login"
-          element={<LoginPage />}
         />
 
         {/* Default chat (Hushh agent) */}

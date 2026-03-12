@@ -24,7 +24,7 @@ export default function OnboardingStep3() {
   const progress = countdown / AUTO_SKIP_SECONDS;
 
   return (
-    <div className="bg-[#faf9f6] text-[#151513] min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
@@ -39,7 +39,7 @@ export default function OnboardingStep3() {
           </div>
           <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-fr-rust transition-all duration-500"
+              className="h-full bg-hushh-blue transition-all duration-500"
               style={{ width: `${PROGRESS_PCT}%` }}
             />
           </div>
@@ -59,16 +59,16 @@ export default function OnboardingStep3() {
         {/* ── Title Section ── */}
         <section className="py-4 text-center">
           <h1
-            className="text-[2.25rem] leading-[1.15] text-[#151513] tracking-tight"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
+            className="text-[2.25rem] leading-[1.15] font-normal text-black tracking-tight font-serif"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             Let&apos;s Continue With
             <br />
-            <span className="text-gray-400 italic font-medium">
+            <span className="text-gray-400 italic font-light">
               Some Info About You
             </span>
           </h1>
-          <p className="text-sm text-gray-500 mt-6 leading-relaxed font-medium max-w-xs mx-auto">
+          <p className="text-sm text-gray-500 mt-6 leading-relaxed font-light max-w-xs mx-auto">
             To comply with federal regulations, we are required to collect
             certain personal information about you.
           </p>
@@ -134,11 +134,11 @@ export default function OnboardingStep3() {
         {/* ── Trust Badges ── */}
         <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px] text-fr-rust">
-              lock
-            </span>
-            <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">
-              256 Bit Encryption
+              <span className="material-symbols-outlined text-[12px] text-hushh-blue">
+                lock
+              </span>
+              <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">
+                256 Bit Encryption
             </span>
           </div>
         </section>

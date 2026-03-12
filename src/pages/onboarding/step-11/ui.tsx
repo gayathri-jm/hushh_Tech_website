@@ -64,7 +64,7 @@ export default function OnboardingStep11() {
   } = useStep11Logic();
 
   return (
-    <div className="bg-[#faf9f6] text-[#151513] min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
@@ -76,7 +76,7 @@ export default function OnboardingStep11() {
             <span>{PROG_PCT}% Complete</span>
           </div>
           <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-fr-rust transition-all duration-500" style={{ width: `${PROG_PCT}%` }} />
+            <div className="h-full bg-hushh-blue transition-all duration-500" style={{ width: `${PROG_PCT}%` }} />
           </div>
         </div>
 
@@ -84,14 +84,14 @@ export default function OnboardingStep11() {
         <section className="py-8">
           <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase mb-4 font-medium">Investment</h3>
           <h1
-            className="text-[2.75rem] leading-[1.1] text-[#151513] tracking-tight"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
+            className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             Your
             <br />
-            <span className="text-gray-400 italic font-medium">Summary</span>
+            <span className="text-gray-400 italic font-light">Summary</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-medium">
+          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-light">
             Review your share class allocation and set up recurring investments.
           </p>
         </section>
@@ -120,7 +120,7 @@ export default function OnboardingStep11() {
             return (
               <div key={shareClass.id} className="py-5 border-b border-gray-200">
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${hasUnits ? 'bg-fr-rust' : 'bg-gray-100'}`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${hasUnits ? 'bg-hushh-blue' : 'bg-gray-100'}`}>
                     <span className={`material-symbols-outlined text-lg ${hasUnits ? 'text-white' : 'text-gray-400'}`} style={{ fontVariationSettings: "'wght' 400" }}>
                       monitoring
                     </span>
@@ -160,7 +160,7 @@ export default function OnboardingStep11() {
           <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
             <div className="flex flex-col items-center text-center gap-2">
               <span className="text-[10px] tracking-[0.2em] text-gray-400 uppercase font-medium">Total Investment</span>
-              <span className="text-4xl font-bold text-[#151513] tracking-tight" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
+              <span className="text-4xl font-bold text-black tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
                 {hasAnyUnits ? formatFullCurrency(totalInvestment) : '$0'}
               </span>
               {hasAnyUnits && (
@@ -178,7 +178,7 @@ export default function OnboardingStep11() {
           <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-gray-500 text-lg" style={{ fontVariationSettings: "'wght' 400" }}>info</span>
           </div>
-          <p className="text-xs text-gray-500 leading-relaxed font-medium pt-2">
+          <p className="text-xs text-gray-500 leading-relaxed font-light pt-2">
             We are currently accepting investments of $1 million or greater for Hushh Fund A.
           </p>
         </div>
@@ -218,10 +218,11 @@ export default function OnboardingStep11() {
                     <button
                       key={option.value}
                       onClick={() => setFrequency(option.value as RecurringFrequency)}
-                      className={`h-11 rounded-xl text-xs font-semibold transition-all lowercase ${frequency === option.value
-                        ? 'bg-fr-rust text-white'
-                        : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'
-                        }`}
+                      className={`h-11 rounded-xl text-xs font-semibold transition-all lowercase ${
+                        frequency === option.value
+                          ? 'bg-hushh-blue text-white'
+                          : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'
+                      }`}
                     >
                       {option.label}
                     </button>
@@ -261,14 +262,15 @@ export default function OnboardingStep11() {
                     <button
                       key={amount}
                       onClick={() => handleAmountClick(amount)}
-                      className={`relative py-3 rounded-xl text-sm font-bold transition-all lowercase ${selectedAmount === amount
-                        ? 'bg-fr-rust text-white'
-                        : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'
-                        }`}
+                      className={`relative py-3 rounded-xl text-sm font-bold transition-all lowercase ${
+                        selectedAmount === amount
+                          ? 'bg-hushh-blue text-white'
+                          : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'
+                      }`}
                     >
                       ${amount.toLocaleString()}
                       {selectedAmount === amount && (
-                        <div className="absolute -top-1.5 -right-1.5 bg-fr-rust text-white rounded-full w-5 h-5 flex items-center justify-center">
+                        <div className="absolute -top-1.5 -right-1.5 bg-hushh-blue text-white rounded-full w-5 h-5 flex items-center justify-center">
                           <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>check</span>
                         </div>
                       )}
@@ -285,10 +287,11 @@ export default function OnboardingStep11() {
                       value={customAmount}
                       onChange={handleCustomAmountChange}
                       placeholder="other amount"
-                      className={`w-full h-12 rounded-xl border bg-white text-gray-900 pl-8 pr-4 text-lg font-bold outline-none transition-all placeholder:text-gray-300 lowercase ${customAmountError
-                        ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                        : 'border-gray-200 focus:border-fr-rust focus:ring-1 focus:ring-fr-rust'
-                        }`}
+                      className={`w-full h-12 rounded-xl border bg-white text-gray-900 pl-8 pr-4 text-lg font-bold outline-none transition-all placeholder:text-gray-300 lowercase ${
+                        customAmountError
+                          ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                          : 'border-gray-200 focus:border-hushh-blue focus:ring-1 focus:ring-hushh-blue'
+                      }`}
                     />
                   </div>
                   {customAmountError && <p className="text-red-500 text-xs font-medium px-1">{customAmountError}</p>}
@@ -296,7 +299,7 @@ export default function OnboardingStep11() {
                     <p className="text-ios-green text-xs font-medium px-1">Amount: ${parseFormattedNumber(customAmount).toLocaleString()}</p>
                   )}
                   {!customAmount && selectedAmount === null && (
-                    <p className="text-gray-400 text-xs px-1 font-medium">Leave empty to set recurring later.</p>
+                    <p className="text-gray-400 text-xs px-1 font-light">Leave empty to set recurring later.</p>
                   )}
                 </div>
               </div>
@@ -317,10 +320,10 @@ export default function OnboardingStep11() {
         {/* ── Trust Badge ── */}
         <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px] text-fr-rust">verified</span>
+            <span className="material-symbols-outlined text-[12px] text-hushh-blue">verified</span>
             <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">SEC Registered Fund</span>
           </div>
-          <p className="text-[10px] text-gray-400 font-medium max-w-xs">
+          <p className="text-[10px] text-gray-400 font-light max-w-xs">
             Hushh Fund A is a registered investment vehicle.
           </p>
         </section>
@@ -337,7 +340,7 @@ export default function OnboardingStep11() {
               <button
                 onClick={handleSaveChanges}
                 disabled={!hasModalChanges || savingModal}
-                className={`text-sm font-semibold ${hasModalChanges ? 'text-fr-rust' : 'text-gray-300'}`}
+                className={`text-sm font-semibold ${hasModalChanges ? 'text-hushh-blue' : 'text-gray-300'}`}
               >
                 {savingModal ? '...' : 'Done'}
               </button>
@@ -371,8 +374,9 @@ export default function OnboardingStep11() {
                           <button
                             onClick={() => handleDecrement(shareClass.id)}
                             disabled={units === 0}
-                            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${units === 0 ? 'border-gray-200 text-gray-300' : 'border-gray-300 text-gray-600 hover:bg-gray-50 active:scale-95'
-                              }`}
+                            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${
+                              units === 0 ? 'border-gray-200 text-gray-300' : 'border-gray-300 text-gray-600 hover:bg-gray-50 active:scale-95'
+                            }`}
                             aria-label="Decrease units"
                           >
                             <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'wght' 500" }}>remove</span>
@@ -396,7 +400,7 @@ export default function OnboardingStep11() {
               <div className="mt-6 bg-gray-50 rounded-2xl p-5 border border-gray-200">
                 <div className="flex flex-col items-center text-center gap-1">
                   <span className="text-[10px] tracking-[0.2em] text-gray-400 uppercase font-medium">Total Investment</span>
-                  <span className="text-2xl font-bold text-[#151513] tracking-tight" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
+                  <span className="text-2xl font-bold text-black tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
                     {formatFullCurrency(modalTotalInvestment)}
                   </span>
                 </div>

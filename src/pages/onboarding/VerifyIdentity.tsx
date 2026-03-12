@@ -1,17 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Shield,
-  FileText,
-  Camera,
-  Mail,
-  Phone,
+  Box,
+  VStack,
+  HStack,
+  Text,
+  Button,
+  Icon,
+  Spinner,
+  useToast,
+  Badge,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+} from '@chakra-ui/react';
+import { 
+  Shield, 
+  FileText, 
+  Camera, 
+  Mail, 
+  Phone, 
+  ArrowRight,
   RefreshCw,
-  AlertCircle,
-  XCircle
 } from 'lucide-react';
 import config from '../../resources/config/config';
-import OnboardingShell from '../../components/OnboardingShell';
 
 interface OnboardingData {
   legal_first_name?: string;
@@ -33,8 +46,8 @@ interface VerificationStatus {
 
 function VerifyIdentityPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [startingVerification, setStartingVerification] = useState(false);
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({
@@ -53,8 +66,12 @@ function VerifyIdentityPage() {
 
   const loadUserData = async () => {
     if (!config.supabaseClient) {
-      setError('Configuration error');
-      setLoading(false);
+      toast({
+        title: 'Error',
+        description: 'Configuration error',
+        status: 'error',
+        duration: 5000,
+      });
       return;
     }
 
@@ -74,7 +91,7 @@ function VerifyIdentityPage() {
 
       if (onboarding) {
         setOnboardingData(onboarding);
-
+        
         // If already verified, redirect to profile
         if (onboarding.identity_verified) {
           navigate('/hushh-user-profile');
@@ -99,7 +116,7 @@ function VerifyIdentityPage() {
           email_verified: verification.email_verified || false,
           phone_verified: verification.phone_verified || false,
         });
-
+        
         // If verified, redirect
         if (verification.stripe_status === 'verified') {
           navigate('/hushh-user-profile');
@@ -156,9 +173,14 @@ function VerifyIdentityPage() {
       } else {
         throw new Error('No verification URL received');
       }
-    } catch (err: any) {
-      console.error('Verification error:', err);
-      setError(err.message || 'Failed to start verification');
+    } catch (error: any) {
+      console.error('Verification error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to start verification',
+        status: 'error',
+        duration: 5000,
+      });
       setStartingVerification(false);
     }
   };
@@ -169,202 +191,311 @@ function VerifyIdentityPage() {
     navigate('/hushh-user-profile');
   };
 
-  const DISPLAY_STEP = 14;
-  const PROG_TOTAL = 15;
-
   if (loading) {
     return (
-      <OnboardingShell
-        step={DISPLAY_STEP}
-        totalSteps={PROG_TOTAL}
-        onBack={() => navigate('/onboarding/step-13')}
-        onClose={() => navigate('/dashboard')}
-        continueLabel="Loading"
-        onContinue={() => { }}
-        continueDisabled={true}
-        hideFooter={true}
+      <Box
+        className="onboarding-shell"
+        minH="100dvh"
+        h="100dvh"
+        bg="white"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        mx="auto"
       >
-        <div className="flex flex-col items-center justify-center space-y-4 py-20 animate-pulse">
-          <div className="w-12 h-12 border-4 border-[#EEE9E0] border-t-[#AA4528] rounded-full animate-spin" />
-          <p className="text-[15px] font-medium text-[#8C8479]">Loading verification status...</p>
-        </div>
-      </OnboardingShell>
+        <VStack spacing={4}>
+          <Spinner size="xl" color="#2b8cee" thickness="4px" />
+          <Text color="gray.600">Loading...</Text>
+        </VStack>
+      </Box>
     );
   }
 
   return (
-    <OnboardingShell
-      step={DISPLAY_STEP}
-      totalSteps={PROG_TOTAL}
-      onBack={() => navigate('/onboarding/step-13')}
-      onClose={() => navigate('/dashboard')}
-      continueLabel={startingVerification ? 'Starting...' : (verificationStatus.status === 'requires_input' ? 'Continue Verification' : 'Start Verification')}
-      onContinue={startVerification}
-      continueDisabled={startingVerification}
-      continueLoading={startingVerification}
-    >
-      <div className="flex flex-col items-center max-w-lg mx-auto w-full">
-        {/* Header Icon */}
-        <div className="w-20 h-20 rounded-full bg-[#151513] flex items-center justify-center mb-6 shadow-md">
-          <Shield className="w-10 h-10 text-white" />
-        </div>
-
-        {/* Title */}
-        <div className="text-center mb-10 w-full">
-          <h1
-            className="text-[2.2rem] md:text-[2.6rem] font-medium leading-tight text-[#151513] mb-3"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
+    <Box className="onboarding-shell" minH="100dvh" h="100dvh" bg="white" display="flex" flexDirection="column" mx="auto">
+      <Box as="main" flex="1" minH={0} overflowY="auto" px={{ base: 4, md: 5 }} pt={{ base: 6, md: 8 }} pb={8}>
+      <Box maxW="500px" mx="auto">
+        {/* Header */}
+        <VStack spacing={4} textAlign="center" mb={8}>
+          <Box
+            w="80px"
+            h="80px"
+            borderRadius="full"
+            bg="linear-gradient(135deg, #2b8cee 0%, #38bdf8 100%)"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            boxShadow="0 10px 40px rgba(43, 140, 238, 0.3)"
+          >
+            <Icon as={Shield} boxSize={10} color="white" />
+          </Box>
+          
+          <Text
+            fontSize={{ base: '28px', md: '36px' }}
+            fontWeight="500"
+            color="#0B1120"
           >
             Verify Your Identity
-          </h1>
-          <p className="text-[15px] text-[#8C8479] leading-relaxed max-w-md mx-auto">
+          </Text>
+          
+          <Text fontSize="lg" color="gray.600" maxW="480px">
             Complete a quick verification to secure your account and unlock all features.
-          </p>
-        </div>
+          </Text>
+        </VStack>
 
-        {/* Global Error Banner */}
-        {error && (
-          <div className="w-full mb-6 p-4 bg-red-50 border border-red-100 rounded-md flex items-start space-x-3 text-red-700">
-            <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <div className="text-[14px] leading-relaxed">{error}</div>
-          </div>
-        )}
-
-        {/* Status Alerts */}
+        {/* Status Alert */}
         {verificationStatus.status === 'processing' && (
-          <div className="w-full mb-6 p-4 bg-[#FDF9F7] border border-[#AA4528]/20 rounded-md flex items-start space-x-3">
-            <RefreshCw className="w-5 h-5 text-[#AA4528] shrink-0 mt-0.5 animate-spin" />
-            <div>
-              <h3 className="text-[14px] font-bold text-[#AA4528] mb-1">Verification in Progress</h3>
-              <p className="text-[13px] text-[#8C8479]">Your verification is being processed. This usually takes a few minutes.</p>
-            </div>
-          </div>
+          <Alert status="info" borderRadius="xl" mb={6}>
+            <AlertIcon as={RefreshCw} />
+            <Box>
+              <AlertTitle>Verification in Progress</AlertTitle>
+              <AlertDescription>
+                Your verification is being processed. This usually takes a few minutes.
+              </AlertDescription>
+            </Box>
+          </Alert>
         )}
 
         {verificationStatus.status === 'requires_input' && (
-          <div className="w-full mb-6 p-4 bg-[#FFFAEB] border border-[#D4AF37]/30 rounded-md flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-[#B8860B] shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-[14px] font-bold text-[#9e7309] mb-1">Additional Information Required</h3>
-              <p className="text-[13px] text-[#B8860B]">Please complete the verification process. Some information may need to be resubmitted.</p>
-            </div>
-          </div>
+          <Alert status="warning" borderRadius="xl" mb={6}>
+            <AlertIcon />
+            <Box>
+              <AlertTitle>Additional Information Required</AlertTitle>
+              <AlertDescription>
+                Please complete the verification process. Some information may need to be resubmitted.
+              </AlertDescription>
+            </Box>
+          </Alert>
         )}
 
         {verificationStatus.status === 'failed' && (
-          <div className="w-full mb-6 p-4 bg-red-50 border border-red-100 rounded-md flex items-start space-x-3">
-            <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-[14px] font-bold text-red-800 mb-1">Verification Failed</h3>
-              <p className="text-[13px] text-red-700">Your verification could not be completed. Please try again or contact support.</p>
-            </div>
-          </div>
+          <Alert status="error" borderRadius="xl" mb={6}>
+            <AlertIcon />
+            <Box>
+              <AlertTitle>Verification Failed</AlertTitle>
+              <AlertDescription>
+                Your verification could not be completed. Please try again or contact support.
+              </AlertDescription>
+            </Box>
+          </Alert>
         )}
 
         {/* What will be verified */}
-        <div className="w-full bg-[#F7F5F0] rounded-md border border-[#EEE9E0] p-6 mb-8">
-          <p className="text-[12px] font-bold tracking-[0.1em] text-[#8C8479] uppercase mb-5">
-            What will be verified
-          </p>
-
-          <div className="space-y-5">
-            {/* Gov ID */}
-            <div className="flex items-start space-x-4">
-              <div className={`w-12 h-12 rounded-sm flex items-center justify-center shrink-0 ${verificationStatus.document_verified ? 'bg-[#E3F2E7]' : 'bg-white border border-[#EEE9E0]'}`}>
-                <FileText className={`w-6 h-6 ${verificationStatus.document_verified ? 'text-[#2D7A41]' : 'text-[#8C8479]'}`} />
-              </div>
-              <div className="flex-1 min-w-0 pt-1">
-                <div className="flex items-center space-x-2">
-                  <h4 className="text-[15px] font-bold text-[#151513]">Government ID</h4>
+        <Box
+          bg="gray.50"
+          borderRadius="2xl"
+          p={6}
+          mb={8}
+          border="1px solid"
+          borderColor="gray.200"
+        >
+          <Text fontWeight="500" color="#0B1120" mb={4}>
+            What will be verified:
+          </Text>
+          
+          <VStack spacing={4} align="stretch">
+            <HStack spacing={4}>
+              <Box
+                w="48px"
+                h="48px"
+                borderRadius="xl"
+                bg={verificationStatus.document_verified ? 'green.100' : 'gray.100'}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Icon 
+                  as={FileText} 
+                  boxSize={6} 
+                  color={verificationStatus.document_verified ? 'green.600' : 'gray.500'} 
+                />
+              </Box>
+              <Box flex={1}>
+                <HStack>
+                  <Text fontWeight="500" color="#0B1120">Government ID</Text>
                   {verificationStatus.document_verified && (
-                    <span className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider bg-[#2D7A41] text-white rounded-sm">Verified</span>
+                    <Badge colorScheme="green" borderRadius="full">Verified</Badge>
                   )}
-                </div>
-                <p className="text-[13px] text-[#8C8479] mt-0.5">Passport, Driver's License, or ID Card</p>
-              </div>
-            </div>
+                </HStack>
+                <Text fontSize="sm" color="gray.600">
+                  Passport, Driver's License, or ID Card
+                </Text>
+              </Box>
+            </HStack>
 
-            {/* Selfie */}
-            <div className="flex items-start space-x-4">
-              <div className={`w-12 h-12 rounded-sm flex items-center justify-center shrink-0 ${verificationStatus.selfie_verified ? 'bg-[#E3F2E7]' : 'bg-white border border-[#EEE9E0]'}`}>
-                <Camera className={`w-6 h-6 ${verificationStatus.selfie_verified ? 'text-[#2D7A41]' : 'text-[#8C8479]'}`} />
-              </div>
-              <div className="flex-1 min-w-0 pt-1">
-                <div className="flex items-center space-x-2">
-                  <h4 className="text-[15px] font-bold text-[#151513]">Selfie Verification</h4>
+            <HStack spacing={4}>
+              <Box
+                w="48px"
+                h="48px"
+                borderRadius="xl"
+                bg={verificationStatus.selfie_verified ? 'green.100' : 'gray.100'}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Icon 
+                  as={Camera} 
+                  boxSize={6} 
+                  color={verificationStatus.selfie_verified ? 'green.600' : 'gray.500'} 
+                />
+              </Box>
+              <Box flex={1}>
+                <HStack>
+                  <Text fontWeight="500" color="#0B1120">Selfie Verification</Text>
                   {verificationStatus.selfie_verified && (
-                    <span className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider bg-[#2D7A41] text-white rounded-sm">Verified</span>
+                    <Badge colorScheme="green" borderRadius="full">Verified</Badge>
                   )}
-                </div>
-                <p className="text-[13px] text-[#8C8479] mt-0.5">Live selfie matching your ID photo</p>
-              </div>
-            </div>
+                </HStack>
+                <Text fontSize="sm" color="gray.600">
+                  Live selfie matching your ID photo
+                </Text>
+              </Box>
+            </HStack>
 
-            {/* Email */}
-            <div className="flex items-start space-x-4">
-              <div className={`w-12 h-12 rounded-sm flex items-center justify-center shrink-0 ${verificationStatus.email_verified ? 'bg-[#E3F2E7]' : 'bg-white border border-[#EEE9E0]'}`}>
-                <Mail className={`w-6 h-6 ${verificationStatus.email_verified ? 'text-[#2D7A41]' : 'text-[#8C8479]'}`} />
-              </div>
-              <div className="flex-1 min-w-0 pt-1">
-                <div className="flex items-center space-x-2">
-                  <h4 className="text-[15px] font-bold text-[#151513]">Email</h4>
+            <HStack spacing={4}>
+              <Box
+                w="48px"
+                h="48px"
+                borderRadius="xl"
+                bg={verificationStatus.email_verified ? 'green.100' : 'gray.100'}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Icon 
+                  as={Mail} 
+                  boxSize={6} 
+                  color={verificationStatus.email_verified ? 'green.600' : 'gray.500'} 
+                />
+              </Box>
+              <Box flex={1}>
+                <HStack>
+                  <Text fontWeight="500" color="#0B1120">Email</Text>
                   {verificationStatus.email_verified && (
-                    <span className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider bg-[#2D7A41] text-white rounded-sm">Verified</span>
+                    <Badge colorScheme="green" borderRadius="full">Verified</Badge>
                   )}
-                </div>
-                <p className="text-[13px] text-[#8C8479] mt-0.5 truncate pr-2">{onboardingData?.email || 'Your email address'}</p>
-              </div>
-            </div>
+                </HStack>
+                <Text fontSize="sm" color="gray.600">
+                  {onboardingData?.email || 'Your email address'}
+                </Text>
+              </Box>
+            </HStack>
 
-            {/* Phone */}
-            <div className="flex items-start space-x-4">
-              <div className={`w-12 h-12 rounded-sm flex items-center justify-center shrink-0 ${verificationStatus.phone_verified ? 'bg-[#E3F2E7]' : 'bg-white border border-[#EEE9E0]'}`}>
-                <Phone className={`w-6 h-6 ${verificationStatus.phone_verified ? 'text-[#2D7A41]' : 'text-[#8C8479]'}`} />
-              </div>
-              <div className="flex-1 min-w-0 pt-1">
-                <div className="flex items-center space-x-2">
-                  <h4 className="text-[15px] font-bold text-[#151513]">Phone Number</h4>
+            <HStack spacing={4}>
+              <Box
+                w="48px"
+                h="48px"
+                borderRadius="xl"
+                bg={verificationStatus.phone_verified ? 'green.100' : 'gray.100'}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Icon 
+                  as={Phone} 
+                  boxSize={6} 
+                  color={verificationStatus.phone_verified ? 'green.600' : 'gray.500'} 
+                />
+              </Box>
+              <Box flex={1}>
+                <HStack>
+                  <Text fontWeight="500" color="#0B1120">Phone Number</Text>
                   {verificationStatus.phone_verified && (
-                    <span className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider bg-[#2D7A41] text-white rounded-sm">Verified</span>
+                    <Badge colorScheme="green" borderRadius="full">Verified</Badge>
                   )}
-                </div>
-                <p className="text-[13px] text-[#8C8479] mt-0.5">
+                </HStack>
+                <Text fontSize="sm" color="gray.600">
                   {onboardingData?.phone_country_code && onboardingData?.phone_number
                     ? `${onboardingData.phone_country_code} ${onboardingData.phone_number.replace(/(.{3})/g, '$1 ').trim()}`
                     : 'Your phone number'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+                </Text>
+              </Box>
+            </HStack>
+          </VStack>
+        </Box>
 
         {/* Security Note */}
-        <div className="w-full bg-[#FDFBF9] rounded-md border border-[#EEE9E0] p-5 mb-8">
-          <div className="flex items-start space-x-3">
-            <Shield className="w-5 h-5 text-[#AA4528] shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-[14px] font-bold text-[#151513] mb-1">Secure & Private</h4>
-              <p className="text-[13px] text-[#8C8479] leading-relaxed">
-                Your documents are encrypted and processed securely by Stripe Identity.
+        <Box
+          bg="blue.50"
+          borderRadius="xl"
+          p={4}
+          mb={8}
+          border="1px solid"
+          borderColor="blue.100"
+        >
+          <HStack spacing={3}>
+            <Icon as={Shield} color="blue.500" boxSize={5} />
+            <Box>
+              <Text fontWeight="500" color="blue.700" fontSize="sm">
+                Secure & Private
+              </Text>
+              <Text fontSize="xs" color="blue.600">
+                Your documents are encrypted and processed securely by Stripe Identity. 
                 We never store your raw document images.
-              </p>
-            </div>
-          </div>
-        </div>
+              </Text>
+            </Box>
+          </HStack>
+        </Box>
 
-        {/* Sub-footer actions */}
-        <div className="w-full flex justify-center text-center mt-6 py-6 border-t border-[#F2F0EB]">
-          <button
+        {/* Action Buttons */}
+        <VStack spacing={3}>
+          <Button
+            onClick={startVerification}
+            isLoading={startingVerification}
+            loadingText="Starting..."
+            w="full"
+            h="56px"
+            borderRadius="full"
+            bgGradient="linear(to-r, #2b8cee, #38bdf8)"
+            color="white"
+            fontWeight="600"
+            fontSize="lg"
+            rightIcon={<Icon as={ArrowRight} />}
+            boxShadow="0 10px 25px rgba(43, 140, 238, 0.35)"
+            _hover={{
+              bgGradient: 'linear(to-r, #2070c0, #2b8cee)',
+              boxShadow: '0 12px 30px rgba(43, 140, 238, 0.45)',
+            }}
+            _active={{
+              transform: 'scale(0.98)',
+            }}
+          >
+            {verificationStatus.status === 'requires_input' ? 'Continue Verification' : 'Start Verification'}
+          </Button>
+
+          <Button
             onClick={skipVerification}
-            disabled={startingVerification}
-            className="text-[14px] font-semibold text-[#8C8479] hover:text-[#151513] transition-colors"
+            variant="ghost"
+            w="full"
+            h="48px"
+            color="gray.500"
+            fontWeight="500"
+            _hover={{ color: 'gray.700', bg: 'gray.50' }}
           >
             I'll do this later
-          </button>
-        </div>
+          </Button>
+        </VStack>
 
-      </div>
-    </OnboardingShell>
+        {/* Time estimate */}
+        <Text textAlign="center" fontSize="sm" color="gray.500" mt={4}>
+          This usually takes 2-3 minutes to complete
+        </Text>
+
+        {/* Back button */}
+        <Button
+          onClick={() => navigate('/onboarding/step-13')}
+          variant="link"
+          color="orange.600"
+          fontWeight="500"
+          mt={6}
+          display="block"
+          mx="auto"
+        >
+          Back
+        </Button>
+      </Box>
+      </Box>
+    </Box>
   );
 }
 

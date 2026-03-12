@@ -36,7 +36,7 @@ export default function OnboardingStep2() {
   } = useStep2Logic();
 
   return (
-    <div className="bg-[#faf9f6] text-[#151513] min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
@@ -51,7 +51,7 @@ export default function OnboardingStep2() {
           </div>
           <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-fr-rust transition-all duration-500"
+              className="h-full bg-hushh-blue transition-all duration-500"
               style={{ width: `${PROGRESS_PCT}%` }}
             />
           </div>
@@ -60,8 +60,8 @@ export default function OnboardingStep2() {
         {/* ── Title ── */}
         <section className="py-8">
           <h1
-            className="text-[2.25rem] leading-[1.15] text-[#151513] tracking-tight"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
+            className="text-[2.25rem] leading-[1.15] font-medium text-black tracking-tight"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             How did you hear about Hushh Fund&nbsp;A?
           </h1>
@@ -77,19 +77,21 @@ export default function OnboardingStep2() {
               <button
                 key={option.value}
                 onClick={() => setSelectedSource(option.value)}
-                className={`w-full text-left p-5 rounded-2xl flex items-center gap-4 transition-all duration-200 border ${isSelected
-                  ? "border-fr-rust bg-fr-rust/5 shadow-md"
-                  : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
-                  }`}
+                className={`w-full text-left p-5 rounded-2xl flex items-center gap-4 transition-all duration-200 border ${
+                  isSelected
+                    ? "border-hushh-blue bg-hushh-blue/5 shadow-md"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+                }`}
                 aria-label={option.label}
                 tabIndex={0}
               >
                 {/* Icon circle */}
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${isSelected
-                    ? "bg-fr-rust text-white"
-                    : "bg-gray-100 text-gray-500"
-                    }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                    isSelected
+                      ? "bg-hushh-blue text-white"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
                 >
                   <span
                     className="material-symbols-outlined text-[22px]"
@@ -101,8 +103,9 @@ export default function OnboardingStep2() {
 
                 {/* Label */}
                 <span
-                  className={`text-base font-semibold transition-colors ${isSelected ? "text-black" : "text-gray-700"
-                    }`}
+                  className={`text-base font-semibold transition-colors ${
+                    isSelected ? "text-black" : "text-gray-700"
+                  }`}
                 >
                   {option.label}
                 </span>

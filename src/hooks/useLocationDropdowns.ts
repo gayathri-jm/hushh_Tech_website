@@ -18,7 +18,7 @@ interface CityItem {
   name: string;
 }
 
-export interface LocationDropdownState {
+interface LocationDropdownState {
   countries: DropdownItem[];
   states: DropdownItem[];
   cities: CityItem[];
@@ -136,50 +136,22 @@ export function useLocationDropdowns(
       states.find(s => s.isoCode.toLowerCase() === raw || s.name.toLowerCase() === raw) ||
       states.find(s => s.name.toLowerCase().includes(raw) || raw.includes(s.name.toLowerCase()));
 
-    if (match) {
-      setStateRaw(match.isoCode);
-      pendingState.current = null;
-    }
-    /* Keep pendingState if no match — retry when states reload */
+    if (match) setStateRaw(match.isoCode);
+    pendingState.current = null;
   }, [states, detectionVersion]);
 
   // Apply pending city when cities list loads OR detection version bumps
   useEffect(() => {
     if (cities.length === 0 || !pendingCity.current) return;
 
-    /* pendingCity may contain multiple candidates separated by '|'
-       e.g. "Mahalunge|Pune" — try each one in order */
-    const candidates = pendingCity.current.split('|').map(s => s.trim()).filter(Boolean);
+    const raw = pendingCity.current.toLowerCase();
+    const match =
+      cities.find(c => c.name.toLowerCase() === raw) ||
+      cities.find(c => c.name.toLowerCase().includes(raw) || raw.includes(c.name.toLowerCase()));
 
-    const normalize = (s: string) => s.toLowerCase().replace(/[-]/g, ' ').trim();
-
-    let matchedCity: CityItem | undefined;
-    for (const candidate of candidates) {
-      const raw = normalize(candidate);
-      matchedCity =
-        cities.find(c => normalize(c.name) === raw) ||
-        cities.find(c => normalize(c.name).includes(raw) || raw.includes(normalize(c.name))) ||
-        cities.find(c => {
-          const cTokens = normalize(c.name).split(/\s+/);
-          const rTokens = raw.split(/\s+/);
-          return cTokens[0] === rTokens[0] && cTokens[0].length > 2;
-        });
-      if (matchedCity) break;
-    }
-
-    if (matchedCity) {
-      setCityRaw(matchedCity.name);
-      pendingCity.current = null;
-    } else if (!loadingCities) {
-      /* Cities loaded but no match — add GPS city as custom entry so user sees it */
-      const gpsCity = candidates[0];
-      if (gpsCity) {
-        setCities(prev => [...prev, { name: gpsCity }]);
-        setCityRaw(gpsCity);
-        pendingCity.current = null;
-      }
-    }
-  }, [cities, detectionVersion, loadingCities]);
+    if (match) setCityRaw(match.name);
+    pendingCity.current = null;
+  }, [cities, detectionVersion]);
 
   // Apply GPS/detected location — queues values for when dropdowns load
   const applyDetectedLocation = useCallback((

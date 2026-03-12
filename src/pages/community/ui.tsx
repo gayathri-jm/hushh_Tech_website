@@ -8,13 +8,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCommunityListLogic } from "./logic";
 import HushhTechBackHeader from "../../components/hushh-tech-back-header/HushhTechBackHeader";
 import HushhTechFooter, {
+  HushhFooterTab,
 } from "../../components/hushh-tech-footer/HushhTechFooter";
 import NDARequestModal from "../../components/NDARequestModal";
 import NDADocumentModal from "../../components/NDADocumentModal";
 
-
+/* ── Playfair heading style ── */
+const playfair = { fontFamily: "'Playfair Display', serif" };
 
 export default function CommunityPage() {
+  const navigate = useNavigate();
   const {
     filteredContent,
     dropdownOptions,
@@ -40,7 +43,7 @@ export default function CommunityPage() {
   } = useCommunityListLogic();
 
   return (
-    <div className="bg-fr-cream text-fr-navy min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white font-sans">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader
         onBackClick={handleBackClick}
@@ -51,18 +54,19 @@ export default function CommunityPage() {
       <main className="px-6 flex-grow max-w-md mx-auto w-full pb-32">
         {/* ── Hero ── */}
         <section className="pt-6 pb-6">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-fr-rust/20 rounded-full mb-6">
-            <span className="w-1.5 h-1.5 bg-fr-rust rounded-full" />
-            <span className="text-[10px] tracking-[0.15em] uppercase font-medium text-fr-rust">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-hushh-blue/20 rounded-full mb-6">
+            <span className="w-1.5 h-1.5 bg-hushh-blue rounded-full" />
+            <span className="text-[10px] tracking-[0.15em] uppercase font-medium text-hushh-blue">
               Community
             </span>
           </div>
 
           <h1
-            className="text-[2.75rem] leading-[1.1] text-fr-navy tracking-tight font-display"
+            className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
+            style={playfair}
           >
             Latest <br />
-            <span className="text-gray-400 italic font-medium">Updates.</span>
+            <span className="text-gray-400 italic font-light">Updates.</span>
           </h1>
           <p className="text-[13px] text-gray-400 font-light mt-4 leading-relaxed max-w-xs">
             Insights, news, and privacy technology updates from Hushh Technologies.
@@ -80,7 +84,7 @@ export default function CommunityPage() {
               placeholder="Search articles..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-12 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-[13px] text-black placeholder:text-gray-400 font-light focus:outline-none focus:border-fr-rust transition-colors shadow-sm"
+              className="w-full h-12 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-[13px] text-black placeholder:text-gray-400 font-light focus:outline-none focus:border-hushh-blue transition-colors"
             />
           </div>
         </section>
@@ -91,7 +95,7 @@ export default function CommunityPage() {
             <select
               value={selectedCategory}
               onChange={(e) => onCategoryChange(e.target.value)}
-              className="w-full h-12 px-4 rounded-2xl border border-gray-200 bg-white text-[13px] text-black font-light appearance-none focus:outline-none focus:border-fr-rust transition-colors cursor-pointer shadow-sm"
+              className="w-full h-12 px-4 rounded-2xl border border-gray-200 bg-white text-[13px] text-black font-light appearance-none focus:outline-none focus:border-hushh-blue transition-colors cursor-pointer"
             >
               {dropdownOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -108,7 +112,7 @@ export default function CommunityPage() {
         {/* ── Post List ── */}
         {apiLoading ? (
           <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-2 border-gray-200 border-t-fr-rust rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-gray-200 border-t-hushh-blue rounded-full animate-spin" />
           </div>
         ) : filteredContent.length > 0 ? (
           <div className="space-y-0">
@@ -119,10 +123,11 @@ export default function CommunityPage() {
                 className="block group"
               >
                 <article
-                  className={`py-6 ${index < filteredContent.length - 1
-                    ? "border-b border-gray-200"
-                    : ""
-                    }`}
+                  className={`py-6 ${
+                    index < filteredContent.length - 1
+                      ? "border-b border-gray-200"
+                      : ""
+                  }`}
                 >
                   {/* date pill */}
                   <div className="flex items-center gap-2 mb-3">
@@ -131,14 +136,14 @@ export default function CommunityPage() {
                     </span>
                     <div className="h-px w-6 bg-gray-200" />
                     {post.category && (
-                      <span className="text-[10px] tracking-[0.1em] uppercase text-fr-rust/70 font-light">
+                      <span className="text-[10px] tracking-[0.1em] uppercase text-hushh-blue/70 font-light">
                         {post.category}
                       </span>
                     )}
                   </div>
 
                   {/* title */}
-                  <h3 className="text-[15px] font-semibold text-fr-navy leading-snug mb-2 group-hover:text-fr-rust transition-colors line-clamp-2">
+                  <h3 className="text-[15px] font-semibold text-black leading-snug mb-2 group-hover:text-hushh-blue transition-colors line-clamp-2">
                     {post.title}
                   </h3>
 
@@ -148,7 +153,7 @@ export default function CommunityPage() {
                   </p>
 
                   {/* read more */}
-                  <div className="flex items-center gap-1 text-fr-rust">
+                  <div className="flex items-center gap-1 text-hushh-blue">
                     <span className="text-[11px] font-semibold uppercase tracking-[0.1em]">
                       Read More
                     </span>
@@ -185,6 +190,13 @@ export default function CommunityPage() {
 
       {/* ═══ Footer Nav ═══ */}
       <HushhTechFooter
+        activeTab={HushhFooterTab.COMMUNITY}
+        onTabChange={(tab) => {
+          if (tab === HushhFooterTab.HOME) navigate("/");
+          if (tab === HushhFooterTab.FUND_A) navigate("/discover-fund-a");
+          if (tab === HushhFooterTab.COMMUNITY) navigate("/community");
+          if (tab === HushhFooterTab.PROFILE) navigate("/profile");
+        }}
       />
 
       {/* ═══ NDA Modals ═══ */}
@@ -192,7 +204,7 @@ export default function CommunityPage() {
         isOpen={showNdaModal}
         onClose={() => setShowNdaModal(false)}
         session={session}
-        onSubmit={() => { }}
+        onSubmit={() => {}}
       />
       <NDADocumentModal
         isOpen={showNdaDocModal}

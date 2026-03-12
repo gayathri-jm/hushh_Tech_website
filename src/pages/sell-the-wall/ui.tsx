@@ -1,3 +1,4 @@
+import React from 'react';
 import { Box } from "@chakra-ui/react";
 import { Helmet } from "react-helmet";
 import { useSellTheWallLogic } from "./logic";
@@ -12,7 +13,7 @@ const SellTheWallPage = () => {
         <meta name="description" content={pageDescription} />
       </Helmet>
 
-      <Box
+      <Box 
         position="fixed"
         top="64px"
         left="0"
@@ -24,7 +25,7 @@ const SellTheWallPage = () => {
         margin="0"
         padding="0"
         zIndex="999"
-        bg="#faf9f6"
+        bg="white"
       >
         <Box
           as="iframe"

@@ -5,16 +5,18 @@
  * Logic stays in logic.ts via useProfileLogic().
  */
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import HushhTechBackHeader from '../../components/hushh-tech-back-header/HushhTechBackHeader';
 import HushhTechCta, { HushhTechCtaVariant } from '../../components/hushh-tech-cta/HushhTechCta';
-import HushhTechFooter from '../../components/hushh-tech-footer/HushhTechFooter';
+import HushhTechFooter, { HushhFooterTab } from '../../components/hushh-tech-footer/HushhTechFooter';
 import HushhLogo from '../../components/images/Hushhogo.png';
 import { useProfileLogic } from './logic';
 
-/* ── Ivar Headline style ── */
-const ivarHeadline = { fontFamily: "var(--font-display)", fontWeight: 500 };
+/* ── Playfair heading style ── */
+const playfair = { fontFamily: "'Playfair Display', serif" };
 
 const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   const {
     onboardingStatus,
     primaryCTA,
@@ -22,7 +24,7 @@ const ProfilePage: React.FC = () => {
   } = useProfileLogic();
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#faf9f6] selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="flex flex-col min-h-screen bg-white selection:bg-hushh-blue selection:text-white">
       {/* header */}
       <HushhTechBackHeader />
 
@@ -31,9 +33,9 @@ const ProfilePage: React.FC = () => {
         <div className="w-full max-w-[440px] flex flex-col items-center gap-8">
 
           {/* pill badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-fr-rust/20 bg-fr-rust/5 px-4 py-1">
-            <span className="material-symbols-rounded text-[16px] text-fr-rust">person</span>
-            <span className="text-[11px] tracking-[0.14em] uppercase text-fr-rust font-medium">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-hushh-blue/20 bg-hushh-blue/5 px-4 py-1">
+            <span className="material-symbols-rounded text-[16px] text-hushh-blue">person</span>
+            <span className="text-[11px] tracking-[0.14em] uppercase text-hushh-blue font-medium">
               Profile
             </span>
           </span>
@@ -48,11 +50,11 @@ const ProfilePage: React.FC = () => {
           {/* headline */}
           <div className="text-center space-y-3">
             <h1
-              className="text-[32px] md:text-[38px] leading-[1.08] tracking-tight text-[#151513]"
-              style={ivarHeadline}
+              className="text-[32px] md:text-[38px] leading-[1.08] tracking-tight text-gray-900 font-serif"
+              style={playfair}
             >
               Investing in the{' '}
-              <span className="text-gray-400 italic font-medium">Future.</span>
+              <span className="text-gray-400 italic font-light">Future.</span>
             </h1>
             <p className="text-[15px] md:text-[17px] leading-relaxed text-gray-500 max-w-[360px] mx-auto">
               The AI-powered Berkshire Hathaway. We combine AI and human expertise to invest in exceptional businesses for long-term value creation.
@@ -85,7 +87,7 @@ const ProfilePage: React.FC = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="material-symbols-rounded text-[14px] text-fr-rust">lock</span>
+              <span className="material-symbols-rounded text-[14px] text-hushh-blue">lock</span>
               <p className="text-[10px] tracking-[0.18em] uppercase text-gray-400 font-medium">
                 Bank Level Security
               </p>
@@ -101,6 +103,13 @@ const ProfilePage: React.FC = () => {
 
       {/* ═══ Footer Nav ═══ */}
       <HushhTechFooter
+        activeTab={HushhFooterTab.PROFILE}
+        onTabChange={(tab) => {
+          if (tab === HushhFooterTab.HOME) navigate('/');
+          if (tab === HushhFooterTab.FUND_A) navigate('/discover-fund-a');
+          if (tab === HushhFooterTab.COMMUNITY) navigate('/community');
+          if (tab === HushhFooterTab.PROFILE) navigate('/profile');
+        }}
       />
     </div>
   );

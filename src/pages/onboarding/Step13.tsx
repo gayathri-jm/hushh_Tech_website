@@ -2,16 +2,24 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
-import OnboardingShell from '../../components/OnboardingShell';
+import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { fetchAuthNumbers } from '../../services/plaid/plaidService';
 
 // SVG Icons
-// BackIcon removed as unused
+const BackIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 12H5M12 19l-7-7 7-7" />
+  </svg>
+);
 
-// BankIcon removed as unused
+const BankIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2b8cee" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 21H21M3 10H21M5 6L12 3L19 6M4 10V21M20 10V21M8 14V17M12 14V17M16 14V17" />
+  </svg>
+);
 
 const LockIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#AA4528" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2b8cee" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
@@ -23,7 +31,12 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
-// ArrowForwardIcon removed as unused
+const ArrowForwardIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12" />
+    <polyline points="12,5 19,12 12,19" />
+  </svg>
+);
 
 // Share class pill icons
 const StarIcon = () => (
@@ -61,27 +74,27 @@ const SHARE_CLASSES: ShareClassInfo[] = [
     id: 'class_a',
     name: 'Class A',
     unitPrice: 25000000,
-    color: '#8C8479',
-    bgColor: '#FDFBF9',
-    borderColor: '#E5E0D8',
+    color: '#6B7280',
+    bgColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
     icon: <DiamondIcon />,
   },
   {
     id: 'class_b',
     name: 'Class B',
     unitPrice: 5000000,
-    color: '#AA4528',
-    bgColor: '#FDF9F7',
-    borderColor: 'rgba(170, 69, 40, 0.2)',
+    color: '#B8860B',
+    bgColor: '#FFFAEB',
+    borderColor: 'rgba(255, 215, 0, 0.4)',
     icon: <StarIcon />,
   },
   {
     id: 'class_c',
     name: 'Class C',
     unitPrice: 1000000,
-    color: '#151513',
-    bgColor: '#F7F5F0',
-    borderColor: 'rgba(21, 21, 19, 0.1)',
+    color: '#2b8cee',
+    bgColor: '#F0F7FF',
+    borderColor: 'rgba(43, 140, 238, 0.3)',
     icon: <VerifiedIcon />,
   },
 ];
@@ -153,10 +166,11 @@ const formatCurrency = (amount: number): string => {
 
 function OnboardingStep13() {
   const navigate = useNavigate();
+  const isFooterVisible = useFooterVisibility();
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true); // Data fetch loading
   const [error, setError] = useState<string | null>(null);
-
+  
   // Plaid auto-fill status message (shown as banner)
   const [autoFillMessage, setAutoFillMessage] = useState<string | null>(null);
 
@@ -182,7 +196,7 @@ function OnboardingStep13() {
   const [bankCountry, setBankCountry] = useState('');
   const [accountType, setAccountType] = useState<'checking' | 'savings'>('checking');
   const [selectedOnboardingAccountType, setSelectedOnboardingAccountType] = useState('');
-
+  
   // Touched state for showing validation errors only after user interaction
   const [touched, setTouched] = useState({
     bankName: false,
@@ -193,7 +207,7 @@ function OnboardingStep13() {
     bankCountry: false,
     bankCity: false,
   });
-
+  
   // Share class units state
   const [shareUnits, setShareUnits] = useState<{
     class_a_units: number;
@@ -217,7 +231,11 @@ function OnboardingStep13() {
   const totalInvestment = calculateTotalInvestment();
   const hasAnyUnits = shareUnits.class_a_units > 0 || shareUnits.class_b_units > 0 || shareUnits.class_c_units > 0;
 
-  // formattedOnboardingAccountType removed as unused
+  const formattedOnboardingAccountType = selectedOnboardingAccountType
+    ? selectedOnboardingAccountType
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase())
+    : 'Not selected';
 
   // Cleanup on unmount — clear timeouts, mark unmounted
   useEffect(() => {
@@ -400,6 +418,12 @@ function OnboardingStep13() {
   /* ─── Enable page-level scrolling ─── */
   useEffect(() => {
     window.scrollTo(0, 0);
+    document.documentElement.classList.add('onboarding-page-scroll');
+    document.body.classList.add('onboarding-page-scroll');
+    return () => {
+      document.documentElement.classList.remove('onboarding-page-scroll');
+      document.body.classList.remove('onboarding-page-scroll');
+    };
   }, []);
 
   useEffect(() => {
@@ -407,51 +431,51 @@ function OnboardingStep13() {
       if (!config.supabaseClient) { setPageLoading(false); return; }
 
       try {
-        const { data: { user } } = await config.supabaseClient.auth.getUser();
-        if (!user) { setPageLoading(false); return; }
+      const { data: { user } } = await config.supabaseClient.auth.getUser();
+      if (!user) { setPageLoading(false); return; }
 
-        const { data } = await config.supabaseClient
-          .from('onboarding_data')
-          .select(`
+      const { data } = await config.supabaseClient
+        .from('onboarding_data')
+        .select(`
           class_a_units, class_b_units, class_c_units,
           account_type,
           legal_first_name, legal_last_name,
           bank_name, bank_account_holder_name, bank_account_type,
           bank_routing_number, bank_address_city, bank_address_country
         `)
-          .eq('user_id', user.id)
-          .maybeSingle();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-        // Track what DB already has so we know what's "pre-filled" vs "empty"
-        let dbHasBankName = false;
-        let dbHasCountry = false;
+      // Track what DB already has so we know what's "pre-filled" vs "empty"
+      let dbHasBankName = false;
+      let dbHasCountry = false;
 
-        if (data) {
-          setShareUnits({
-            class_a_units: data.class_a_units || 0,
-            class_b_units: data.class_b_units || 0,
-            class_c_units: data.class_c_units || 0,
-          });
-
-          if (data.legal_first_name && data.legal_last_name && !data.bank_account_holder_name) {
-            setAccountHolderName(`${data.legal_first_name} ${data.legal_last_name}`);
-          }
-
-          if (data.bank_name) { setBankName(data.bank_name); dbHasBankName = true; }
-          if (data.bank_account_holder_name) setAccountHolderName(data.bank_account_holder_name);
-          if (data.bank_account_type) setAccountType(data.bank_account_type as 'checking' | 'savings');
-          if (data.account_type) setSelectedOnboardingAccountType(String(data.account_type));
-          if (data.bank_routing_number) setRoutingNumber(data.bank_routing_number);
-          if (data.bank_address_city) setBankCity(data.bank_address_city);
-          if (data.bank_address_country) { setBankCountry(data.bank_address_country); dbHasCountry = true; }
+      if (data) {
+        setShareUnits({
+          class_a_units: data.class_a_units || 0,
+          class_b_units: data.class_b_units || 0,
+          class_c_units: data.class_c_units || 0,
+        });
+        
+        if (data.legal_first_name && data.legal_last_name && !data.bank_account_holder_name) {
+          setAccountHolderName(`${data.legal_first_name} ${data.legal_last_name}`);
         }
+        
+        if (data.bank_name) { setBankName(data.bank_name); dbHasBankName = true; }
+        if (data.bank_account_holder_name) setAccountHolderName(data.bank_account_holder_name);
+        if (data.bank_account_type) setAccountType(data.bank_account_type as 'checking' | 'savings');
+        if (data.account_type) setSelectedOnboardingAccountType(String(data.account_type));
+        if (data.bank_routing_number) setRoutingNumber(data.bank_routing_number);
+        if (data.bank_address_city) setBankCity(data.bank_address_city);
+        if (data.bank_address_country) { setBankCountry(data.bank_address_country); dbHasCountry = true; }
+      }
 
-        // --- Plaid Auto-Fill ---
-        // Only attempt if user hasn't already saved bank data in a previous session
-        const hasBankDataAlready = data?.bank_routing_number;
-        if (!hasBankDataAlready) {
-          await attemptPlaidAutoFill(user.id, dbHasBankName, dbHasCountry);
-        }
+      // --- Plaid Auto-Fill ---
+      // Only attempt if user hasn't already saved bank data in a previous session
+      const hasBankDataAlready = data?.bank_routing_number;
+      if (!hasBankDataAlready) {
+        await attemptPlaidAutoFill(user.id, dbHasBankName, dbHasCountry);
+      }
       } catch (err) {
         console.error('[Step13] Error loading data:', err);
       } finally {
@@ -649,340 +673,324 @@ function OnboardingStep13() {
     navigate('/onboarding/step-11');
   };
 
-  const DISPLAY_STEP = 13;
-  const PROG_TOTAL = 15;
-
   return (
-    <OnboardingShell
-      step={DISPLAY_STEP}
-      totalSteps={PROG_TOTAL}
-      onBack={handleBack}
-      onClose={() => navigate('/dashboard')}
-      continueLabel={loading ? 'Saving…' : 'Continue'}
-      onContinue={handleContinue}
-      continueDisabled={loading || !isFormValid()}
-      continueLoading={loading}
+    <div
+      className="bg-white min-h-[100dvh]"
+      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}
     >
-      <div className="mb-8">
-        <h1
-          className="text-[2.2rem] md:text-[2.6rem] font-medium leading-tight text-[#151513] mb-3"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
-        >
-          Bank Details
-        </h1>
-        <p className="text-[15px] text-[#8C8479] leading-relaxed">
-          Provide your banking information for secure investment transfers.
-        </p>
-      </div>
+      {/* ═══ iOS Navigation Bar ═══ */}
+      <nav
+        className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 12px) + 4px)', minHeight: '48px' }}
+      >
+        <button onClick={handleBack} className="text-[#007AFF] flex items-center -ml-2 active:opacity-50 transition-opacity" aria-label="Go back">
+          <span className="material-symbols-outlined text-3xl -mr-1" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>chevron_left</span>
+          <span className="text-[17px] leading-none pb-[2px]">Back</span>
+        </button>
+        <span className="font-semibold text-[17px] text-black">Setup</span>
+        <button onClick={handleSkip} className="text-[17px] text-[#007AFF] font-normal active:opacity-50 transition-opacity">Skip</button>
+      </nav>
 
-      {pageLoading && (
-        <div className="space-y-4 animate-pulse">
-          <div className="h-[120px] bg-[#EEE9E0] rounded-md" />
-          <div className="space-y-0 rounded-md overflow-hidden border border-[#EEE9E0]">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-14 bg-[#F2F0EB] border-b border-[#EEE9E0]" />)}
+      <main className="max-w-lg mx-auto w-full px-4 pt-2 pb-48">
+        {/* ─── Progress ─── */}
+        <div className="mb-6 mt-2">
+          <div className="flex justify-between items-end mb-2 px-1">
+            <span className="text-[13px] font-medium text-[#8E8E93] uppercase tracking-wide">Onboarding Progress</span>
+            <span className="text-[13px] text-[#8E8E93]">Step 12/12</span>
           </div>
-          <div className="flex justify-center pt-4">
-            <div className="w-10 h-10 border-4 border-[#EEE9E0] border-t-[#AA4528] rounded-full animate-spin" />
+          <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-[#007AFF] w-full rounded-full" />
           </div>
-          <p className="text-center text-[13px] text-[#8C8479]">Loading your data...</p>
+          <p className="mt-1.5 px-1 text-[12px] font-medium text-[#007AFF]">100% complete</p>
         </div>
-      )}
 
-      {!pageLoading && <>
-        {error && (
-          <div className="mb-6 mx-1 p-4 bg-red-50 border border-red-100 rounded-md text-red-700 text-sm">
-            {error}
+        {/* ─── Title ─── */}
+        <h1 className="text-[34px] leading-tight font-bold text-black tracking-tight mb-2 px-1">Bank Details</h1>
+        <p className="text-[17px] leading-snug text-[#8E8E93] mb-8 px-1">
+          Provide your banking information for investment transfers securely.
+        </p>
+
+        {/* ─── Page Loading Shimmer ─── */}
+        {pageLoading && (
+          <div className="space-y-4 animate-pulse">
+            <div className="h-[120px] bg-gray-100 rounded-xl" />
+            <div className="space-y-0 rounded-[10px] overflow-hidden border border-gray-100">
+              {[1,2,3,4].map(i => <div key={i} className="h-[44px] bg-gray-50 border-b border-gray-100" />)}
+            </div>
+            <div className="space-y-0 rounded-[10px] overflow-hidden border border-gray-100">
+              {[1,2,3].map(i => <div key={i} className="h-[44px] bg-gray-50 border-b border-gray-100" />)}
+            </div>
+            <div className="flex justify-center pt-4">
+              <div className="w-10 h-10 border-4 border-gray-200 border-t-[#007AFF] rounded-full animate-spin" />
+            </div>
+            <p className="text-center text-[13px] text-[#8E8E93]">Loading your data...</p>
           </div>
         )}
 
-        {/* Plaid Auto-Fill Banner */}
-        {autoFillMessage && (
-          <div className="mb-6 mx-1 p-3 bg-[#FDF9F7] border border-[#AA4528]/20 rounded-md text-[#AA4528] text-sm font-medium text-center animate-pulse">
-            {autoFillMessage}
-          </div>
-        )}
+        {/* ─── Form Content (hidden while loading) ─── */}
+        {!pageLoading && <>
+          {/* Error Message */}
+          {error && (
+            <div className="mx-5 mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+              {error}
+            </div>
+          )}
 
-        {/* Multi-Account Selector — shown when Plaid returns 2+ accounts */}
-        {plaidAccounts.length > 1 && (
-          <div className="mb-8">
-            <div className="bg-white rounded-md border border-[#EEE9E0] p-5">
-              <p className="text-[12px] font-bold tracking-widest text-[#8C8479] uppercase mb-4">
-                {plaidInstitutionName ? `${plaidInstitutionName} - ` : ''}Select Account
-              </p>
-              <div className="space-y-3">
-                {plaidAccounts.map((acct, idx) => {
-                  const isSelected = idx === selectedAccountIdx;
-                  return (
-                    <button
-                      key={acct.accountId || idx}
-                      type="button"
-                      onClick={() => {
-                        setSelectedAccountIdx(idx);
-                        userModifiedFields.current.delete('accountNumber');
-                        userModifiedFields.current.delete('confirmAccountNumber');
-                        userModifiedFields.current.delete('routingNumber');
-                        userModifiedFields.current.delete('accountType');
-                        applyAccountSelection(acct);
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-md border transition-all text-left ${isSelected
-                        ? 'border-[#AA4528] bg-[#FDF9F7] ring-1 ring-[#AA4528]/20'
-                        : 'border-[#EEE9E0] bg-white hover:bg-[#F7F5F0]'
+          {/* Plaid Auto-Fill Banner */}
+          {autoFillMessage && (
+            <div className="mx-5 mb-4 p-3 bg-[#F0F7FF] border border-[#2b8cee]/20 rounded-xl text-[#2b8cee] text-sm font-medium text-center animate-pulse">
+              {autoFillMessage}
+            </div>
+          )}
+
+          {/* Multi-Account Selector — shown when Plaid returns 2+ accounts */}
+          {plaidAccounts.length > 1 && (
+            <div className="mx-5 mb-5">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-3">
+                  {plaidInstitutionName ? `${plaidInstitutionName} - ` : ''}SELECT ACCOUNT
+                </p>
+                <div className="space-y-2">
+                  {plaidAccounts.map((acct, idx) => {
+                    const isSelected = idx === selectedAccountIdx;
+                    return (
+                      <button
+                        key={acct.accountId || idx}
+                        type="button"
+                        onClick={() => {
+                          setSelectedAccountIdx(idx);
+                          // Clear user modifications for auto-fillable fields so the new account applies
+                          userModifiedFields.current.delete('accountNumber');
+                          userModifiedFields.current.delete('confirmAccountNumber');
+                          userModifiedFields.current.delete('routingNumber');
+                          userModifiedFields.current.delete('accountType');
+                          applyAccountSelection(acct);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${
+                          isSelected
+                            ? 'border-[#2b8cee] bg-[#F0F7FF] ring-1 ring-[#2b8cee]/30'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
                         }`}
-                      aria-label={`Select ${acct.name} ending in ${acct.mask}`}
-                    >
-                      {/* Radio indicator */}
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-[#AA4528]' : 'border-[#C4BFB5]'
-                        }`}>
-                        {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#AA4528]" />}
-                      </div>
-                      {/* Account info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[15px] font-bold text-[#151513] truncate">{acct.name}</p>
-                        <p className="text-[13px] text-[#8C8479]">
-                          {acct.subtype.charAt(0).toUpperCase() + acct.subtype.slice(1)} &middot; &bull;&bull;&bull;&bull;{acct.mask}
-                        </p>
-                      </div>
-                      {/* Selected check */}
-                      {isSelected && (
-                        <span className="text-[#AA4528] text-xl font-bold">
-                          <span className="material-symbols-outlined text-[20px]">check</span>
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Investment Amount Summary */}
-        {hasAnyUnits && (
-          <div className="mb-8">
-            <div className="bg-[#F7F5F0] rounded-md border border-[#EEE9E0] p-6 text-center">
-              <p className="text-[12px] font-bold tracking-[0.1em] text-[#8C8479] uppercase mb-2">
-                Investment Amount
-              </p>
-              <div className="text-3xl font-medium text-[#151513] mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-                {formatCurrency(totalInvestment)}
-              </div>
-
-              <div className="flex flex-wrap justify-center gap-2">
-                {SHARE_CLASSES.map((shareClass) => {
-                  const units = getUnits(shareClass.id);
-                  if (units === 0) return null;
-
-                  return (
-                    <div
-                      key={shareClass.id}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm"
-                      style={{
-                        backgroundColor: shareClass.bgColor,
-                        border: `1px solid ${shareClass.borderColor}`,
-                      }}
-                    >
-                      {shareClass.icon}
-                      <span
-                        className="text-[12px] font-bold"
-                        style={{ color: shareClass.color }}
+                        aria-label={`Select ${acct.name} ending in ${acct.mask}`}
                       >
-                        {shareClass.name} — {units}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Banking Information Form */}
-        <div className="mb-8 space-y-6">
-          <h2 className="text-[14px] font-bold text-[#151513] uppercase tracking-[0.05em] border-b border-[#EEE9E0] pb-2">
-            Banking Information
-          </h2>
-
-          <div className="space-y-4">
-            {/* Bank Name */}
-            <div>
-              <label className="block text-[13px] font-bold text-[#5C564D] mb-1.5 uppercase tracking-wide">
-                Bank Name
-              </label>
-              <input
-                type="text"
-                value={bankName}
-                onChange={(e) => { userModifiedFields.current.add('bankName'); setBankName(e.target.value); }}
-                onBlur={() => handleBlur('bankName')}
-                placeholder="Bank Name"
-                className={`w-full h-12 rounded-md border bg-white px-4 text-[16px] text-[#151513] placeholder:text-[#C4BFB5] outline-none transition-all ${touched.bankName && bankNameError
-                  ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                  : 'border-[#EEE9E0] focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20'
-                  }`}
-              />
-              {touched.bankName && bankNameError && <p className="mt-1.5 text-[12px] text-red-500">{bankNameError}</p>}
-            </div>
-
-            {/* Holder Name */}
-            <div>
-              <label className="block text-[13px] font-bold text-[#5C564D] mb-1.5 uppercase tracking-wide">
-                Account Holder Name
-              </label>
-              <input
-                type="text"
-                value={accountHolderName}
-                onChange={(e) => setAccountHolderName(e.target.value)}
-                onBlur={() => handleBlur('accountHolderName')}
-                placeholder="Account Holder Name"
-                className={`w-full h-12 rounded-md border bg-white px-4 text-[16px] text-[#151513] placeholder:text-[#C4BFB5] outline-none transition-all ${touched.accountHolderName && accountHolderNameError
-                  ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                  : 'border-[#EEE9E0] focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20'
-                  }`}
-              />
-              <p className="mt-1.5 text-[12px] text-[#8C8479]">Ensure the account holder name matches your ID exactly.</p>
-              {touched.accountHolderName && accountHolderNameError && <p className="mt-1.5 text-[12px] text-red-500">{accountHolderNameError}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Account Type */}
-              <div>
-                <label className="block text-[13px] font-bold text-[#5C564D] mb-1.5 uppercase tracking-wide">
-                  Account Type
-                </label>
-                <div className="relative">
-                  <select
-                    value={accountType}
-                    onChange={(e) => { userModifiedFields.current.add('accountType'); setAccountType(e.target.value as any); }}
-                    className="w-full h-12 rounded-md border border-[#EEE9E0] bg-white px-4 text-[15px] text-[#151513] focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20 outline-none appearance-none cursor-pointer"
-                  >
-                    <option value="checking">Checking</option>
-                    <option value="savings">Savings</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#8C8479]">
-                    <ChevronDownIcon />
-                  </div>
+                        {/* Radio indicator */}
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          isSelected ? 'border-[#2b8cee]' : 'border-slate-300'
+                        }`}>
+                          {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#2b8cee]" />}
+                        </div>
+                        {/* Account info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate">{acct.name}</p>
+                          <p className="text-xs text-slate-500">
+                            {acct.subtype.charAt(0).toUpperCase() + acct.subtype.slice(1)} &middot; &bull;&bull;&bull;&bull;{acct.mask}
+                          </p>
+                        </div>
+                        {/* Selected check */}
+                        {isSelected && (
+                          <span className="text-[#2b8cee] text-sm font-bold">*</span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+            </div>
+          )}
 
+          {/* Investment Amount Card */}
+          {hasAnyUnits && (
+            <div className="mx-5 mb-6">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-1">
+                  INVESTMENT AMOUNT
+                </p>
+                <div className="text-3xl font-bold text-slate-900 mb-4">
+                  {formatCurrency(totalInvestment)}
+                </div>
+                
+                {/* Share Class Pills */}
+                <div className="flex flex-wrap gap-2">
+                  {SHARE_CLASSES.map((shareClass) => {
+                    const units = getUnits(shareClass.id);
+                    if (units === 0) return null;
+                    
+                    return (
+                      <div
+                        key={shareClass.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                        style={{
+                          backgroundColor: shareClass.bgColor,
+                          border: `1px solid ${shareClass.borderColor}`,
+                        }}
+                      >
+                        {shareClass.icon}
+                        <span 
+                          className="text-xs font-bold"
+                          style={{ color: shareClass.color }}
+                        >
+                          {shareClass.name} —{units}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ─── BANKING INFORMATION — iOS Grouped Table ─── */}
+          <div className="mb-8">
+            <div className="uppercase text-[13px] text-[#8E8E93] mb-2 px-4 font-normal">Banking Information</div>
+            <div className="bg-white rounded-[10px] overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.05)] divide-y divide-[#C6C6C8]/50">
+              {/* Bank Name */}
+              <div className="flex items-center min-h-[44px] px-4 active:bg-gray-100 transition-colors">
+                <label className="w-1/3 text-[17px] text-black py-3">Bank Name</label>
+                <input
+                  type="text"
+                  value={bankName}
+                  onChange={(e) => { userModifiedFields.current.add('bankName'); setBankName(e.target.value); }}
+                  onBlur={() => handleBlur('bankName')}
+                  placeholder="Required"
+                  className="w-2/3 bg-transparent border-none text-[17px] text-right text-black placeholder-[#8E8E93] focus:ring-0 p-0"
+                />
+              </div>
+              {/* Holder Name */}
+              <div className="flex items-center min-h-[44px] px-4 active:bg-gray-100 transition-colors">
+                <label className="w-1/3 text-[17px] text-black py-3 whitespace-nowrap">Holder Name</label>
+                <input
+                  type="text"
+                  value={accountHolderName}
+                  onChange={(e) => setAccountHolderName(e.target.value)}
+                  onBlur={() => handleBlur('accountHolderName')}
+                  placeholder="Required"
+                  className="w-2/3 bg-transparent border-none text-[17px] text-right text-black placeholder-[#8E8E93] focus:ring-0 p-0"
+                />
+              </div>
+              {/* Account Type */}
+              <div className="flex items-center justify-between min-h-[44px] px-4 cursor-pointer">
+                <label className="text-[17px] text-black py-3">Account Type</label>
+                <div className="flex items-center">
+                  <span className="text-[17px] text-[#8E8E93] mr-2">{formattedOnboardingAccountType}</span>
+                  <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
+                </div>
+              </div>
               {/* Country */}
-              <div>
-                <label className="block text-[13px] font-bold text-[#5C564D] mb-1.5 uppercase tracking-wide">
-                  Country
-                </label>
-                <div className="relative">
+              <div className="flex items-center justify-between min-h-[44px] px-4 cursor-pointer relative">
+                <label className="text-[17px] text-black py-3">Country</label>
+                <div className="flex items-center">
                   <select
                     value={bankCountry}
                     onChange={(e) => { userModifiedFields.current.add('bankCountry'); setBankCountry(e.target.value); handleBlur('bankCountry'); }}
                     onBlur={() => handleBlur('bankCountry')}
-                    className={`w-full h-12 rounded-md border bg-white px-4 text-[15px] text-[#151513] focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20 outline-none appearance-none cursor-pointer ${touched.bankCountry && bankCountryError ? 'border-red-400' : 'border-[#EEE9E0]'
-                      }`}
+                    className="appearance-none bg-transparent border-none text-[17px] text-[#8E8E93] text-right focus:ring-0 p-0 pr-6 cursor-pointer"
                   >
                     {COUNTRIES.map((c) => (
                       <option key={c.code} value={c.code} disabled={c.code === ''}>{c.name}</option>
                     ))}
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#8C8479]">
-                    <ChevronDownIcon />
-                  </div>
+                  <span className="material-symbols-outlined text-gray-400 text-lg absolute right-4 pointer-events-none">chevron_right</span>
                 </div>
               </div>
             </div>
+            <p className="mt-2 px-4 text-[13px] text-[#8E8E93] leading-normal">Ensure the account holder name matches your ID exactly.</p>
+            {touched.bankName && bankNameError && <p className="mt-1 px-4 text-[13px] text-red-500">{bankNameError}</p>}
+            {touched.accountHolderName && accountHolderNameError && <p className="mt-1 px-4 text-[13px] text-red-500">{accountHolderNameError}</p>}
           </div>
-        </div>
 
-        {/* Account Details Form */}
-        <div className="mb-8 space-y-6">
-          <h2 className="text-[14px] font-bold text-[#151513] uppercase tracking-[0.05em] border-b border-[#EEE9E0] pb-2">
-            Account Details
-          </h2>
-
-          <div className="space-y-4">
-            {/* Routing Number */}
-            <div>
-              <label className="block text-[13px] font-bold text-[#5C564D] mb-1.5 uppercase tracking-wide">
-                Routing Number
-              </label>
-              <input
-                type="tel"
-                inputMode="numeric"
-                value={routingNumber}
-                onChange={(e) => { userModifiedFields.current.add('routingNumber'); setRoutingNumber(e.target.value.replace(/\D/g, '').slice(0, bankCountry === 'US' ? 9 : 15)); }}
-                onBlur={() => handleBlur('routingNumber')}
-                placeholder={bankCountry === 'US' ? '9 digits' : 'Routing number'}
-                maxLength={bankCountry === 'US' ? 9 : 15}
-                className={`w-full h-12 rounded-md border bg-white px-4 text-[16px] text-[#151513] placeholder:text-[#C4BFB5] outline-none transition-all font-mono ${touched.routingNumber && routingNumberError
-                  ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                  : 'border-[#EEE9E0] focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20'
-                  }`}
-              />
-              <p className="mt-1.5 text-[12px] text-[#8C8479]">Routing number can be found on the bottom left of your check.</p>
-              {touched.routingNumber && routingNumberError && <p className="mt-1.5 text-[12px] text-red-500">{routingNumberError}</p>}
+          {/* ─── ACCOUNT DETAILS — iOS Grouped Table ─── */}
+          <div className="mb-8">
+            <div className="uppercase text-[13px] text-[#8E8E93] mb-2 px-4 font-normal">Account Details</div>
+            <div className="bg-white rounded-[10px] overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.05)] divide-y divide-[#C6C6C8]/50">
+              {/* Routing # */}
+              <div className="flex items-center min-h-[44px] px-4 active:bg-gray-100 transition-colors">
+                <label className="w-1/3 text-[17px] text-black py-3">Routing #</label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={routingNumber}
+                  onChange={(e) => { userModifiedFields.current.add('routingNumber'); setRoutingNumber(e.target.value.replace(/\D/g, '').slice(0, bankCountry === 'US' ? 9 : 15)); }}
+                  onBlur={() => handleBlur('routingNumber')}
+                  placeholder="9 digits"
+                  maxLength={bankCountry === 'US' ? 9 : 15}
+                  className="w-2/3 bg-transparent border-none text-[17px] text-right text-black placeholder-[#8E8E93] focus:ring-0 p-0 font-mono tracking-tight"
+                />
+              </div>
+              {/* Account # */}
+              <div className="flex items-center min-h-[44px] px-4 active:bg-gray-100 transition-colors">
+                <label className="w-1/3 text-[17px] text-black py-3">Account #</label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={accountNumber}
+                  onChange={(e) => { userModifiedFields.current.add('accountNumber'); setAccountNumber(e.target.value.replace(/\D/g, '')); }}
+                  onBlur={() => handleBlur('accountNumber')}
+                  placeholder="Required"
+                  className="w-2/3 bg-transparent border-none text-[17px] text-right text-black placeholder-[#8E8E93] focus:ring-0 p-0 font-mono tracking-tight"
+                />
+              </div>
+              {/* Confirm # */}
+              <div className="flex items-center min-h-[44px] px-4 active:bg-gray-100 transition-colors">
+                <label className="w-1/3 text-[17px] text-black py-3">Confirm #</label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={confirmAccountNumber}
+                  onChange={(e) => { userModifiedFields.current.add('confirmAccountNumber'); setConfirmAccountNumber(e.target.value.replace(/\D/g, '')); }}
+                  onBlur={() => handleBlur('confirmAccountNumber')}
+                  placeholder="Re-enter number"
+                  className="w-2/3 bg-transparent border-none text-[17px] text-right text-black placeholder-[#8E8E93] focus:ring-0 p-0 font-mono tracking-tight"
+                />
+              </div>
             </div>
-
-            {/* Account Number */}
-            <div>
-              <label className="block text-[13px] font-bold text-[#5C564D] mb-1.5 uppercase tracking-wide">
-                Account Number
-              </label>
-              <input
-                type="tel"
-                inputMode="numeric"
-                value={accountNumber}
-                onChange={(e) => { userModifiedFields.current.add('accountNumber'); setAccountNumber(e.target.value.replace(/\D/g, '')); }}
-                onBlur={() => handleBlur('accountNumber')}
-                placeholder="Account Number"
-                className={`w-full h-12 rounded-md border bg-white px-4 text-[16px] text-[#151513] placeholder:text-[#C4BFB5] outline-none transition-all font-mono ${touched.accountNumber && accountNumberError
-                  ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                  : 'border-[#EEE9E0] focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20'
-                  }`}
-              />
-              {touched.accountNumber && accountNumberError && <p className="mt-1.5 text-[12px] text-red-500">{accountNumberError}</p>}
-            </div>
-
-            {/* Confirm Account Number */}
-            <div>
-              <label className="block text-[13px] font-bold text-[#5C564D] mb-1.5 uppercase tracking-wide">
-                Confirm Account Number
-              </label>
-              <input
-                type="tel"
-                inputMode="numeric"
-                value={confirmAccountNumber}
-                onChange={(e) => { userModifiedFields.current.add('confirmAccountNumber'); setConfirmAccountNumber(e.target.value.replace(/\D/g, '')); }}
-                onBlur={() => handleBlur('confirmAccountNumber')}
-                placeholder="Re-enter number"
-                className={`w-full h-12 rounded-md border bg-white px-4 text-[16px] text-[#151513] placeholder:text-[#C4BFB5] outline-none transition-all font-mono ${touched.confirmAccountNumber && confirmAccountNumberError
-                  ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                  : 'border-[#EEE9E0] focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20'
-                  }`}
-              />
-              {touched.confirmAccountNumber && confirmAccountNumberError && <p className="mt-1.5 text-[12px] text-red-500">{confirmAccountNumberError}</p>}
-            </div>
+            <p className="mt-2 px-4 text-[13px] text-[#8E8E93] leading-normal">Routing number can be found on the bottom left of your check.</p>
+            {touched.routingNumber && routingNumberError && <p className="mt-1 px-4 text-[13px] text-red-500">{routingNumberError}</p>}
+            {touched.accountNumber && accountNumberError && <p className="mt-1 px-4 text-[13px] text-red-500">{accountNumberError}</p>}
+            {touched.confirmAccountNumber && confirmAccountNumberError && <p className="mt-1 px-4 text-[13px] text-red-500">{confirmAccountNumberError}</p>}
           </div>
-        </div>
 
-        {/* Security Badge */}
-        <div className="flex flex-col items-center justify-center mt-6 mb-8 py-6 bg-[#FDFBF9] rounded-md border border-[#EEE9E0]">
-          <div className="flex items-center space-x-2 text-[#AA4528] mb-1">
-            <LockIcon />
-            <span className="text-[14px] font-bold">Bank-level Security</span>
+          {/* ─── Security Badge ─── */}
+          <div className="flex flex-col items-center justify-center mt-6 mb-8 opacity-80">
+            <div className="flex items-center space-x-1.5 text-[#8E8E93]">
+              <span className="material-symbols-outlined text-[16px]">lock</span>
+              <span className="text-[13px] font-medium">Bank-level Security</span>
+            </div>
+            <p className="text-[11px] text-[#8E8E93] mt-1 text-center max-w-xs">
+              Your data is encrypted with 256-bit SSL security.
+            </p>
           </div>
-          <p className="text-[12px] text-[#8C8479] text-center max-w-xs">
-            Your data is encrypted with 256-bit SSL security.
-          </p>
-        </div>
+        </>}
+        </main>
 
-        {/* Bottom Skip Section */}
-        <div className="mt-8 pt-6 border-t border-[#F2F0EB]">
-          <button
-            onClick={handleSkip}
-            disabled={loading}
-            className="w-full py-3.5 rounded-md text-[14px] font-semibold text-[#8C8479] bg-[#F2F0EB] hover:bg-[#EEE9E0] transition-colors"
+        {/* ═══ iOS Fixed Footer ═══ */}
+        {!isFooterVisible && (
+          <div
+            className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-[#C6C6C8]/30 px-4 pt-3 z-50"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
+            data-onboarding-footer
           >
-            I'll do this later
-          </button>
-        </div>
-      </>}
-    </OnboardingShell>
+            <div className="max-w-lg mx-auto flex flex-col gap-3">
+              <div className="flex gap-4 h-[50px]">
+                <button onClick={handleBack} disabled={loading} className="flex-1 bg-gray-200 text-black font-semibold text-[17px] rounded-xl active:bg-gray-300 transition-colors">Back</button>
+                <button
+                  onClick={handleContinue}
+                  disabled={loading || !isFormValid()}
+                  data-onboarding-cta
+                  className={`flex-1 rounded-xl font-semibold text-[17px] flex items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20 ${
+                    isFormValid() && !loading ? 'bg-[#007AFF] text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {loading ? 'Saving...' : 'Continue'}
+                  {!loading && <span className="material-symbols-outlined text-xl">arrow_forward</span>}
+                </button>
+              </div>
+              <button onClick={handleSkip} disabled={loading} className="text-[15px] font-medium text-[#8E8E93] active:text-[#007AFF] transition-colors text-center">
+                I'll do this later
+              </button>
+            </div>
+          </div>
+        )}
+    </div>
   );
 }
 

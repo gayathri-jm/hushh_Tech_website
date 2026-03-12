@@ -47,26 +47,12 @@ Deno.serve(async (req) => {
       body: JSON.stringify(plaidBody),
     });
 
-    const text = await response.text();
-    let data: any;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      console.error('[identity-match] Non-JSON response:', text.slice(0, 200));
-      return new Response(
-        JSON.stringify({ error: 'Invalid response from Plaid', available: false }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
+    const data = await response.json();
 
     if (!response.ok) {
-      // Treat PRODUCTS_NOT_SUPPORTED / INVALID_PRODUCT as 400 not 500
-      const errorCode = data.error_code || '';
-      const isMissing = ['PRODUCTS_NOT_SUPPORTED', 'INVALID_PRODUCT', 'PRODUCT_NOT_READY',
-        'NO_ACCOUNTS', 'ITEM_NOT_FOUND'].includes(errorCode);
       return new Response(
-        JSON.stringify({ error: data.error_message, error_code: errorCode, available: false }),
-        { status: isMissing ? 400 : response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({ error: data.error_message, error_code: data.error_code }),
+        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -74,10 +60,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err: any) {
-    console.error('[identity-match] Error:', err.message);
     return new Response(
-      JSON.stringify({ error: err.message, available: false }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      JSON.stringify({ error: err.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });

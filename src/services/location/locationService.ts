@@ -20,11 +20,6 @@ import {
   COUNTRY_NAME_TO_CODE,
 } from './types';
 
-// localStorage keys for permission + location caching
-const LS_LOCATION_GRANTED = 'hushh_location_granted';
-const LS_LOCATION_CACHE = 'hushh_location_cache';
-const LS_LOCATION_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
-
 // API Endpoints
 const LOCATIONS_API = `${config.SUPABASE_URL}/functions/v1/get-locations`;
 const GEOCODE_API = `${config.SUPABASE_URL}/functions/v1/hushh-location-geocode`;
@@ -367,28 +362,15 @@ export class LocationService {
             '';
 
           const stateCode = this.parseIsoSubdivisionCode(stateIso || addr?.state_code || '');
-          /* Primary city: prefer actual city/town over sub-localities.
-             Also include state_district as pipe-separated fallback
-             so dropdown matching can try "Mahalunge|Pune" */
-          const primaryCity =
+          const city =
             addr?.city ||
             addr?.town ||
-            '';
-          const subCity =
             addr?.village ||
             addr?.hamlet ||
             addr?.suburb ||
             addr?.county ||
+            addr?.state_district ||
             '';
-          const district = addr?.state_district || '';
-
-          /* Build pipe-separated candidates for dropdown matching:
-             e.g. "Pune" or "Mahalunge|Pune" */
-          const city = primaryCity
-            || (subCity && district && subCity !== district ? `${subCity}|${district}` : '')
-            || subCity
-            || district
-            || '';
 
           const countryNameFromCode = countryCode ? this.mapIsoCodeToCountry(countryCode) : '';
 
@@ -468,48 +450,11 @@ export class LocationService {
    * 2. If GPS available → request GPS → geocode → return
    * 3. If GPS denied/unavailable → fall back to IP geolocation
    */
-  /** Save location result to localStorage cache (15 min TTL) */
-  private cacheLocationToStorage(data: LocationData): void {
-    try {
-      const payload = { data, ts: Date.now() };
-      localStorage.setItem(LS_LOCATION_CACHE, JSON.stringify(payload));
-      localStorage.setItem(LS_LOCATION_GRANTED, 'true');
-      console.log('[LocationService] Cached location to localStorage');
-    } catch { /* localStorage may be unavailable in private mode */ }
-  }
-
-  /** Read cached location from localStorage if still fresh */
-  getCachedLocationFromStorage(): LocationData | null {
-    try {
-      const raw = localStorage.getItem(LS_LOCATION_CACHE);
-      if (!raw) return null;
-      const { data, ts } = JSON.parse(raw);
-      if (Date.now() - ts > LS_LOCATION_CACHE_TTL) {
-        localStorage.removeItem(LS_LOCATION_CACHE);
-        return null;
-      }
-      return data as LocationData;
-    } catch { return null; }
-  }
-
-  /** Check if user previously granted location permission */
-  wasLocationGranted(): boolean {
-    try { return localStorage.getItem(LS_LOCATION_GRANTED) === 'true'; } catch { return false; }
-  }
-
   async detectLocation(): Promise<LocationDetectionResult> {
     try {
-      // Step 0: Check localStorage cache (avoids re-detecting within 15 min)
-      const cached = this.getCachedLocationFromStorage();
-      if (cached) {
-        console.log('[LocationService] Returning cached location from localStorage');
-        return { source: 'detected', data: cached };
-      }
-
       // Step 1: Check geolocation permission state
       const permState = await this.checkPermissionState();
-      const previouslyGranted = this.wasLocationGranted();
-      console.log('[LocationService] Permission state:', permState, 'previouslyGranted:', previouslyGranted);
+      console.log('[LocationService] Permission state:', permState);
 
       // Step 2: If GPS is available, try it first
       if (permState !== 'unavailable' && permState !== 'denied') {
@@ -521,9 +466,6 @@ export class LocationService {
           // Geocode coordinates to address via Google API
           const locationData = await this.geocodeCoordinates(coords);
           console.log('[LocationService] GPS location detected:', locationData);
-
-          // Cache to localStorage for next 15 min
-          this.cacheLocationToStorage(locationData);
 
           return {
             source: 'detected',
@@ -643,7 +585,7 @@ export class LocationService {
       // Matches the current onboarding_data schema (gps_* columns).
       gps_latitude: locationData.latitude,
       gps_longitude: locationData.longitude,
-      gps_city: (locationData.city || '').split('|')[0].trim() || null,
+      gps_city: locationData.city || null,
       gps_state: locationData.state || null,
       gps_country: countryName || locationData.country || null,
       gps_zip_code: locationData.postalCode || null,
@@ -665,7 +607,7 @@ export class LocationService {
     } satisfies Record<string, unknown>;
 
     const tryUpdate = async (payload: Record<string, unknown>) => {
-      const { error } = await config.supabaseClient!
+      const { error } = await config.supabaseClient
         .from('onboarding_data')
         .update(payload)
         .eq('user_id', userId);

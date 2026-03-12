@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  Box,
+  VStack,
+  Text,
+  Button,
+  Icon,
+  Spinner,
+} from '@chakra-ui/react';
+import {
   CheckCircle,
   AlertCircle,
   Clock,
@@ -9,7 +17,6 @@ import {
 } from 'lucide-react';
 import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
-import OnboardingShell from '../../components/OnboardingShell';
 
 type VerificationResult = 'verified' | 'processing' | 'requires_input' | 'failed' | 'loading';
 
@@ -97,152 +104,243 @@ function VerifyCompletePage() {
     navigate('/onboarding/verify');
   };
 
-  const DISPLAY_STEP = 15;
-  const PROG_TOTAL = 15;
-
   const renderContent = () => {
     switch (result) {
       case 'loading':
         return (
-          <div className="flex flex-col items-center justify-center space-y-6 py-10">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center bg-[#F7F5F0]">
-              <div className="w-10 h-10 border-4 border-[#EEE9E0] border-t-[#AA4528] rounded-full animate-spin" />
-            </div>
-            <h2 className="text-[1.8rem] font-medium text-[#151513]" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
+          <VStack spacing={6}>
+            <Box
+              w="100px"
+              h="100px"
+              borderRadius="full"
+              bg="gray.100"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Spinner size="xl" color="#2b8cee" thickness="4px" />
+            </Box>
+            <Text fontSize="2xl" fontWeight="600" color="#0B1120">
               Checking Status...
-            </h2>
-            <p className="text-[15px] text-[#8C8479] text-center max-w-sm">
+            </Text>
+            <Text color="gray.600" textAlign="center">
               Please wait while we confirm your verification.
-            </p>
-          </div>
+            </Text>
+          </VStack>
         );
 
       case 'verified':
         return (
-          <div className="flex flex-col items-center justify-center space-y-6 py-10">
-            <div className="w-24 h-24 rounded-full flex items-center justify-center bg-[#E3F2E7] animate-[pulse_2s_ease-in-out_infinite]">
-              <CheckCircle className="w-14 h-14 text-[#2D7A41]" />
-            </div>
-            <h2 className="text-[1.8rem] md:text-[2.2rem] font-medium text-[#151513]" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
-              Verification Complete
-            </h2>
-            <p className="text-[15px] text-[#8C8479] text-center max-w-sm leading-relaxed mb-4">
-              Your identity has been verified successfully. You now have full access to all features.
-            </p>
-            <button
-              onClick={handleContinue}
-              className="w-full max-w-[320px] h-[52px] flex items-center justify-center text-[13px] font-bold tracking-[0.1em] uppercase text-white bg-[#AA4528] hover:bg-[#923A1E] transition-colors rounded-[2px]"
+          <VStack spacing={6}>
+            <Box
+              w="100px"
+              h="100px"
+              borderRadius="full"
+              bg="green.100"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              animation="pulse 1s ease-in-out"
             >
-              <span className="mr-2">Continue to Profile</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
+              <Icon as={CheckCircle} boxSize={16} color="green.500" />
+            </Box>
+            <Text fontSize="2xl" fontWeight="600" color="#0B1120">
+              Verification Complete
+            </Text>
+            <Text color="gray.600" textAlign="center" maxW="400px">
+              Your identity has been verified successfully. You now have full access to all features.
+            </Text>
+            <Button
+              onClick={handleContinue}
+              h="56px"
+              w="full"
+              maxW="320px"
+              borderRadius="full"
+              bgGradient="linear(to-r, #2b8cee, #38bdf8)"
+              color="white"
+              fontWeight="600"
+              fontSize="lg"
+              rightIcon={<Icon as={ArrowRight} />}
+              boxShadow="0 10px 25px rgba(43, 140, 238, 0.35)"
+              _hover={{
+                bgGradient: 'linear(to-r, #2070c0, #2b8cee)',
+                boxShadow: '0 12px 30px rgba(43, 140, 238, 0.45)',
+              }}
+            >
+              Continue to Profile
+            </Button>
+          </VStack>
         );
 
       case 'processing':
         return (
-          <div className="flex flex-col items-center justify-center space-y-6 py-10">
-            <div className="w-24 h-24 rounded-full flex items-center justify-center bg-[#FDF9F7]">
-              <Clock className="w-14 h-14 text-[#AA4528]" />
-            </div>
-            <h2 className="text-[1.8rem] md:text-[2.2rem] font-medium text-[#151513]" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
+          <VStack spacing={6}>
+            <Box
+              w="100px"
+              h="100px"
+              borderRadius="full"
+              bg="blue.100"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Icon as={Clock} boxSize={16} color="blue.500" />
+            </Box>
+            <Text fontSize="2xl" fontWeight="600" color="#0B1120">
               Verification in Progress
-            </h2>
-            <p className="text-[15px] text-[#8C8479] text-center max-w-sm leading-relaxed">
+            </Text>
+            <Text color="gray.600" textAlign="center" maxW="400px">
               Your verification is being processed. This usually takes just a few moments.
-            </p>
-            <div className="w-full max-w-[320px] space-y-2 mt-4">
-              <div className="w-full h-1 bg-[#EEE9E0] overflow-hidden rounded-full">
-                <div className="h-full bg-[#AA4528] animate-[loading_2s_linear_infinite] w-[40%]" />
-              </div>
-              <p className="text-[13px] text-[#8C8479] text-center">
+            </Text>
+            <VStack spacing={2} w="full" maxW="320px">
+              <Box
+                w="full"
+                h="4px"
+                bg="gray.200"
+                borderRadius="full"
+                overflow="hidden"
+              >
+                <Box
+                  h="full"
+                  bgGradient="linear(to-r, #2b8cee, #38bdf8)"
+                  animation="loading 2s ease-in-out infinite"
+                  w="60%"
+                />
+              </Box>
+              <Text fontSize="sm" color="gray.500">
                 {pollingCount < 10 ? 'Checking status...' : 'Taking longer than expected'}
-              </p>
-            </div>
-            <button
+              </Text>
+            </VStack>
+            <Button
               onClick={handleContinue}
-              className="w-full max-w-[320px] mt-6 h-[52px] flex items-center justify-center text-[13px] font-bold tracking-[0.1em] uppercase text-[#151513] border border-[#151513] hover:bg-[#F7F5F0] transition-colors rounded-[2px]"
+              variant="outline"
+              h="48px"
+              w="full"
+              maxW="320px"
+              borderRadius="full"
+              borderColor="gray.300"
+              color="gray.700"
+              fontWeight="500"
+              _hover={{ bg: 'gray.50' }}
             >
               Continue Anyway
-            </button>
-            <p className="text-[12px] text-[#8C8479] mt-2">
+            </Button>
+            <Text fontSize="xs" color="gray.500" textAlign="center">
               You'll be notified when verification is complete
-            </p>
-          </div>
+            </Text>
+          </VStack>
         );
 
       case 'requires_input':
         return (
-          <div className="flex flex-col items-center justify-center space-y-6 py-10">
-            <div className="w-24 h-24 rounded-full flex items-center justify-center bg-[#FFFAEB]">
-              <AlertCircle className="w-14 h-14 text-[#B8860B]" />
-            </div>
-            <h2 className="text-[1.8rem] md:text-[2.2rem] font-medium text-[#151513]" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
-              Additional Info Needed
-            </h2>
-            <p className="text-[15px] text-[#8C8479] text-center max-w-sm leading-relaxed mb-4">
-              We need some additional information to complete your verification. Please try again.
-            </p>
-            <button
-              onClick={handleRetry}
-              className="w-full max-w-[320px] h-[52px] flex items-center justify-center text-[13px] font-bold tracking-[0.1em] uppercase text-white bg-[#AA4528] hover:bg-[#923A1E] transition-colors rounded-[2px]"
+          <VStack spacing={6}>
+            <Box
+              w="100px"
+              h="100px"
+              borderRadius="full"
+              bg="yellow.100"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              <span>Try Again</span>
-            </button>
-            <button
+              <Icon as={AlertCircle} boxSize={16} color="yellow.600" />
+            </Box>
+            <Text fontSize="2xl" fontWeight="600" color="#0B1120">
+              Additional Info Needed
+            </Text>
+            <Text color="gray.600" textAlign="center" maxW="400px">
+              We need some additional information to complete your verification. Please try again.
+            </Text>
+            <Button
+              onClick={handleRetry}
+              h="56px"
+              w="full"
+              maxW="320px"
+              borderRadius="full"
+              bgGradient="linear(to-r, #2b8cee, #38bdf8)"
+              color="white"
+              fontWeight="600"
+              fontSize="lg"
+              leftIcon={<Icon as={RefreshCw} />}
+              boxShadow="0 10px 25px rgba(43, 140, 238, 0.35)"
+              _hover={{
+                bgGradient: 'linear(to-r, #2070c0, #2b8cee)',
+              }}
+            >
+              Try Again
+            </Button>
+            <Button
               onClick={handleContinue}
-              className="mt-4 text-[13px] font-semibold text-[#8C8479] hover:text-[#151513] transition-colors"
+              variant="ghost"
+              color="gray.500"
+              fontWeight="500"
             >
               I'll do this later
-            </button>
-          </div>
+            </Button>
+          </VStack>
         );
 
       case 'failed':
         return (
-          <div className="flex flex-col items-center justify-center space-y-6 py-10">
-            <div className="w-24 h-24 rounded-full flex items-center justify-center bg-red-50">
-              <AlertCircle className="w-14 h-14 text-red-600" />
-            </div>
-            <h2 className="text-[1.8rem] md:text-[2.2rem] font-medium text-[#151513]" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
-              Verification Failed
-            </h2>
-            <p className="text-[15px] text-[#8C8479] text-center max-w-sm leading-relaxed mb-4">
-              We couldn't verify your identity. This could be due to unclear images or mismatched information.
-            </p>
-            <button
-              onClick={handleRetry}
-              className="w-full max-w-[320px] h-[52px] flex items-center justify-center text-[13px] font-bold tracking-[0.1em] uppercase text-white bg-[#AA4528] hover:bg-[#923A1E] transition-colors rounded-[2px]"
+          <VStack spacing={6}>
+            <Box
+              w="100px"
+              h="100px"
+              borderRadius="full"
+              bg="red.100"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              <span>Try Again</span>
-            </button>
-            <button
+              <Icon as={AlertCircle} boxSize={16} color="red.500" />
+            </Box>
+            <Text fontSize="2xl" fontWeight="600" color="#0B1120">
+              Verification Failed
+            </Text>
+            <Text color="gray.600" textAlign="center" maxW="400px">
+              We couldn't verify your identity. This could be due to unclear images or mismatched information.
+            </Text>
+            <Button
+              onClick={handleRetry}
+              h="56px"
+              w="full"
+              maxW="320px"
+              borderRadius="full"
+              bgGradient="linear(to-r, #2b8cee, #38bdf8)"
+              color="white"
+              fontWeight="600"
+              fontSize="lg"
+              leftIcon={<Icon as={RefreshCw} />}
+              boxShadow="0 10px 25px rgba(43, 140, 238, 0.35)"
+              _hover={{
+                bgGradient: 'linear(to-r, #2070c0, #2b8cee)',
+              }}
+            >
+              Try Again
+            </Button>
+            <Button
               onClick={handleContinue}
-              className="mt-4 text-[13px] font-semibold text-[#8C8479] hover:text-[#151513] transition-colors"
+              variant="ghost"
+              color="gray.500"
+              fontWeight="500"
             >
               Continue without verification
-            </button>
-            <p className="text-[12px] text-[#8C8479] mt-2">
+            </Button>
+            <Text fontSize="xs" color="gray.500" textAlign="center">
               Need help? Contact support@hushh.ai
-            </p>
-          </div>
+            </Text>
+          </VStack>
         );
     }
   };
 
   return (
-    <OnboardingShell
-      step={DISPLAY_STEP}
-      totalSteps={PROG_TOTAL}
-      onBack={() => navigate('/onboarding/step-13')}
-      onClose={() => navigate('/dashboard')}
-      hideFooter={true} // In this complete screen, we handle navigation via the content buttons instead of a bottom sticky footer.
-    >
-      <div className="flex flex-col items-center max-w-lg mx-auto w-full pt-8">
-        {renderContent()}
-      </div>
+    <Box className="onboarding-shell" minH="100dvh" h="100dvh" bg="white" display="flex" flexDirection="column" mx="auto">
+      <Box as="main" flex="1" minH={0} overflowY="auto" px={{ base: 4, md: 5 }} pt={{ base: 8, md: 10 }} pb={8}>
+        <Box maxW="500px" mx="auto" textAlign="center">
+          {renderContent()}
+        </Box>
+      </Box>
 
       <style>
         {`
@@ -253,11 +351,12 @@ function VerifyCompletePage() {
           }
           @keyframes loading {
             0% { transform: translateX(-100%); }
-            100% { transform: translateX(250%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
           }
         `}
       </style>
-    </OnboardingShell>
+    </Box>
   );
 }
 

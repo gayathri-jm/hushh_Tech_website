@@ -1,7 +1,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
-import { X } from "lucide-react";
+import {
+  Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
+  FormControl, FormLabel, Input, Button, VStack, Text, useToast, Box, Select
+} from '@chakra-ui/react';
 
 interface ApplicationFormProps {
   jobTitle: string;
@@ -17,7 +20,7 @@ type ApplicationFormState = {
   officialEmail: string;
   phone: string;
   resumeLink: string;
-  college: string;
+  college: string; // value (LPU/MIT)
 };
 
 const ALLOWED_COLLEGES = [
@@ -34,8 +37,7 @@ const initialState: ApplicationFormState = {
 const ApplicationForm = ({ jobTitle, jobLocation, onClose }: ApplicationFormProps) => {
   const [formData, setFormData] = useState<ApplicationFormState>(initialState);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const toast = useToast();
 
   const allowedCollegeValues = useMemo(
     () => new Set(ALLOWED_COLLEGES.map(({ value }) => value)), []
@@ -44,7 +46,6 @@ const ApplicationForm = ({ jobTitle, jobLocation, onClose }: ApplicationFormProp
   const updateFormField = useCallback(
     <K extends keyof ApplicationFormState>(field: K, value: ApplicationFormState[K]) => {
       setFormData(prev => ({ ...prev, [field]: value }));
-      setError(null);
     }, []
   );
 
@@ -55,7 +56,6 @@ const ApplicationForm = ({ jobTitle, jobLocation, onClose }: ApplicationFormProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
       const sanitized: ApplicationFormState = {
@@ -69,9 +69,11 @@ const ApplicationForm = ({ jobTitle, jobLocation, onClose }: ApplicationFormProp
         college: formData.college.trim(),
       };
 
-      if (!sanitized.firstName || !sanitized.lastName || !sanitized.email || !sanitized.collegeEmail || !sanitized.phone || !sanitized.resumeLink || !sanitized.college) {
-        throw new Error('Please complete all required fields');
-      }
+      const required: (keyof ApplicationFormState)[] = [
+        'firstName','lastName','email','collegeEmail','officialEmail','phone','resumeLink','college'
+      ];
+      const missing = required.find(f => !sanitized[f]);
+      if (missing) throw new Error('Please complete all required fields before submitting');
 
       if (!allowedCollegeValues.has(sanitized.college)) {
         throw new Error('Please select a valid college option');
@@ -85,8 +87,8 @@ const ApplicationForm = ({ jobTitle, jobLocation, onClose }: ApplicationFormProp
 
       const applicationData = {
         ...sanitized,
-        college: selectedCollege,
-        collegeValue: sanitized.college,
+        college: selectedCollege,           // label
+        collegeValue: sanitized.college,    // value (LPU/MIT)
         jobTitle,
         jobLocation,
         submittedAt: new Date().toISOString(),
@@ -97,166 +99,112 @@ const ApplicationForm = ({ jobTitle, jobLocation, onClose }: ApplicationFormProp
 
       const resp = await fetch(appsScriptUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
+        headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight
         body: JSON.stringify(applicationData),
       });
 
       const text = await resp.text();
-      let data: any = null; try { data = text ? JSON.parse(text) : null; } catch { }
+      let data: any = null; try { data = text ? JSON.parse(text) : null; } catch {}
 
       if (!resp.ok || !data?.success) {
         throw new Error(data?.error || text || 'Submission failed');
       }
 
-      setSuccess(true);
-      setTimeout(() => onClose(), 2000);
+      toast({ title: 'Application submitted successfully!', status: 'success', duration: 5000, isClosable: true });
+      setFormData(initialState);
+      onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error submitting application');
+      console.error('Submit error:', err);
+      toast({
+        title: 'Application failed',
+        description: err instanceof Error ? err.message : 'Error submitting application. Please try again.',
+        status: 'error', duration: 6000, isClosable: true,
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-xl max-h-[90vh] overflow-hidden rounded-[2rem] shadow-2xl relative flex flex-col">
-        {/* Header */}
-        <div className="p-8 border-b border-black/5 flex justify-between items-center bg-[#faf9f6]">
-          <div>
-            <h2 className="text-2xl font-['Ivar_Headline',serif] font-medium">Apply for {jobTitle}</h2>
-            <p className="text-sm text-[#666] mt-1">{jobLocation}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-black/5 rounded-full transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
+    <Modal isOpen={true} onClose={onClose} size="lg" isCentered>
+      <ModalOverlay bg="blackAlpha.700" />
+      <ModalContent borderRadius="lg" mx={4}>
+        <ModalHeader fontSize="xl">Apply for {jobTitle}</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody pb={6}>
+          <form onSubmit={handleSubmit}>
+            <VStack spacing={4} align="stretch">
+              <FormControl isRequired>
+                <FormLabel>First Name</FormLabel>
+                <Input value={formData.firstName} onChange={(e)=>updateFormField('firstName', e.target.value)} />
+              </FormControl>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-6">
-          {success ? (
-            <div className="text-center py-12 space-y-4">
-              <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-['Ivar_Headline',serif] font-medium text-green-800">Application Submitted!</h3>
-              <p className="text-[#666]">Thank you for your interest. We'll be in touch soon.</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="p-4 bg-red-50 text-red-700 text-sm font-medium border-l-4 border-red-500">
-                  {error}
-                </div>
-              )}
+              <FormControl isRequired>
+                <FormLabel>Last Name</FormLabel>
+                <Input value={formData.lastName} onChange={(e)=>updateFormField('lastName', e.target.value)} />
+              </FormControl>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-widest text-[#666]">First Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.firstName}
-                    onChange={(e) => updateFormField('firstName', e.target.value)}
-                    className="w-full h-12 px-4 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all placeholder:text-gray-300"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-widest text-[#666]">Last Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.lastName}
-                    onChange={(e) => updateFormField('lastName', e.target.value)}
-                    className="w-full h-12 px-4 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all placeholder:text-gray-300"
-                  />
-                </div>
-              </div>
+              <FormControl isRequired>
+                <FormLabel>Email</FormLabel>
+                <Input type="email" value={formData.email} onChange={(e)=>updateFormField('email', e.target.value)} />
+              </FormControl>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">Personal Email</label>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => updateFormField('email', e.target.value)}
-                  className="w-full h-12 px-4 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all"
-                />
-              </div>
+              <FormControl isRequired>
+                <FormLabel>College Email</FormLabel>
+                <Input type="email" value={formData.collegeEmail} onChange={(e)=>updateFormField('collegeEmail', e.target.value)} />
+              </FormControl>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">College Email</label>
-                <input
-                  type="email"
-                  required
-                  value={formData.collegeEmail}
-                  onChange={(e) => updateFormField('collegeEmail', e.target.value)}
-                  className="w-full h-12 px-4 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all"
-                />
-              </div>
+              {/* <FormControl isRequired>
+                <FormLabel>Official Email</FormLabel>
+                <Input type="email" value={formData.officialEmail} onChange={(e)=>updateFormField('officialEmail', e.target.value)} />
+              </FormControl> */}
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">Phone Number</label>
-                <div className="phone-container-custom">
+              <FormControl isRequired>
+                <FormLabel>Phone Number</FormLabel>
+                <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={1}>
                   <PhoneInput
-                    country={'in'}
+                    country="us"
                     value={formData.phone}
-                    onChange={(phone) => updateFormField('phone', phone)}
-                    containerClass="!w-full !h-12 border border-black/10 focus-within:border-[#AA4528] focus-within:ring-1 focus-within:ring-[#AA4528] bg-[#faf9f6] transition-all"
-                    inputClass="!w-full !h-full !border-none !bg-transparent !pl-12 !text-base"
-                    buttonClass="!bg-transparent !border-none !h-full"
+                    onChange={(phone)=>updateFormField('phone', phone)}
+                    inputStyle={{ width:'100%', border:'none', outline:'none' }}
+                    buttonStyle={{ border:'none', background:'none' }}
                   />
-                </div>
-              </div>
+                </Box>
+              </FormControl>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">College</label>
-                <select
-                  required
+              <FormControl isRequired>
+                <FormLabel>College</FormLabel>
+                <Select
+                  placeholder="Select your college"
                   value={formData.college}
-                  onChange={(e) => updateFormField('college', e.target.value)}
-                  className="w-full h-12 px-4 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all"
+                  onChange={(e)=>updateFormField('college', e.target.value)}
+                  focusBorderColor="cyan.400"
                 >
-                  <option value="">Select your college</option>
                   {ALLOWED_COLLEGES.map(({ value, label }) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
-                </select>
-              </div>
+                </Select>
+              </FormControl>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-widest text-[#666]">Resume Link</label>
-                <input
+              <FormControl isRequired>
+                <FormLabel>Resume Link</FormLabel>
+                <Input
                   type="url"
-                  required
-                  placeholder="https://drive.google.com/your-resume"
                   value={formData.resumeLink}
-                  onChange={(e) => updateFormField('resumeLink', e.target.value)}
-                  className="w-full h-12 px-4 border border-black/10 focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528] bg-[#faf9f6] outline-none transition-all"
+                  onChange={(e)=>updateFormField('resumeLink', e.target.value)}
+                  placeholder="https://drive.google.com/your-resume-link"
                 />
-                <p className="text-[10px] text-[#999] mt-1 font-medium">MUST BE A PUBLIC LINK TO YOUR RESUME</p>
-              </div>
+                <Text fontSize="sm" color="gray.500" mt={1}>Please provide a public link to your resume</Text>
+              </FormControl>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 bg-[#AA4528] text-white font-bold rounded-lg hover:bg-[#8e3a22] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-4 shadow-lg active:scale-95"
-              >
-                {loading ? (
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                ) : (
-                  'Submit Application'
-                )}
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
+              <Button type="submit" colorScheme="cyan" size="lg" isLoading={loading} w="100%" mt={4}>
+                Submit Application
+              </Button>
+            </VStack>
+          </form>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 };
 

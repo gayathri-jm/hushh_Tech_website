@@ -18,47 +18,47 @@ import HushhLogo from "./images/Hushhogo.png";
 
 /* ─── iOS Design Tokens ─── */
 const IOS = {
-  blue: "#AA4528",
-  blueActive: "#8B3820",
+  blue: "#007AFF",
+  blueActive: "#0062CC",
   bg: "#F2F2F7",
   bgWhite: "#FFFFFF",
   text: "#000000",
   subtext: "#86868B",
   separator: "#C6C6C8",
   fillGray: "rgba(118,118,128,0.12)",
-  font: 'Ivar Display,Source Sans Pro,Helvetica Neue,Helvetica,Arial,sans-serif',
-  fontDisplay: 'Ivar Display,Source Sans Pro,Helvetica Neue,Helvetica,Arial,sans-serif',
+  font: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+  fontDisplay: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif',
 };
 
 /* ─── Inline SVG Icons (no external deps) ─── */
 const PsychologyIcon = () => (
   <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.22.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" fill={IOS.blue} opacity="0.8" />
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.22.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" fill={IOS.blue} opacity="0.8"/>
   </svg>
 );
 
 const SparkIcon = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-    <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z" fill="white" />
+    <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z" fill="white"/>
   </svg>
 );
 
 const ShieldIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" fill="#8E8E93" />
+    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" fill="#8E8E93"/>
   </svg>
 );
 
 const LockSmallIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <rect x="5" y="11" width="14" height="10" rx="2" fill="#8E8E93" />
-    <path d="M8 11V8a4 4 0 118 0v3" stroke="#8E8E93" strokeWidth="2" fill="none" />
+    <rect x="5" y="11" width="14" height="10" rx="2" fill="#8E8E93"/>
+    <path d="M8 11V8a4 4 0 118 0v3" stroke="#8E8E93" strokeWidth="2" fill="none"/>
   </svg>
 );
 
 const ChevronRight = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-    <path d="M9 6l6 6-6 6" stroke="#C7C7CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M9 6l6 6-6 6" stroke="#C7C7CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
@@ -225,7 +225,7 @@ export default function Hero() {
       return { text: "Complete Your Hushh Profile", action: () => navigate("/investor-profile"), loading: false };
     }
     if (onboardingStatus.loading) {
-      return { text: "Loading...", action: () => { }, loading: true };
+      return { text: "Loading...", action: () => {}, loading: true };
     }
     if (onboardingStatus.hasProfile || onboardingStatus.isCompleted) {
       return { text: "View Your Profile", action: () => navigate("/hushh-user-profile"), loading: false };

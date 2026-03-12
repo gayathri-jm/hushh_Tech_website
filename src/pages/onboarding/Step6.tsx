@@ -1,8 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
+import { useFooterVisibility } from '../../utils/useFooterVisibility';
 import { locationService, type LocationData } from '../../services/location';
-import OnboardingShell from '../../components/OnboardingShell';
+import { OnboardingStepProgress } from '../../components/onboarding/OnboardingStepProgress';
+
+// Back arrow icon
+const BackIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+);
 
 // Chevron down icon for select
 const ChevronDownIcon = () => (
@@ -71,6 +79,7 @@ export default function OnboardingStep6() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
+  const isFooterVisible = useFooterVisibility();
   const isUnmountedRef = useRef(false);
 
   useEffect(() => {
@@ -138,7 +147,7 @@ export default function OnboardingStep6() {
 
     const getCurrentUser = async () => {
       if (!config.supabaseClient) return;
-
+      
       const { data: { user } } = await config.supabaseClient.auth.getUser();
       if (!user) {
         navigate('/login');
@@ -176,7 +185,7 @@ export default function OnboardingStep6() {
     };
 
     getCurrentUser();
-
+    
     return () => {
       isUnmountedRef.current = true;
       locationService.cancel();
@@ -213,7 +222,7 @@ export default function OnboardingStep6() {
   const formatPhoneNumber = (value: string) => {
     // Remove all non-digits
     const digits = value.replace(/\D/g, '');
-
+    
     // Format as (XXX) XXX-XXXX
     if (digits.length <= 3) {
       return digits;
@@ -234,79 +243,122 @@ export default function OnboardingStep6() {
   const isValidPhone = phoneNumber.length >= 10;
 
   return (
-    <OnboardingShell
-      step={6}
-      totalSteps={12}
-      onBack={handleBack}
-      onClose={() => navigate('/dashboard')}
-      continueLabel={isLoading ? 'Saving…' : 'Continue'}
-      onContinue={handleContinue}
-      continueDisabled={!isValidPhone || isLoading}
-      continueLoading={isLoading}
+    <div 
+      className="bg-slate-50 min-h-screen"
+      style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      {/* ── Title ── */}
-      <div className="mb-8 text-center sm:text-left">
-        <h1
-          className="text-[2.2rem] md:text-[2.6rem] font-medium leading-tight text-[#151513] mb-3"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
-        >
-          Enter your phone number
-        </h1>
-        <p className="text-[15px] text-[#8C8479] leading-relaxed">
-          We'll send a confirmation code to verify your identity.
-        </p>
+      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
+        
+        {/* Sticky Header */}
+        <header className="flex items-center px-4 pt-6 pb-4 bg-white/95 backdrop-blur-sm sticky top-0 z-10">
+          <button 
+            onClick={handleBack}
+            className="flex items-center gap-1 text-slate-900 hover:text-[#2b8cee] transition-colors"
+          >
+            <BackIcon />
+            <span className="text-base font-bold tracking-tight">Back</span>
+          </button>
+          <div className="flex-1" />
+        </header>
 
-        {locationMessage && (
-          <div className="mt-4 flex sm:justify-start justify-center">
-            <div className="inline-flex items-center gap-2 rounded-md bg-[#F7F5F0] px-3 py-1.5 border border-[#EEE9E0] text-[12px] font-medium text-[#AA4528]">
-              {isDetectingLocation && (
-                <span className="h-1.5 w-1.5 rounded-full bg-[#AA4528] animate-pulse" aria-hidden="true" />
-              )}
-              <span>{locationMessage}</span>
+        <OnboardingStepProgress currentStep={6} />
+
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col px-4 sm:px-6 pb-40 sm:pb-48">
+          {/* Header Section - Center Aligned */}
+          <div className="mb-8 text-center">
+            <h1 className="text-slate-900 text-[22px] font-bold leading-tight tracking-tight mb-3">
+              Enter your phone number
+            </h1>
+            <p className="text-slate-500 text-[14px] font-normal leading-relaxed">
+              We'll send a confirmation code to verify your identity.
+            </p>
+
+            {locationMessage && (
+              <div className="mt-4 flex justify-center">
+                <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                  {isDetectingLocation && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#2b8cee] animate-pulse" aria-hidden="true" />
+                  )}
+                  <span>{locationMessage}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Phone Input Form */}
+          <div className="flex flex-col gap-4">
+            {/* Phone Input Group */}
+            <div className="flex w-full items-center gap-3">
+              {/* Country Code Selector */}
+              <div className="relative h-14 w-[110px] flex-shrink-0">
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="h-full w-full appearance-none rounded-full border border-gray-200 bg-white pl-4 pr-8 text-base font-bold text-slate-900 focus:border-[#2b8cee] focus:outline-none focus:ring-1 focus:ring-[#2b8cee] cursor-pointer"
+                >
+                  {countryCodes.map((country) => (
+                    <option key={`${country.country}-${country.code}`} value={country.code}>
+                      {country.flag} {country.code}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">
+                  <ChevronDownIcon />
+                </div>
+              </div>
+
+              {/* Phone Number Input */}
+              <div className="relative h-14 flex-1">
+                <input
+                  type="tel"
+                  value={formatPhoneNumber(phoneNumber)}
+                  onChange={handlePhoneChange}
+                  placeholder="(555) 000-0000"
+                  className="h-full w-full rounded-full border border-gray-200 bg-white px-5 text-base font-semibold text-slate-900 placeholder:text-slate-400 focus:border-[#2b8cee] focus:outline-none focus:ring-1 focus:ring-[#2b8cee] transition-all"
+                />
+              </div>
             </div>
+
+            {/* Helper Text */}
+            <p className="px-2 text-xs font-medium text-slate-400">
+              Standard message and data rates may apply.
+            </p>
+          </div>
+        </main>
+
+        {/* Fixed Footer - Hidden when main footer is visible */}
+        {!isFooterVisible && (
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto border-t border-slate-100 bg-white/90 backdrop-blur-md px-4 sm:px-6 pt-4 sm:pt-5 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-3 sm:gap-4"
+            data-onboarding-footer
+          >
+            {/* Continue Button */}
+            <button
+              onClick={handleContinue}
+              disabled={!isValidPhone || isLoading}
+              data-onboarding-cta
+              className={`
+                flex w-full cursor-pointer items-center justify-center rounded-full h-11 sm:h-12 px-6 text-sm sm:text-base font-semibold transition-all active:scale-[0.98]
+                ${isValidPhone && !isLoading
+                  ? 'bg-[#2b8cee] hover:bg-[#2070c0] text-white shadow-md shadow-[#2b8cee]/20'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                }
+              `}
+            >
+              {isLoading ? 'Saving...' : 'Continue'}
+            </button>
+            
+            {/* Back Button */}
+            <button
+              onClick={handleBack}
+              className="flex w-full cursor-pointer items-center justify-center rounded-full bg-transparent py-2 text-slate-500 text-sm font-semibold hover:text-slate-800 transition-colors"
+            >
+              Back
+            </button>
           </div>
         )}
       </div>
-
-      {/* Phone Input Form */}
-      <div className="flex flex-col gap-4 mb-8">
-        {/* Phone Input Group */}
-        <div className="flex bg-white border border-[#EEE9E0] rounded-md overflow-hidden focus-within:border-[#AA4528] focus-within:ring-1 focus-within:ring-[#AA4528]/20 transition-all">
-          {/* Country Code Selector */}
-          <div className="relative h-12 w-[110px] flex-shrink-0 border-r border-[#EEE9E0] bg-[#F7F5F0]">
-            <select
-              value={countryCode}
-              onChange={(e) => setCountryCode(e.target.value)}
-              className="h-full w-full appearance-none bg-transparent pl-4 pr-8 text-[15px] font-medium text-[#151513] focus:outline-none cursor-pointer"
-            >
-              {countryCodes.map((country) => (
-                <option key={`${country.country}-${country.code}`} value={country.code}>
-                  {country.flag} {country.code}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[#8C8479]">
-              <span className="material-symbols-outlined text-[18px]">expand_more</span>
-            </div>
-          </div>
-
-          {/* Phone Number Input */}
-          <div className="relative h-12 flex-1">
-            <input
-              type="tel"
-              value={formatPhoneNumber(phoneNumber)}
-              onChange={handlePhoneChange}
-              placeholder="(555) 000-0000"
-              className="h-full w-full bg-transparent px-4 text-[15px] text-[#151513] placeholder-[#C4BFB5] focus:outline-none transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Helper Text */}
-        <p className="text-[11px] text-[#8C8479]">
-          Standard message and data rates may apply.
-        </p>
-      </div>
-    </OnboardingShell>
+    </div>
   );
 }

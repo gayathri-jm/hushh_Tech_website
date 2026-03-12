@@ -29,8 +29,8 @@ Deno.serve(async (req) => {
       user: { client_user_id: userId, email_address: userEmail },
       client_name: 'Hushh',
       products: ['auth'],
-      required_if_supported_products: ['identity', 'investments'],
-      additional_consented_products: ['signal', 'liabilities', 'transactions'],
+      required_if_supported_products: ['identity'],
+      additional_consented_products: ['signal'],
       country_codes: ['US'],
       language: 'en',
     };

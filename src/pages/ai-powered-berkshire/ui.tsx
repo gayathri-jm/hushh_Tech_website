@@ -13,7 +13,7 @@ const AIPoweredBerkshirePage = () => {
         <meta name="description" content={pageDescription} />
       </Helmet>
 
-      <Box
+      <Box 
         position="fixed"
         top="64px"
         left="0"
@@ -25,7 +25,7 @@ const AIPoweredBerkshirePage = () => {
         margin="0"
         padding="0"
         zIndex="999"
-        bg="#faf9f6"
+        bg="white"
       >
         <Box
           as="iframe"

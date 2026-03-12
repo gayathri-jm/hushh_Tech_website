@@ -1,336 +1,1035 @@
-import React, { useState } from "react";
-import { ChevronDown, ChevronRight, Play } from "lucide-react";
+import {
+  Box,
+  Button,
+  Divider,
+  Heading,
+  HStack,
+  List,
+  ListItem,
+  Text,
+  UnorderedList,
+  VStack,
+} from "@chakra-ui/react";
+import { Image } from "@chakra-ui/react";
 import Companion from "../../svg/companion.svg";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+} from "@chakra-ui/react";
+import { ChevronDownIcon } from "lucide-react";
 
 const Consumers = () => {
-  const [openAccordion, setOpenAccordion] = useState<number | null>(0);
-
-  const walletFeatures = [
-    {
-      title: "Unify your Scattered Data",
-      description: "Collect your data from phones, apps, brands, and data giants creating a comprehensive digital profile."
-    },
-    {
-      title: "Curate your Identity",
-      description: "Manage and refine your digital identity to reflect your true self."
-    },
-    {
-      title: "Unlock Personalized Experiences",
-      description: "Share your data to receive tailored experiences and offers."
-    },
-    {
-      title: "Get Rewarded",
-      description: "Earn rewards for sharing your data with trusted partners."
-    },
-    {
-      title: "Transparency and Control",
-      description: "Maintain full control over who accesses your data and how it is used."
-    }
-  ];
-
-  const companionFeatures = [
-    {
-      title: "Discover Your Digital Self",
-      content: [
-        "Track Your Browsing: Gain insights into your online behavior and interests.",
-        "Evolving Interests: Watch how your preferences change over time.",
-        "Data Control: Choose exactly what information you want to collect."
-      ]
-    },
-    {
-      title: "Shop Smarter, Not Harder",
-      content: [
-        "Cross-Brand Shopping Cart: Compare products across different websites with ease.",
-        "Curated Collections: Save and organize products you love.",
-        "Link Library: Keep all your favorite content just a click away."
-      ]
-    },
-    {
-      title: "Your Data, Your Way",
-      content: [
-        "Personal Insights: Understand your digital footprint like never before.",
-        "Data Portability: Easily export your information for personal use.",
-        "Future-Ready: Coming soon - Hushh Wallet for secure, consensual data monetization."
-      ]
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-[#151515] font-['Source_Sans_Pro',sans-serif]">
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 max-w-7xl mx-auto text-center">
-        <h1 className="text-[#AA4528] uppercase tracking-widest text-sm font-semibold mb-6">
+    <>
+      <Box
+        gap={{ md: "3rem", base: "1rem" }}
+        display={"flex"}
+        flexDirection={"column"}
+        alignItems={"center"}
+        justifyContent={"center"}
+        w={"100%"}
+        minH={"100vh"}
+      >
+        <Heading
+          fontWeight={"700"}
+          lineHeight={"1.2"}
+          fontSize={{ md: "1.25rem", base: "0.65rem" }}
+          as={"h1"}
+          color={"rgba(61,61,145,1)"}
+          mt={{md:'4rem',base:'2rem'}}
+        >
           For Consumers
-        </h1>
-        <h2 className="text-5xl md:text-7xl font-['Ivar_Headline',serif] font-medium leading-tight mb-8">
-          Own Your Data,<br />Unlock Its Value
-        </h2>
-        <p className="text-2xl font-semibold text-[#434343] mb-6">
+        </Heading>
+        <Text
+          fontSize={{ md: "2.83rem", base: "1.41rem" }}
+          lineHeight={"1.2"}
+          fontWeight={"700"}
+          as={"h2"}
+          color={"#1c1c1c"}
+        >
+          Own Your Data, <br></br> Unlock Its Value{" "}
+        </Text>
+        <Text
+          color={"#434343"}
+          fontWeight={"700"}
+          lineHeight={"1.2"}
+          fontSize={{ md: "1.5rem", base: "0.8rem" }}
+        >
           Your Data, Your Rules. Get Rewarded for What You Share.
-        </p>
-        <p className="text-lg text-[#666] max-w-3xl mx-auto leading-relaxed">
+        </Text>
+        <Text
+          fontWeight={"400"}
+          fontSize={{ md: "1rem", base: "0.5rem" }}
+          lineHeight={"1.2"}
+        >
           Take control of your digital footprint and unlock personalized
           experiences and exclusive rewards with Hushh's suite of products.
-        </p>
+        </Text>
+        <HStack spacing={4} justifyContent="center" w="100%" minW={"100%"}>
+          <Box
+            bg="black"
+            color="white"
+            borderRadius="3xl"
+            overflow="hidden"
+            // maxW="sm"
+            textAlign="center"
+          >
+            <Image
+              src="/gif/typing.gif"
+              alt="Hushh Companion Hushh Browser Companion"
+              width={"340px"}
+              height={"220px"}
+            />
+            <Box
+              p={4}
+              bg={"rgba(28,28,28,1)"}
+              color={"white"}
+            >
+              <Text
+                fontWeight="400"
+                fontSize={{ md: "0.75rem", base: "0.45rem" }}
+              >
+                Hushh Companion
+              </Text>
+              <Text
+                fontWeight={"600"}
+                fontSize={{ md: "1.25rem", base: "0.75rem" }}
+              >
+                Track Your Digital <br></br> Footprint
+              </Text>
+            </Box>
+          </Box>
 
-        {/* Product Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-          <div className="bg-[#151515] rounded-[2rem] overflow-hidden group">
-            <img src="/gif/typing.gif" alt="Hushh Companion" className="w-full h-56 object-cover" />
-            <div className="p-8 text-white">
-              <span className="text-xs uppercase tracking-widest block mb-2 opacity-70">Hushh Companion</span>
-              <h3 className="text-2xl font-['Ivar_Headline',serif] font-medium">Track Your Digital<br />Footprint</h3>
-            </div>
-          </div>
+          <Box
+            bg="black"
+            color="white"
+            borderRadius="3xl"
+            overflow="hidden"
+            // maxW="sm"
+            textAlign="center"
+          >
+            <Image
+              src="/images/fendiCards.png"
+              alt="Hushh Wallet"
+              width={"460px"}
+              height={"370px"}
+            />
+            <Box p={4} bg={"rgba(28,28,28,1)"} color={"white"}>
+              <Text
+                fontWeight="400"
+                fontSize={{ md: "0.75rem", base: "0.45rem" }}
+              >
+                Hushh Wallet
+              </Text>
+              <Text
+                fontWeight={"600"}
+                fontSize={{ md: "1.25rem", base: "0.75rem" }}
+              >
+                Your Personal Data, <br></br> Your Powerhouse
+              </Text>
+            </Box>
+          </Box>
 
-          <div className="bg-[#151515] rounded-[2rem] overflow-hidden group">
-            <img src="/images/fendiCards.png" alt="Hushh Wallet" className="w-full h-80 object-cover" />
-            <div className="p-8 text-white">
-              <span className="text-xs uppercase tracking-widest block mb-2 opacity-70">Hushh Wallet</span>
-              <h3 className="text-2xl font-['Ivar_Headline',serif] font-medium">Your Personal Data,<br />Your Powerhouse</h3>
-            </div>
-          </div>
+          <Box
+            bg="black"
+            color="white"
+            borderRadius="3xl"
+            overflow="hidden"
+            // maxW="sm"
+            textAlign="center"
+          >
+            <Image
+              src="/images/dressImage.png"
+              alt="Vibe Search"
+              width={"340px"}
+              height={"220px"}
+            />
+            <Box p={4} bg={"rgba(28,28,28,1)"} color={"white"}>
+              <Text
+                fontWeight="400"
+                fontSize={{ md: "0.75rem", base: "0.45rem" }}
+              >
+                Vibe Search
+              </Text>
+              <Text
+                fontWeight={"600"}
+                fontSize={{ md: "1.25rem", base: "0.75rem" }}
+              >
+                Stop Scrolling, <br></br> Start Discovering!
+              </Text>
+            </Box>
+          </Box>
+        </HStack>
+      </Box>
 
-          <div className="bg-[#151515] rounded-[2rem] overflow-hidden group">
-            <img src="/images/dressImage.png" alt="Vibe Search" className="w-full h-56 object-cover" />
-            <div className="p-8 text-white">
-              <span className="text-xs uppercase tracking-widest block mb-2 opacity-70">Vibe Search</span>
-              <h3 className="text-2xl font-['Ivar_Headline',serif] font-medium">Stop Scrolling,<br />Start Discovering!</h3>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HStack
+        bg={"#D9D2E9"}
+                  px={{md:'10rem',base:'0'}}
+        mt={{ md: "3rem", base: "1rem" }}
+        gap={{ md: "6rem", base: "1rem" }}
+        padding={{ md: "2rem", base: "0.5" }}
+        spacing={4}
+        alignItems={"center"}
+        w={"100%"}
+      >
+        <Box
+          as="div"
+          className="embed-container"
+          w="100%"
+          maxW="400px"
+          overflow="hidden"
+          position="relative"
+          paddingBottom="56.25%"
+        >
+          <iframe
+            src="https://www.youtube.com/embed/igf1PYq1WOM"
+            title="Hushh User Journey"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "85%",
+            }}
+          ></iframe>
+        </Box>
 
-      {/* Video Intro Section */}
-      <section className="bg-[#D9D2E9] py-20 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:row items-center gap-12">
-          <div className="w-full md:w-1/2 aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl relative group">
-            <iframe
-              src="https://www.youtube.com/embed/igf1PYq1WOM"
-              title="Hushh User Journey"
-              className="absolute inset-0 w-full h-full border-0"
-              allowFullScreen
-            ></iframe>
-          </div>
-          <div className="w-full md:w-1/2 text-left space-y-6">
-            <h2 className="text-4xl font-['Ivar_Headline',serif] font-medium text-[#434343]">Imagine This</h2>
-            <p className="text-lg text-[#666] leading-relaxed">
-              You walk into your favorite store, and the sales agent understands
-              your style, size, and even your vibe. They offer you personalized
-              recommendations and exclusive discounts, all because you've chosen
-              to share relevant information with them.
-            </p>
-            <p className="text-xl font-bold text-[#434343]">
-              This is the power of Hushh Wallet.
-            </p>
-          </div>
-        </div>
-      </section>
+        <Box
+          // maxW={{ md: "35rem", base: "100%" }}
+          p={4}
+          textAlign={"left"}
+          display={"flex"}
+          flexDirection={"column"}
+          gap={{ md: "2rem", base: "1rem" }}
+        >
+          <Text
+            fontSize={{ md: "2rem", base: "1.2rem" }}
+            fontWeight="500"
+            lineHeight="1.2"
+            color="#434343"
+          >
+            Imagine This
+          </Text>
+          <Text
+            mr={{ md: "6rem", base: "0" }}
+            color={"#666666"}
+            fontWeight={"400"}
+            lineHeight={"1.2"}
+            fontSize={{ md: "1rem", base: "0.65rem" }}
+          >
+            You walk into your favorite store, and the sales agent understands
+            your style, size, and even your vibe. They offer you personalized
+            recommendations and exclusive discounts, all because you've chosen
+            to share relevant information with them.
+          </Text>
+          <Text
+            color={"#666666"}
+            fontWeight={"700"}
+            lineHeight={"1.2"}
+            fontSize={{ md: "1rem", base: "0.65rem" }}
+          >
+            This is the power of Hushh Wallet.
+          </Text>
+        </Box>
+      </HStack>
 
-      {/* Hushh Wallet Detail */}
-      <section className="py-24 px-4 text-center">
-        <h2 className="text-4xl font-['Ivar_Headline',serif] font-medium mb-4">Hushh Wallet</h2>
-        <p className="text-xl font-medium text-[#434343] mb-12 max-w-3xl mx-auto">
+      <VStack bg={"#F5F5F7"} p={{ md: "4rem", base: "1rem" }}>
+        <Text
+          fontSize={{ md: "2.3rem", base: "1.15rem" }}
+          color={"#1c1c1c"}
+          fontWeight={"700"}
+          lineHeight={"1.2"}
+        >
+          Hushh Wallet
+        </Text>
+        <Text
+          fontSize={{ md: "1.16rem", base: "0.65rem" }}
+          color={"#434343"}
+          fontWeight={"600"}
+          lineHeight={"1.2"}
+        >
           Take control of your digital identity and unlock a world of
           personalized experiences and rewards.
-        </p>
-        <img src="/images/mobile.png" alt="Hushh Wallet App" className="mx-auto max-w-full h-auto mb-12" />
+        </Text>
+        <Image src="/images/mobile.png" alt="Hushh Wallet App" />
+        <Text
+          color={"#434343"}
+          fontWeight={"400"}
+          fontSize={{ md: "1.5rem", base: "0.75rem" }}
+          lineHeight={"1.2"}
+        >
+          We live in a{" "}
+          <span style={{ fontWeight: "500" }}>data-driven world.</span>
+        </Text>
+        <Text
+          color={"#434343"}
+          fontWeight={"400"}
+          fontSize={{ md: "1.5rem", base: "0.75rem" }}
+          lineHeight={"1.2"}
+        >
+          Every online interaction, every purchase, every click leaves a digital
+          footprint.
+        </Text>
+        <Text
+          color={"#434343"}
+          fontWeight={"400"}
+          fontSize={{ md: "1.5rem", base: "0.75rem" }}
+          lineHeight={"1.2"}
+        >
+          Hushh Wallet empowers you to{" "}
+          <span style={{ fontWeight: "500" }}>take control</span> of that data
+          and{" "}
+          <span style={{ fontWeight: "500" }}>use it to your advantage.</span>
+        </Text>
+      </VStack>
 
-        <div className="space-y-4 text-xl text-[#434343] mb-16">
-          <p>We live in a <span className="font-semibold italic">data-driven world.</span></p>
-          <p>Every online interaction, every purchase, every click leaves a digital footprint.</p>
-          <p>Hushh Wallet empowers you to <span className="font-semibold text-[#AA4528]">take control</span> of that data and <span className="font-semibold text-[#AA4528]">use it to your advantage.</span></p>
-        </div>
-
-        {/* Wallet Accordion Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 max-w-7xl mx-auto px-4">
-          {walletFeatures.map((feature, index) => (
-            <div
-              key={index}
-              className={`p-8 rounded-2xl text-left transition-all cursor-pointer ${openAccordion === index ? 'bg-white shadow-xl ring-2 ring-[#AA4528]/10' : 'bg-[#e5e7eb] hover:bg-white/50'
-                }`}
-              onClick={() => setOpenAccordion(openAccordion === index ? null : index)}
+      <Accordion
+        allowToggle
+        minW={"100%"}
+        w="100%"
+        flexDirection="row"
+        p={{ md: "4rem", base: "1rem" }}
+        display="flex"
+        justifyContent="center"
+      >
+        <AccordionItem>
+          <Box
+            bg="purple.200"
+            p={4}
+            w={{ md: "250px", base: "150px" }}
+            h={{ md: "200px", base: "100px" }}
+            m={2}
+            borderRadius="md"
+            textAlign="center"
+          >
+            <AccordionButton
+              display="flex"
+              flexDirection="column"
+              justifyContent="space-between"
+              alignItems="center"
+              h="100%"
             >
-              <h4 className="text-xl font-['Ivar_Headline',serif] font-medium mb-4">{feature.title}</h4>
-              <div className={`overflow-hidden transition-all duration-300 ${openAccordion === index ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <p className="text-sm text-[#666] leading-relaxed">{feature.description}</p>
-              </div>
-              <ChevronDown className={`mt-4 w-6 h-6 text-[#AA4528] transition-transform ${openAccordion === index ? 'rotate-180' : ''}`} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Glimpse Section */}
-      <section className="bg-white py-20 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:row items-center gap-16">
-          <h2 className="text-4xl font-['Ivar_Headline',serif] font-medium w-full md:w-1/3 text-left">Glimpse into Hushh Wallet</h2>
-          <div className="w-full md:w-2/3 aspect-video bg-black rounded-2xl overflow-hidden shadow-xl">
-            <iframe
-              className="w-full h-full border-0"
-              src="https://www.youtube.com/embed/WYppPoOSi7k?si=yMlu5PUzuZhueJZm"
-              title="YouTube video player"
-              allowFullScreen
-            ></iframe>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto flex flex-col md:row items-center gap-12 mt-20 p-12 bg-[#faf9f6] rounded-[2.5rem]">
-          <div className="flex-1 text-left">
-            <p className="text-2xl font-bold text-[#434343] leading-snug mb-8">
-              Hushh Wallet is more than just an app; it's a movement.<br />
-              Download and unlock the true power of your personal data.
-            </p>
-            <button
-              onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSeIQF0GhLxmwEHrmOpMRQVlxuJBtQYUP2oT_GQt16h8oyw2Dg/viewform", "_blank")}
-              className="bg-[#AA4528] text-white px-10 py-4 rounded-lg font-bold hover:bg-[#8e3a22] transition-colors"
-            >
-              Want to have Wallet capabilities in your brand?
-            </button>
-          </div>
-          <img src="/images/QRWallet.png" alt="Hushh Wallet QR Code" className="w-64 h-64 shadow-lg rounded-2xl" />
-        </div>
-      </section>
-
-      {/* Hushh Companion Section */}
-      <section className="py-24 px-4 bg-[#faf9f6]">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-5xl font-['Ivar_Headline',serif] font-medium mb-6">Hushh Companion</h2>
-          <p className="text-xl font-medium text-[#434343] mb-16 max-w-4xl mx-auto leading-relaxed">
-            More than just a Chrome extension – it's your personal companion for a
-            smarter, more organized digital life.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {companionFeatures.map((f, i) => (
-              <div key={i} className="bg-white p-10 rounded-[2rem] text-left shadow-md hover:shadow-xl transition-shadow group">
-                <h4 className="text-2xl font-['Ivar_Headline',serif] font-medium mb-6 group-hover:text-[#AA4528] transition-colors">{f.title}</h4>
-                <ul className="space-y-4">
-                  {f.content.map((item, j) => (
-                    <li key={j} className="flex gap-3 text-[#666] leading-relaxed">
-                      <ChevronRight className="w-5 h-5 text-[#AA4528] shrink-0 mt-1" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-20 flex flex-col md:row items-center justify-center gap-12">
-            <div className="w-full md:w-2/3 aspect-video bg-black rounded-2xl overflow-hidden shadow-xl">
-              <iframe
-                className="w-full h-full border-0"
-                src="https://www.youtube.com/embed/371l4LVRcwo?si=RcUlPxi17GAUWJLS"
-                title="Hushh Browser Companion"
-                allowFullScreen
-              ></iframe>
-            </div>
-            <div className="flex flex-col items-center gap-8">
-              <img src={Companion} alt="Hushh Browser Companion" className="w-48 h-48 opacity-90" />
-              <button
-                onClick={() => window.open("https://chromewebstore.google.com/detail/hushh-browser-companion/glmkckchoggnebfiklpbiajpmjoagjgj?authuser=0&hl=en", "_blank")}
-                className="bg-[#AA4528] text-white px-10 py-4 rounded-lg font-bold hover:bg-[#8e3a22] transition-colors"
+              <Box
+                as="span"
+                flex="1"
+                fontWeight="500"
+                fontSize={{ md: "1.5rem", base: "1rem" }}
+                alignSelf="flex-start"
               >
-                Add to Chrome today
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+                Unify your Scattered Data
+              </Box>
+              <ChevronDownIcon
+                style={{
+                  background: "#5f6368",
+                  color: "white",
+                  borderRadius: "50%",
+                }}
+                stroke="white"
+                alignSelf="flex-end"
+              />
+            </AccordionButton>
+          </Box>
+          <AccordionPanel pb={4} fontSize={{ md: "1rem", base: "0.8rem" }}>
+            Collect your data from phones, apps, brands, and data giants
+            creating a comprehensive digital profile.
+          </AccordionPanel>
+        </AccordionItem>
 
-      {/* Vibe Search Section */}
-      <section className="py-24 px-4 bg-white">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-5xl font-['Ivar_Headline',serif] font-medium mb-4">Vibe Search</h2>
-          <p className="text-2xl font-['Ivar_Headline',serif] text-[#AA4528] mb-8">Stop Searching, Start Vibing.</p>
-          <p className="text-xl text-[#434343] mb-16 max-w-2xl mx-auto leading-relaxed">
-            Find your perfect outfit effortlessly with AI-powered fashion search.
-          </p>
-
-          <div className="flex flex-col lg:row items-center gap-16 mb-24">
-            <div className="w-full lg:w-[400px] shrink-0">
-              <iframe
-                width="360"
-                height="615"
-                src="https://www.youtube.com/embed/gGFm5QVsJwg?si=LIBm-M3--HA10I7g"
-                title="Vibe Search Demo"
-                className="rounded-[2.5rem] shadow-2xl mx-auto border-[10px] border-[#151515]"
-                allowFullScreen
-              ></iframe>
-            </div>
-            <div className="flex-1 text-left space-y-12">
-              <div className="space-y-4">
-                <h4 className="text-3xl font-['Ivar_Headline',serif] font-medium">Unleash the Power of AI Search</h4>
-                <p className="text-lg text-[#666] leading-relaxed">
-                  Describe what you want using natural language - "boho summer
-                  dress," "Dark academia aesthetic outfits for fall," "minimal
-                  office outfit," – Vibe Search understands!
-                </p>
-              </div>
-
-              <div className="bg-[#faf9f6] p-10 rounded-[2rem] border border-[#e5e7eb]">
-                <h5 className="text-[#AA4528] font-bold uppercase tracking-widest text-sm mb-6">Try Vibe Search Now</h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    "Boho Summer Dress", "Casual Summer Dress",
-                    "Minimal Office Outfit", "Bold Office Outfits",
-                    "Summer Beach Party", "Ball Dresses",
-                    "Streetwear for Men", "Floral and Striped"
-                  ].map((query, idx) => (
-                    <div key={idx} className="flex items-center gap-3 text-[#555] font-medium p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                      <Play className="w-4 h-4 text-[#AA4528] fill-[#AA4528]" />
-                      {query}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col lg:row-reverse items-center gap-16">
-            <div className="w-full lg:w-[400px] shrink-0">
-              <iframe
-                width="360"
-                height="615"
-                src="https://www.youtube.com/embed/4tH9j6kIQ0Q?si=3kp9oBbXRdh7Ewab"
-                title="Vibe Search Personalization"
-                className="rounded-[2.5rem] shadow-2xl mx-auto border-[10px] border-[#151515]"
-                allowFullScreen
-              ></iframe>
-            </div>
-            <div className="flex-1 text-left space-y-10">
-              <h4 className="text-3xl font-['Ivar_Headline',serif] font-medium">Personalization That Gets You</h4>
-              <div className="space-y-8">
-                <div>
-                  <h6 className="text-xl font-bold mb-2">Your Style, Your Feed</h6>
-                  <p className="text-lg text-[#666]">Vibe Search learns what you love. The more you interact, the more tailored your results become.</p>
-                </div>
-                <div>
-                  <h6 className="text-xl font-bold mb-2">Effortless Discovery</h6>
-                  <p className="text-lg text-[#666]">Just browse and like products – Vibe Search personalizes your experience automatically.</p>
-                </div>
-                <div>
-                  <h6 className="text-xl font-bold mb-2">Control Your Style Journey</h6>
-                  <p className="text-lg text-[#666]">Soon you'll be able to fine-tune your preferences for ultimate control.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-24 p-16 bg-[#151515] rounded-[3rem] text-white">
-            <h4 className="text-3xl font-['Ivar_Headline',serif] font-medium mb-6">Ready to find your perfect fashion match?</h4>
-            <p className="text-xl mb-10 opacity-80">Start vibing with Vibe Search today!</p>
-            <button
-              onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSeIQF0GhLxmwEHrmOpMRQVlxuJBtQYUP2oT_GQt16h8oyw2Dg/viewform", "_blank")}
-              className="bg-[#AA4528] text-white px-12 py-5 rounded-xl font-bold text-lg hover:bg-[#C15438] hover:scale-105 transition-all"
+        <AccordionItem>
+          <Box
+            bg="pink.200"
+            w={{ md: "250px", base: "150px" }}
+            h={{ md: "200px", base: "100px" }}
+            p={4}
+            m={2}
+            borderRadius="md"
+            textAlign="center"
+          >
+            <AccordionButton
+              display="flex"
+              flexDirection="column"
+              justifyContent="space-between"
+              alignItems="center"
+              h="100%"
             >
-              Schedule a demo to know more
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
+              <Box
+                as="span"
+                flex="1"
+                fontWeight="500"
+                fontSize={{ md: "1.5rem", base: "1rem" }}
+                alignSelf="flex-start"
+              >
+                Curate your Identity
+              </Box>
+              <ChevronDownIcon
+                style={{
+                  background: "#5f6368",
+                  color: "white",
+                  borderRadius: "50%",
+                }}
+                stroke="white"
+                alignSelf="flex-end"
+              />
+            </AccordionButton>
+          </Box>
+          <AccordionPanel pb={4} fontSize={{ md: "1rem", base: "0.8rem" }}>
+            Manage and refine your digital identity to reflect your true self.
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <Box
+            bg="pink.300"
+            w={{ md: "250px", base: "150px" }}
+            h={{ md: "200px", base: "100px" }}
+            p={4}
+            m={2}
+            borderRadius="md"
+            textAlign="center"
+          >
+            <AccordionButton
+              display="flex"
+              flexDirection="column"
+              justifyContent="space-between"
+              alignItems="center"
+              h="100%"
+            >
+              <Box
+                as="span"
+                flex="1"
+                fontWeight="500"
+                fontSize={{ md: "1.5rem", base: "1rem" }}
+                alignSelf="flex-start"
+              >
+                Unlock Personalized Experiences
+              </Box>
+              <ChevronDownIcon
+                style={{
+                  background: "#5f6368",
+                  color: "white",
+                  borderRadius: "50%",
+                }}
+                stroke="white"
+                alignSelf="flex-end"
+              />
+            </AccordionButton>
+          </Box>
+          <AccordionPanel pb={4} fontSize={{ md: "1rem", base: "0.8rem" }}>
+            Share your data to receive tailored experiences and offers.
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <Box
+            bg="blue.200"
+            w={{ md: "250px", base: "150px" }}
+            h={{ md: "200px", base: "100px" }}
+            p={4}
+            m={2}
+            borderRadius="md"
+            textAlign="center"
+          >
+            <AccordionButton
+              display="flex"
+              flexDirection="column"
+              justifyContent="space-between"
+              alignItems="center"
+              h="100%"
+            >
+              <Box
+                as="span"
+                flex="1"
+                fontWeight="500"
+                fontSize={{ md: "1.5rem", base: "1rem" }}
+                alignSelf="flex-start"
+              >
+                Get Rewarded
+              </Box>
+              <ChevronDownIcon
+                style={{
+                  background: "#5f6368",
+                  color: "white",
+                  borderRadius: "50%",
+                }}
+                stroke="white"
+                alignSelf="flex-end"
+              />
+            </AccordionButton>
+          </Box>
+          <AccordionPanel pb={4} fontSize={{ md: "1rem", base: "0.8rem" }}>
+            Earn rewards for sharing your data with trusted partners.
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <Box
+            bg="blue.300"
+            w={{ md: "250px", base: "150px" }}
+            h={{ md: "200px", base: "100px" }}
+            p={4}
+            m={2}
+            borderRadius="md"
+            textAlign="center"
+          >
+            <AccordionButton
+              display="flex"
+              flexDirection="column"
+              justifyContent="space-between"
+              alignItems="center"
+              h="100%"
+            >
+              <Box
+                as="span"
+                flex="1"
+                fontWeight="500"
+                fontSize={{ md: "1.5rem", base: "1rem" }}
+                alignSelf="flex-start"
+              >
+                Transparency and Control
+              </Box>
+              <ChevronDownIcon
+                style={{
+                  background: "#5f6368",
+                  color: "white",
+                  borderRadius: "50%",
+                }}
+                stroke="white"
+                alignSelf="flex-end"
+              />
+            </AccordionButton>
+          </Box>
+          <AccordionPanel pb={4} fontSize={{ md: "1rem", base: "0.8rem" }}>
+            Maintain full control over who accesses your data and how it is
+            used.
+          </AccordionPanel>
+        </AccordionItem>
+      </Accordion>
+
+      <HStack
+        my={{ md: "2rem", base: "1rem" }}
+        alignItems={"center"}
+        justifyContent={"center"}
+        gap={{ md: "4rem", base: "1rem" }}
+      >
+        <Text
+          fontWeight={"700"}
+          lineHeight={"1.2"}
+          color={"rgba(28,28,28,1)"}
+          fontSize={{ md: "2rem", base: "1rem" }}
+        >
+          {" "}
+          Glimpse into Hushh Wallet{" "}
+        </Text>
+        <iframe
+          style={{ borderRadius: "15px" }}
+          width="828"
+          height="550"
+          src="https://www.youtube.com/embed/WYppPoOSi7k?si=yMlu5PUzuZhueJZm"
+          title="YouTube video player"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+      </HStack>
+
+      <VStack
+        my={{ md: "8rem", base: "1rem" }}
+        alignItems={"center"}
+        justifyContent={"center"}
+      >
+        <HStack
+          alignItems={"center"}
+          justifyContent={"center"}
+          gap={{ md: "4rem", base: "1rem" }}
+          bg={"rgba(0,0,0,0)"}
+          mx={{ md: "6rem", base: "1rem" }}
+        >
+          <Text
+            fontWeight={"700"}
+            lineHeight={"1.2"}
+            color={"#434343"}
+            fontSize={{ md: "1.5rem", base: "0.65rem" }}
+          >
+            Hushh Wallet is more than just an app; it's a movement.
+            <br></br>
+            Download and unlock the true power of your personal data.
+          </Text>
+          <Image
+            src="/images/QRWallet.png"
+            alt="Hushh Wallet QR Code"
+            boxSize={{ md: "16rem", base: "100px" }}
+          />
+        </HStack>
+        <Button
+          maxW={{ md: "680px", base: "8rem" }}
+          px={"12px"}
+          bg={"rgba(153, 40, 112, 1)"}
+          color={"white"}
+          _hover={{
+            color: "white",
+            background: "black",
+          }}
+          onClick={() =>
+            window.open(
+              "https://docs.google.com/forms/d/e/1FAIpQLSeIQF0GhLxmwEHrmOpMRQVlxuJBtQYUP2oT_GQt16h8oyw2Dg/viewform",
+              "_blank"
+            )
+          }
+        >
+          Want to have Wallet capabilities in your brand?
+        </Button>
+      </VStack>
+      <Divider borderWidth={"2px"} my={"1rem"} stroke={"grey"} />
+
+      <VStack
+        gap={{ md: "2rem", base: "1rem" }}
+        alignItems={"center"}
+        textAlign={"center"}
+        justifyContent={"center"}
+      >
+        <Text
+          color={"#1c1c1c"}
+          fontWeight={"700"}
+          lineHeight={"1.2"}
+          fontSize={{ md: "2.3rem", base: "1.4rem" }}
+        >
+          Hushh Companion
+        </Text>
+        <Text
+          color={"#434343"}
+          fontWeight={"600"}
+          lineHeight={"1.2"}
+          fontSize={{ md: "1.17rem", base: "0.65rem" }}
+        >
+          More than just a Chrome extension – it's your personal companion for a
+          smarter, <br></br> more organized digital life.{" "}
+        </Text>
+        <Accordion
+          allowToggle
+          minW={"80%"}
+          w="100%"
+          flexDirection="row"
+          p={{ md: "4rem", base: "1rem" }}
+          display="flex"
+          justifyContent="center"
+          gap={{ md: "6rem", base: "1rem" }}
+        >
+          <AccordionItem>
+            <Box
+              bg="purple.200"
+              p={4}
+              w={{ md: "250px", base: "150px" }}
+              h={{ md: "200px", base: "100px" }}
+              m={2}
+              textAlign="center"
+            >
+              <AccordionButton
+                display="flex"
+                flexDirection="column"
+                justifyContent="space-between"
+                alignItems="center"
+                h="100%"
+              >
+                <Box
+                  as="span"
+                  flex="1"
+                  fontWeight="500"
+                  fontSize={{ md: "1.5rem", base: "1rem" }}
+                  alignSelf="flex-start"
+                >
+                  Discover Your <br></br> Digital Self
+                </Box>
+                <ChevronDownIcon
+                  style={{
+                    background: "#5f6368",
+                    color: "white",
+                    borderRadius: "50%",
+                  }}
+                  stroke="white"
+                  alignSelf="flex-end"
+                />
+              </AccordionButton>
+            </Box>
+            <AccordionPanel pb={4} fontSize={{ md: "1rem", base: "0.8rem" }}>
+              <Box maxWidth="280px" mx="auto">
+                <UnorderedList spacing={3} textAlign="left">
+                  <ListItem>
+                    <strong>Track Your Browsing:</strong> Gain insights into
+                    your online behavior and interests.
+                  </ListItem>
+                  <ListItem>
+                    <strong>Evolving Interests:</strong> Watch how your
+                    preferences change over time.
+                  </ListItem>
+                  <ListItem>
+                    <strong>Data Control:</strong> Choose exactly what
+                    information you want to collect.
+                  </ListItem>
+                </UnorderedList>
+              </Box>
+            </AccordionPanel>
+          </AccordionItem>
+
+          <AccordionItem>
+            <Box
+              bg="pink.200"
+              w={{ md: "250px", base: "150px" }}
+              h={{ md: "200px", base: "100px" }}
+              p={4}
+              m={2}
+              textAlign="center"
+            >
+              <AccordionButton
+                display="flex"
+                flexDirection="column"
+                justifyContent="space-between"
+                alignItems="center"
+                h="100%"
+              >
+                <Box
+                  as="span"
+                  flex="1"
+                  fontWeight="500"
+                  fontSize={{ md: "1.5rem", base: "1rem" }}
+                  alignSelf="flex-start"
+                >
+                  Shop Smarter, <br></br> Not Harder
+                </Box>
+                <ChevronDownIcon
+                  style={{
+                    background: "#5f6368",
+                    color: "white",
+                    borderRadius: "50%",
+                  }}
+                  stroke="white"
+                  alignSelf="flex-end"
+                />
+              </AccordionButton>
+            </Box>
+            <AccordionPanel pb={4} fontSize={{ md: "1rem", base: "0.8rem" }}>
+              <Box maxWidth="280px" mx="auto">
+                <UnorderedList spacing={3} textAlign="left">
+                  <ListItem>
+                    <strong>Cross-Brand Shopping Cart: </strong> Compare
+                    products across different websites with ease.
+                  </ListItem>
+                  <ListItem>
+                    <strong>Curated Collections: </strong> Save and organize
+                    products you love.
+                  </ListItem>
+                  <ListItem>
+                    <strong>Link Library:</strong> Keep all your favorite
+                    content just a click away.
+                  </ListItem>
+                </UnorderedList>
+              </Box>
+            </AccordionPanel>
+          </AccordionItem>
+
+          <AccordionItem>
+            <Box
+              bg="pink.300"
+              w={{ md: "250px", base: "150px" }}
+              h={{ md: "200px", base: "100px" }}
+              p={4}
+              m={2}
+              textAlign="center"
+            >
+              <AccordionButton
+                display="flex"
+                flexDirection="column"
+                justifyContent="space-between"
+                alignItems="center"
+                h="100%"
+              >
+                <Box
+                  as="span"
+                  flex="1"
+                  fontWeight="500"
+                  fontSize={{ md: "1.5rem", base: "1rem" }}
+                  alignSelf="flex-start"
+                >
+                  Your Data, <br></br> Your Way
+                </Box>
+                <ChevronDownIcon
+                  style={{
+                    background: "#5f6368",
+                    color: "white",
+                    borderRadius: "50%",
+                  }}
+                  stroke="white"
+                  alignSelf="flex-end"
+                />
+              </AccordionButton>
+            </Box>
+            <AccordionPanel pb={4} fontSize={{ md: "1rem", base: "0.8rem" }}>
+              <Box maxWidth="280px" mx="auto">
+                <UnorderedList spacing={3} textAlign="left">
+                  <ListItem>
+                    <strong>Personal Insights:</strong> Understand your digital
+                    footprint like never before.
+                  </ListItem>
+                  <ListItem>
+                    <strong>Data Portability:</strong> Easily export your
+                    information for personal use.
+                  </ListItem>
+                  <ListItem>
+                    <strong>Future-Ready: </strong> Coming soon - Hushh Wallet
+                    for secure, consensual data monetization.
+                  </ListItem>
+                </UnorderedList>
+              </Box>
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
+      </VStack>
+
+      <HStack
+        my={{ md: "2rem", base: "1rem" }}
+        alignItems={"center"}
+        justifyContent={"center"}
+        gap={{ md: "4rem", base: "1rem" }}
+      >
+        <iframe
+          style={{ borderRadius: "15px" }}
+          width="728"
+          height="550"
+          src="https://www.youtube.com/embed/371l4LVRcwo?si=RcUlPxi17GAUWJLS"
+          title="Hushh Browser Companion"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+        <Image src="/images/browserCompanion.png" alt="Hushh Broswer Companion" />
+      </HStack>
+
+      <VStack
+        my={{ md: "8rem", base: "1rem" }}
+        alignItems={"center"}
+        justifyContent={"center"}
+      >
+        <HStack
+          alignItems={"center"}
+          justifyContent={"center"}
+          gap={{ md: "4rem", base: "1rem" }}
+          bg={"rgba(0,0,0,0)"}
+          textAlign={"right"}
+          mx={{ md: "6rem", base: "1rem" }}
+        >
+          <Text
+            fontWeight={"700"}
+            lineHeight={"1.2"}
+            color={"#434343"}
+            fontSize={{ md: "1.5rem", base: "0.65rem" }}
+          >
+            Ready to enhance your digital journey? Add Hushh Companion
+            <br></br>
+            to Chrome today and start exploring the web on your own
+            <br></br>
+            terms!
+          </Text>
+          <Image
+            src={Companion}
+            alt="Hushh Browser Companion"
+            boxSize={{ md: "16rem", base: "100px" }}
+          />
+        </HStack>
+        <Button
+          maxW={{ md: "680px", base: "8rem" }}
+          px={"12px"}
+          bg={"rgba(153, 40, 112, 1)"}
+          color={"white"}
+          _hover={{
+            color: "white",
+            background: "black",
+          }}
+          onClick={() =>
+            window.open(
+              "https://chromewebstore.google.com/detail/hushh-browser-companion/glmkckchoggnebfiklpbiajpmjoagjgj?authuser=0&hl=en",
+              "_blank"
+            )
+          }
+        >
+          Want to know more about Hushh Companion?
+        </Button>
+      </VStack>
+      <Divider borderWidth={"2px"} my={"1rem"} stroke={"grey"} />
+
+      <VStack>
+        <Text
+          fontWeight={"700"}
+          lineHeight={"1.2"}
+          color={"#1c1c1c"}
+          fontSize={{ md: "2.3rem", base: "1.15rem" }}
+        >
+          Vibe Search
+        </Text>
+        <Text
+          fontWeight={"600"}
+          lineHeight={"1.2"}
+          color={"#434343"}
+          mt={{md:'1rem',base:'0.5rem'}}
+          fontSize={{ md: "1.1rem", base: "0.55rem" }}
+        >
+          Stop Searching, Start Vibing.
+        </Text>
+        <Text
+          fontWeight={"600"}
+          lineHeight={"1.2"}
+          color={"#434343"}
+          fontSize={{ md: "1.1rem", base: "0.55rem" }}
+        >
+          Find your perfect outfit effortlessly <br></br>with AI-powered fashion
+          search.
+        </Text>
+        <HStack  my={{md:'2.5rem',base:'1.5rem'}} gap={{md:'8rem',base:'2.5rem'}} px={{md:'12rem',base:'1rem'}} boxSizing="border-box" width={'100%'}>
+          <iframe
+            width="360"
+            height="615"
+            src="https://www.youtube.com/embed/gGFm5QVsJwg?si=LIBm-M3--HA10I7g"
+            title="YouTube video player"
+            frameborder="0"
+            style={{borderRadius:'10px'}}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen
+          ></iframe>
+          <VStack flex={1} gap={{md:'1.25rem',base:'0.65rem'}} textAlign={'left'} alignItems={'flex-start'}>
+            <Text
+              fontWeight={"700"}
+              lineHeight={"1.2"}
+              color={"rgba(28,28,28,1)"}
+              fontSize={{ md: "1.5rem", base: "0.65rem" }}
+            >
+              Unleash the Power of AI Search
+            </Text>
+            <Text
+              fontWeight={"400"}
+              lineHeight={"1.2"}
+              color={"rgba(28,28,28,1)"}
+              fontSize={{ md: "1rem", base: "0.5rem" }}
+            >
+              Describe what you want using natural language - "boho summer
+              dress," "Dark academia aesthetic outfits for fall," "minimal
+              office outfit," "bold office outfits for women," "dresses for a
+              summer beach party," – Vibe Search understands!
+            </Text>
+            <Text
+              fontWeight={"400"}
+              lineHeight={"1.2"}
+              color={"rgba(28,28,28,1)"}
+              fontSize={{ md: "1rem", base: "0.5rem" }}
+            >
+              See a look you love? Upload the picture and instantly discover
+              similar items.
+            </Text>
+            <Text
+              fontWeight={"400"}
+              lineHeight={"1.2"}
+              color={"rgba(28,28,28,1)"}
+              fontSize={{ md: "1rem", base: "0.5rem" }}
+            >
+              No more keyword stuffing – Vibe Search gets you there faster and
+              more accurately.
+            </Text>
+          </VStack>
+        </HStack>
+      </VStack>
+
+      <HStack my={{ md: "2rem", base: "1rem" }} px={{md:'12rem',base:'0.5rem'}}>
+        <VStack textAlign={'left'} alignItems={'flex-start'} justifyContent={'flex-start'}>
+          <Text fontWeight={'700'} lineHeight={'1.2'} color={'rgba(153,40,112,1)'} fontSize={{md:'1.5rem',base:'0.75rem'}}>Try Vibe Search Now</Text>
+          <Text mt={{md:'1.5rem',base:'0.5rem'}} fontWeight={'400'} fontSize={{md:'1rem',base:'0.5rem'}} lineHeight={'1.2'}>Example Queries: </Text>
+          <UnorderedList gap={{md:'1rem',base:'0.5rem'}} display={'flex'} flexDirection={'column'} fontWeight={'400'} fontSize={{md:'1rem',base:'0.5rem'}} lineHeight={'1.2'}>
+             <ListItem>Boho Summer Dress</ListItem>
+             <ListItem>Casual Summer Dress</ListItem>
+             <ListItem>Minimal Office Outfit</ListItem>
+             <ListItem>Bold Office Outfits for Women</ListItem>
+             <ListItem>Dresses for a Summer Beach Party</ListItem>
+             <ListItem>Ball Dresses</ListItem>
+             <ListItem>Streetwear for Men</ListItem>
+             <ListItem>Floral and Striped Dresses</ListItem>
+          </UnorderedList>
+        </VStack>
+
+
+      </HStack>
+ <HStack my={{md:'2.5rem',base:'1.5rem'}} gap={{md:'14rem',base:'2.5rem'}} px={{md:'12rem',base:'1rem'}} boxSizing="border-box" width={'100%'}>
+          <iframe
+            width="360"
+            height="615"
+            src="https://www.youtube.com/embed/4tH9j6kIQ0Q?si=3kp9oBbXRdh7Ewab" 
+            title="YouTube video player"
+            frameborder="0"
+            style={{borderRadius:'10px'}}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen
+          ></iframe>
+          <VStack flex={1} gap={{md:'1.25rem',base:'0.65rem'}} textAlign={'left'} alignItems={'flex-start'}>
+            <Text
+              fontWeight={"700"}
+              lineHeight={"1.2"}
+              color={"rgba(28,28,28,1)"}
+              fontSize={{ md: "1.5rem", base: "0.65rem" }}
+            >
+              Personalization That Gets You
+            </Text>
+            <Text
+              fontWeight={"400"}
+              lineHeight={"1.2"}
+              color={"rgba(28,28,28,1)"}
+              fontSize={{ md: "1rem", base: "0.5rem" }}
+            >
+              <span style={{fontWeight:'500'}}>Your Style, Your Feed:</span> Vibe Search learns what you love. The more you interact, the more tailored your results become.
+            </Text>
+            <Text
+              fontWeight={"400"}
+              lineHeight={"1.2"}
+              color={"rgba(28,28,28,1)"}
+              fontSize={{ md: "1rem", base: "0.5rem" }}
+            >
+              <span style={{fontWeight:'500'}}>Effortless Discovery:</span> Just browse and like products – Vibe Search personalizes your experience automatically.
+            </Text>
+            <Text
+              fontWeight={"400"}
+              lineHeight={"1.2"}
+              color={"rgba(28,28,28,1)"}
+              fontSize={{ md: "1rem", base: "0.5rem" }}
+            >
+              <span style={{fontWeight:'500'}}>Control Your Style Journey: </span>Soon you'll be able to fine-tune your preferences for ultimate control.
+            </Text>
+          </VStack>
+        </HStack>
+
+        <VStack my={{md:'2rem',base:'1rem'}} textAlign={'center'} gap={{md:'2rem',base:'1rem'}}>
+          <Text color={'#434343'} fontSize={{md:'1.5rem',base:'0.75rem'}} fontWeight={'600'}>Ready to find your perfect fashion match? Start vibing with Vibe <br></br> Search today!</Text>
+           <Button
+          maxW={{ md: "680px", base: "8rem" }}
+          px={"12px"}
+          bg={"rgba(153, 40, 112, 1)"}
+          color={"white"}
+          _hover={{
+            color: "white",
+            background: "black",
+          }}
+          onClick={() =>
+            window.open(
+              "https://docs.google.com/forms/d/e/1FAIpQLSeIQF0GhLxmwEHrmOpMRQVlxuJBtQYUP2oT_GQt16h8oyw2Dg/viewform",
+              "_blank"
+            )
+          }
+        >Schedule a demo to know more about Vibe Search
+        </Button>
+        </VStack>
+    </>
   );
 };
 

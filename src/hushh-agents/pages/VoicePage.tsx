@@ -80,7 +80,12 @@ export default function VoicePage() {
     setMounted(true);
   }, []);
 
-  // Auth is optional — voice works without login
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate('/login', { state: { redirectTo: `/hushh-agents/voice?lang=${langParam}` } });
+    }
+  }, [isAuthenticated, isLoading, navigate, langParam]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -356,6 +361,8 @@ export default function VoicePage() {
     );
   }
 
+  if (!isAuthenticated) return null;
+
   // Status text
   const getStatusText = () => {
     switch (status) {
@@ -386,7 +393,7 @@ export default function VoicePage() {
       }}
     >
       {/* ═══ Header ═══ */}
-      <header className="px-4 sm:px-6 py-4 sm:py-5 flex justify-between items-center">
+      <header className="px-6 py-5 flex justify-between items-center">
         <Link to="/hushh-agents" className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
             <img src={HushhLogo} alt="Hushh" className="w-6 h-6 object-contain" />
@@ -409,11 +416,11 @@ export default function VoicePage() {
       </header>
 
       {/* ═══ Main Content ═══ */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-8">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
         
         {/* Response Text */}
-        <div className="max-w-md text-center mb-6 sm:mb-8 min-h-[100px] sm:min-h-[120px] flex items-center justify-center px-2">
-          <p className="text-base sm:text-xl md:text-2xl font-light leading-relaxed">
+        <div className="max-w-md text-center mb-8 min-h-[120px] flex items-center justify-center">
+          <p className="text-xl md:text-2xl font-light leading-relaxed">
             {response || langConfig.greeting}
           </p>
         </div>

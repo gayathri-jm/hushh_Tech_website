@@ -25,10 +25,6 @@ export interface FinancialDataResponse {
   identity: ProductResult;
   authNumbers: ProductResult;
   identityMatch: ProductResult;
-  income: ProductResult;
-  investmentTransactions: ProductResult;
-  liabilities: ProductResult;
-  transactions: ProductResult;
   summary: {
     products_available: number;
     products_total: number;
@@ -248,63 +244,17 @@ const fetchAuth = async (accessToken: string): Promise<ProductResult> => {
   }
 };
 
-/** Fetch liabilities (credit cards, student loans, mortgages) */
-export const fetchLiabilities = async (accessToken: string): Promise<ProductResult> => {
-  try {
-    const token = await getUserAccessToken();
-    const res = await fetch(`${SUPABASE_URL}/liabilities`, {
-      method: 'POST', headers: getHeaders(token),
-      body: JSON.stringify({ accessToken }),
-    });
-    if (!res.ok) {
-      if (res.status === 400) return { available: false, data: null, error: null, reason: 'not_supported' };
-      const err = await res.json().catch(() => ({}));
-      return { available: false, data: null, error: err.error || 'Failed', reason: 'error' };
-    }
-    const data = await res.json();
-    if (!data.available) return { available: false, data: null, error: data.error, reason: 'not_supported' };
-    return { available: true, data, error: null, reason: null };
-  } catch (e: any) {
-    return { available: false, data: null, error: e.message, reason: 'error' };
-  }
-};
-
-/** Fetch transactions via /transactions/sync (spending history) */
-export const fetchTransactions = async (accessToken: string): Promise<ProductResult> => {
-  try {
-    const token = await getUserAccessToken();
-    const res = await fetch(`${SUPABASE_URL}/transactions-sync`, {
-      method: 'POST', headers: getHeaders(token),
-      body: JSON.stringify({ accessToken }),
-    });
-    if (!res.ok) {
-      if (res.status === 400) return { available: false, data: null, error: null, reason: 'not_supported' };
-      const err = await res.json().catch(() => ({}));
-      return { available: false, data: null, error: err.error || 'Failed', reason: 'error' };
-    }
-    const data = await res.json();
-    if (!data.available) return { available: false, data: null, error: data.error, reason: 'not_supported' };
-    return { available: true, data, error: null, reason: null };
-  } catch (e: any) {
-    return { available: false, data: null, error: e.message, reason: 'error' };
-  }
-};
-
-/** Fetch all 10 products in parallel */
+/** Fetch all 6 products in parallel */
 export const fetchAllFinancialData = async (
   accessToken: string, userId: string,
 ): Promise<FinancialDataResponse> => {
-  const [b, a, i, id, auth, idMatch, inc, invTx, liab, tx] = await Promise.allSettled([
+  const [b, a, i, id, auth, idMatch] = await Promise.allSettled([
     fetchBalance(accessToken, userId),
     fetchAssets(accessToken, userId),
     fetchInvestments(accessToken, userId),
     fetchIdentity(accessToken),
     fetchAuth(accessToken),
     fetchIdentityMatch(accessToken),
-    fetchBankIncome(accessToken),
-    fetchInvestmentTransactions(accessToken),
-    fetchLiabilities(accessToken),
-    fetchTransactions(accessToken),
   ]);
 
   const errResult = { available: false, data: null, error: 'Network error', reason: 'error' as const };
@@ -314,21 +264,17 @@ export const fetchAllFinancialData = async (
   const identity = id.status === 'fulfilled' ? id.value : errResult;
   const authNumbers = auth.status === 'fulfilled' ? auth.value : errResult;
   const identityMatch = idMatch.status === 'fulfilled' ? idMatch.value : errResult;
-  const income = inc.status === 'fulfilled' ? inc.value : errResult;
-  const investmentTransactions = invTx.status === 'fulfilled' ? invTx.value : errResult;
-  const liabilities = liab.status === 'fulfilled' ? liab.value : errResult;
-  const transactions = tx.status === 'fulfilled' ? tx.value : errResult;
 
-  const count = [balance, assets, investments, identity, authNumbers, identityMatch, income, investmentTransactions, liabilities, transactions].filter(r => r.available).length;
+  const count = [balance, assets, investments, identity, authNumbers, identityMatch].filter(r => r.available).length;
 
   return {
     status: count >= 4 ? 'complete' : count > 0 ? 'partial' : 'failed',
-    balance, assets, investments, identity, authNumbers, identityMatch, income, investmentTransactions, liabilities, transactions,
-    summary: { products_available: count, products_total: 10, can_proceed: count >= 1 },
+    balance, assets, investments, identity, authNumbers, identityMatch,
+    summary: { products_available: count, products_total: 6, can_proceed: count >= 1 },
   };
 };
 
-/** Check asset report status (JSON) */
+/** Check asset report status */
 export const checkAssetReport = async (assetReportToken: string, userId: string) => {
   const token = await getUserAccessToken();
   const res = await fetch(`${SUPABASE_URL}/asset-report-create`, {
@@ -337,173 +283,6 @@ export const checkAssetReport = async (assetReportToken: string, userId: string)
   });
   if (!res.ok) throw new Error('Failed to check asset report');
   return res.json() as Promise<{ status: 'complete' | 'pending'; data?: any }>;
-};
-
-/** Get asset report with categorized transactions + merchant insights */
-export const getAssetReportWithInsights = async (assetReportToken: string) => {
-  const token = await getUserAccessToken();
-  const res = await fetch(`${SUPABASE_URL}/asset-report-create`, {
-    method: 'POST', headers: getHeaders(token),
-    body: JSON.stringify({ assetReportToken, action: 'get', includeInsights: true }),
-  });
-  if (!res.ok) throw new Error('Failed to get asset report with insights');
-  return res.json() as Promise<{ status: 'complete' | 'pending'; data?: any }>;
-};
-
-/** Get Fast Assets report (quick version with balance + identity only) */
-export const getAssetReportFast = async (assetReportToken: string) => {
-  const token = await getUserAccessToken();
-  const res = await fetch(`${SUPABASE_URL}/asset-report-create`, {
-    method: 'POST', headers: getHeaders(token),
-    body: JSON.stringify({ assetReportToken, action: 'get', fastReport: true }),
-  });
-  if (!res.ok) throw new Error('Failed to get fast asset report');
-  return res.json() as Promise<{ status: 'complete' | 'pending'; data?: any }>;
-};
-
-/** Create asset report with Fast Assets add-on enabled */
-export const createAssetReportFast = async (accessToken: string, daysRequested = 60) => {
-  const token = await getUserAccessToken();
-  const res = await fetch(`${SUPABASE_URL}/asset-report-create`, {
-    method: 'POST', headers: getHeaders(token),
-    body: JSON.stringify({ accessToken, daysRequested, fastAssets: true }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to create fast asset report');
-  }
-  return res.json() as Promise<{
-    status: 'pending';
-    asset_report_token: string;
-    asset_report_id: string;
-  }>;
-};
-
-/** Get asset report as PDF (returns base64-encoded PDF) */
-export const getAssetReportPdf = async (assetReportToken: string) => {
-  const token = await getUserAccessToken();
-  const res = await fetch(`${SUPABASE_URL}/asset-report-create`, {
-    method: 'POST', headers: getHeaders(token),
-    body: JSON.stringify({ assetReportToken, action: 'get_pdf' }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to get asset report PDF');
-  }
-  return res.json() as Promise<{
-    status: 'complete' | 'pending';
-    pdf_base64?: string;
-    message?: string;
-  }>;
-};
-
-/** Refresh an asset report (creates a new updated version) */
-export const refreshAssetReport = async (assetReportToken: string, daysRequested?: number) => {
-  const token = await getUserAccessToken();
-  const body: Record<string, any> = { assetReportToken, action: 'refresh' };
-  if (daysRequested) body.daysRequested = daysRequested;
-
-  const res = await fetch(`${SUPABASE_URL}/asset-report-create`, {
-    method: 'POST', headers: getHeaders(token),
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to refresh asset report');
-  }
-  return res.json() as Promise<{
-    status: 'pending';
-    asset_report_token: string;
-    asset_report_id: string;
-  }>;
-};
-
-/** Create audit copy for Fannie Mae / Freddie Mac / Ocrolus */
-export const createAssetAuditCopy = async (assetReportToken: string, auditorId?: string) => {
-  const token = await getUserAccessToken();
-  const res = await fetch(`${SUPABASE_URL}/asset-report-create`, {
-    method: 'POST', headers: getHeaders(token),
-    body: JSON.stringify({ assetReportToken, action: 'audit_copy', auditorId }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to create audit copy');
-  }
-  return res.json() as Promise<{
-    status: 'complete';
-    audit_copy_token: string;
-  }>;
-};
-
-// =====================================================
-// Income — Bank Income Verification
-// =====================================================
-
-/** Fetch bank income data (income streams from deposit activity) */
-export const fetchBankIncome = async (accessToken: string): Promise<ProductResult> => {
-  try {
-    const token = await getUserAccessToken();
-    const res = await fetch(`${SUPABASE_URL}/bank-income`, {
-      method: 'POST', headers: getHeaders(token),
-      body: JSON.stringify({ accessToken }),
-    });
-    if (!res.ok) {
-      if (res.status === 400) return { available: false, data: null, error: null, reason: 'not_supported' };
-      const err = await res.json().catch(() => ({}));
-      return { available: false, data: null, error: err.error || 'Failed', reason: 'error' };
-    }
-    const data = await res.json();
-    if (!data.available) return { available: false, data: null, error: data.error, reason: 'not_supported' };
-    return { available: true, data, error: null, reason: null };
-  } catch (e: any) {
-    return { available: false, data: null, error: e.message, reason: 'error' };
-  }
-};
-
-// =====================================================
-// Investment Transactions
-// =====================================================
-
-/** Fetch investment transactions (last 90 days by default) */
-export const fetchInvestmentTransactions = async (
-  accessToken: string, startDate?: string, endDate?: string,
-): Promise<ProductResult> => {
-  try {
-    const token = await getUserAccessToken();
-    const body: Record<string, any> = { accessToken };
-    if (startDate) body.startDate = startDate;
-    if (endDate) body.endDate = endDate;
-
-    const res = await fetch(`${SUPABASE_URL}/investments-transactions`, {
-      method: 'POST', headers: getHeaders(token),
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      if (res.status === 400) return { available: false, data: null, error: null, reason: 'not_supported' };
-      const err = await res.json().catch(() => ({}));
-      return { available: false, data: null, error: err.error || 'Failed', reason: 'error' };
-    }
-    const data = await res.json();
-    if (!data.available) return { available: false, data: null, error: data.error, reason: 'not_supported' };
-    return { available: true, data, error: null, reason: null };
-  } catch (e: any) {
-    return { available: false, data: null, error: e.message, reason: 'error' };
-  }
-};
-
-/** Download asset report PDF as a Blob for saving/viewing */
-export const downloadAssetReportPdf = async (assetReportToken: string): Promise<Blob> => {
-  const result = await getAssetReportPdf(assetReportToken);
-  if (result.status === 'pending') throw new Error('Asset report not ready yet');
-  if (!result.pdf_base64) throw new Error('No PDF data received');
-
-  // Convert base64 to Blob
-  const binaryString = atob(result.pdf_base64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return new Blob([bytes], { type: 'application/pdf' });
 };
 
 /** Save financial data to Supabase */
@@ -523,12 +302,8 @@ export const saveFinancialDataToSupabase = async (
     if (data.identity?.error) errors.identity = data.identity.error;
     if (data.authNumbers?.error) errors.auth = data.authNumbers.error;
     if (data.identityMatch?.error) errors.identity_match = data.identityMatch.error;
-    if (data.income?.error) errors.income = data.income.error;
-    if (data.investmentTransactions?.error) errors.investment_transactions = data.investmentTransactions.error;
-    if (data.liabilities?.error) errors.liabilities = data.liabilities.error;
-    if (data.transactions?.error) errors.transactions = data.transactions.error;
 
-    const { error: upsertError } = await supabase.from('user_financial_data').upsert({
+    await supabase.from('user_financial_data').upsert({
       user_id: userId,
       plaid_item_id: itemId || null,
       plaid_access_token: accessToken || null,
@@ -541,10 +316,6 @@ export const saveFinancialDataToSupabase = async (
       identity_data: data.identity?.available ? data.identity.data : null,
       auth_numbers: data.authNumbers?.available ? data.authNumbers.data : null,
       identity_match: data.identityMatch?.available ? data.identityMatch.data : null,
-      income_data: data.income?.available ? data.income.data : null,
-      investment_transactions: data.investmentTransactions?.available ? data.investmentTransactions.data : null,
-      liabilities_data: data.liabilities?.available ? data.liabilities.data : null,
-      transactions_data: data.transactions?.available ? data.transactions.data : null,
       available_products: {
         balance: data.balance.available,
         assets: data.assets.available,
@@ -552,21 +323,13 @@ export const saveFinancialDataToSupabase = async (
         identity: data.identity?.available || false,
         auth: data.authNumbers?.available || false,
         identity_match: data.identityMatch?.available || false,
-        income: data.income?.available || false,
-        investment_transactions: data.investmentTransactions?.available || false,
-        liabilities: data.liabilities?.available || false,
-        transactions: data.transactions?.available || false,
       },
       status: data.status,
       fetch_errors: Object.keys(errors).length > 0 ? errors : null,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });
 
-    if (upsertError) {
-      console.error('[Plaid] ❌ Upsert error:', upsertError.message, upsertError.details);
-    } else {
-      console.log('[Plaid] ✅ Data saved to Supabase');
-    }
+    console.log('[Plaid] ✅ Data saved to Supabase');
   } catch (err) {
     console.warn('[Plaid] Save failed:', err);
   }

@@ -1,161 +1,414 @@
 'use client'
 
 import React from 'react'
-import { Check, Shield, FileText, User, Info } from 'lucide-react'
+import { FiCheck, FiSearch, FiFileText, FiUser, FiShield, FiArchive, FiActivity, FiClock, FiX } from 'react-icons/fi'
+import { Box, Container, Heading, Text, Stack, HStack, VStack, Flex, Icon, useColorModeValue, Badge } from '@chakra-ui/react'
 
 const KYCVerificationPage = () => {
-  const sections = [
-    {
-      num: 1,
-      title: "Identity Verification",
-      items: [
-        "Government-issued photo identification (passport, driver's license, or national ID)",
-        "Proof of address (utility bill, bank statement, or lease agreement dated within 3 months)",
-        "Social Security Number or Tax Identification Number verification"
-      ]
-    },
-    {
-      num: 2,
-      title: "Financial Background Verification",
-      items: [
-        "Bank statements from the last 3 months",
-        "Tax returns for the previous 2 years",
-        "Employment verification or business ownership documentation",
-        "Source of funds documentation for investment capital"
-      ]
-    },
-    {
-      num: 3,
-      title: "Investment Experience Documentation",
-      items: [
-        "Investment portfolio statements or history",
-        "Accredited investor certification (if applicable)",
-        "Professional qualifications in finance (if applicable)"
-      ]
-    },
-    {
-      num: 4,
-      title: "Enhanced Due Diligence (High-Risk Categories)",
-      items: [
-        "Politically Exposed Persons (PEP) screening",
-        "Sanctions list verification (OFAC, UN, EU, etc.)",
-        "Additional documentation for high-risk jurisdictions"
-      ]
-    },
-    {
-      num: 5,
-      title: "Corporate Entity Verification (Institutional)",
-      items: [
-        "Articles of incorporation or formation documents",
-        "Board resolutions authorizing investment",
-        "Beneficial ownership disclosure (25% threshold)",
-        "Corporate structure chart"
-      ]
-    },
-    {
-      num: 6,
-      title: "Ongoing Monitoring Requirements",
-      items: [
-        "Annual KYC refresh and document updates",
-        "Transaction monitoring and suspicious activity reporting",
-        "Periodic re-screening against sanctions lists"
-      ]
-    },
-    {
-      num: 7,
-      title: "Prohibited Activities & Red Flags",
-      items: [
-        "Cash transactions above $10,000",
-        "Funds from sanctioned countries or entities",
-        "Structuring transactions to avoid reporting requirements",
-        "Inconsistent or suspicious source of funds explanations"
-      ]
-    },
-    {
-      num: 8,
-      title: "Documentation Timeline & Process",
-      items: [
-        "Initial KYC completion required before fund admission",
-        "Standard processing time: 5-10 business days",
-        "Enhanced due diligence may require additional 10-15 business days",
-        "Incomplete documentation will delay the onboarding process"
-      ]
-    }
-  ];
-
+  const primaryColor = "#0AADBC"
+  const secondaryColor = useColorModeValue('gray.800', 'white')
+  const borderColor = useColorModeValue('gray.200', 'gray.700')
+  
   return (
-    <div className="min-h-screen bg-[#faf9f6] py-16 px-4">
-      <div className="max-w-4xl mx-auto">
+    <Container maxW="container.xl" py={12}>
+      <VStack spacing={8} align="stretch">
         {/* Header */}
-        <div className="text-center mb-16">
-          <p className="text-[12px] font-bold tracking-[0.15em] text-[#AA4528] uppercase mb-4">Compliance Guide</p>
-          <h1 className="text-[2.5rem] md:text-[3.5rem] font-medium leading-[1.1] text-[#151513] mb-6" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
-            AML & KYC <br />
-            <span className="text-gray-400 italic">Documentation</span>
-          </h1>
-          <p className="text-[18px] text-[#8C8479] max-w-2xl mx-auto leading-relaxed font-body">
-            Hushh Renaissance Alpha & Alpha Fund, LP maintains strict adherence to global financial regulations. Here's what we require for onboarding.
-          </p>
-        </div>
+        <Box textAlign="center" mb={8}>
+          <Heading as="h1" size="xl" mb={4}>
+            <Text as="span" className='blue-gradient-text' fontWeight="500">ANTI-MONEY LAUNDERING (AML)</Text>
+            <Text as="span" color={secondaryColor} fontWeight="500"> & KNOW YOUR CUSTOMER</Text>
+          </Heading>
+          <Heading as="h2" size="lg" color={secondaryColor} fontWeight="500">(KYC) DOCUMENTATION</Heading>
+          <Text mt={4} fontSize="md" color="gray.600">Hushh Renaissance Alpha & Alpha Fund, LP</Text>
+        </Box>
 
-        {/* Requirements Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          {sections.map((section) => (
-            <div key={section.num} className="bg-white border border-[#EEE9E0] p-8 rounded-sm hover:shadow-lg transition-shadow duration-300">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-10 h-10 bg-[#151513] text-white flex items-center justify-center rounded-sm font-bold text-[18px]">
-                  {section.num}
-                </div>
-                <h3 className="text-[18px] font-bold text-[#151513] leading-snug">{section.title}</h3>
-              </div>
-              <ul className="space-y-4">
-                {section.items.map((item, i) => (
-                  <li key={i} className="flex gap-3 text-[15px] text-[#8C8479] leading-relaxed">
-                    <Check className="w-4 h-4 text-[#AA4528] shrink-0 mt-1" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+        {/* Documentation Requirements */}
+        <Box 
+          borderWidth="1px" 
+          borderRadius="lg" 
+          overflow="hidden"
+          borderColor={borderColor}
+          p={6}
+        >
+          <VStack spacing={8} align="stretch">
+            {/* Section 1: Identity Verification */}
+            <Stack direction="row" align="center">
+              <Box
+                w={10}
+                h={10}
+                align="center"
+                justify="center"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                rounded="md"
+                background={'linear-gradient(to right, #00A9E0, #6DD3EF)'}
+                mr={4}
+              >
+                <Text fontWeight="500" fontSize="lg" color="white">1</Text>
+              </Box>
+              <Heading as="h3" size="md" fontWeight="500">Identity Verification</Heading>
+            </Stack>
+            <VStack align="start" pl={14} spacing={3}>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Government-issued photo identification (passport, driver's license, or national ID)</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Proof of address (utility bill, bank statement, or lease agreement dated within 3 months)</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Social Security Number or Tax Identification Number verification</Text>
+              </HStack>
+            </VStack>
 
-        {/* Info Cards */}
-        <div className="space-y-6">
-          <div className="bg-[#151513] text-white p-8 md:p-12 rounded-sm shadow-xl flex flex-col md:flex-row gap-8 items-center">
-            <div className="w-16 h-16 bg-[#AA4528] rounded-full flex items-center justify-center shrink-0">
-              <Info className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h3 className="text-[20px] font-bold mb-3">Important Notice</h3>
-              <p className="text-[#C4BFB5] text-[16px] leading-relaxed">
-                All documentation must be provided in English or accompanied by certified translations. Digital copies are acceptable for initial review, but original or certified copies may be required for final verification. Hushh Technology LLC reserves the right to request additional documentation as deemed necessary for compliance purposes.
-              </p>
-            </div>
-          </div>
+            {/* Section 2: Financial Background Verification */}
+            <Stack direction="row" align="center">
+              <Box
+                w={10}
+                h={10}
+                align="center"
+                justify="center"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                rounded="md"
+                background={'linear-gradient(to right, #00A9E0, #6DD3EF)'}
+                mr={4}
+              >
+                <Text fontWeight="500" fontSize="lg" color="white">2</Text>
+              </Box>
+              <Heading as="h3" size="md" fontWeight="500">Financial Background Verification</Heading>
+            </Stack>
+            <VStack align="start" pl={14} spacing={3}>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Bank statements from the last 3 months</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Tax returns for the previous 2 years</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Employment verification or business ownership documentation</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Source of funds documentation for investment capital</Text>
+              </HStack>
+            </VStack>
 
-          <div className="bg-[#F7F5F0] border border-[#EEE9E0] p-8 md:p-12 rounded-sm flex flex-col md:flex-row gap-8 items-center">
-            <div className="w-16 h-16 bg-white border border-[#EEE9E0] rounded-full flex items-center justify-center shrink-0">
-              <Shield className="w-8 h-8 text-[#AA4528]" />
-            </div>
-            <div>
-              <h3 className="text-[20px] font-bold text-[#151513] mb-3">Data Protection & Privacy</h3>
-              <p className="text-[#8C8479] text-[16px] leading-relaxed font-body">
-                All personal and financial information provided during the KYC process is handled in strict accordance with applicable privacy laws and regulations. Your data is encrypted, secured, stored, and will only be shared with authorized third parties as required by law and/or compliance verification purposes.
-              </p>
-            </div>
-          </div>
-        </div>
+            {/* Section 3: Investment Experience Documentation */}
+            <Stack direction="row" align="center">
+              <Box
+                w={10}
+                h={10}
+                align="center"
+                justify="center"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                rounded="md"
+                background={'linear-gradient(to right, #00A9E0, #6DD3EF)'}
+                mr={4}
+              >
+                <Text fontWeight="500" fontSize="lg" color="white">3</Text>
+              </Box>
+              <Heading as="h3" size="md" fontWeight="500">Investment Experience Documentation</Heading>
+            </Stack>
+            <VStack align="start" pl={14} spacing={3}>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Investment portfolio statements or history</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Accredited investor certification (if applicable)</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Professional qualifications in finance (if applicable)</Text>
+              </HStack>
+            </VStack>
 
-        {/* Footer Link */}
-        <div className="text-center mt-16 pt-8 border-t border-[#EEE9E0]">
-          <p className="text-[14px] text-[#8C8479] mb-4">Ready to start your investment journey?</p>
-          <a href="/kyc-form" className="inline-flex items-center gap-2 text-[#AA4528] font-bold text-[16px] hover:underline">
-            Complete KYC Form <User className="w-4 h-4" />
-          </a>
-        </div>
-      </div>
-    </div>
+            {/* Section 4: Enhanced Due Diligence */}
+            <Stack direction="row" align="center">
+              <Box
+                w={10}
+                h={10}
+                align="center"
+                justify="center"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                rounded="md"
+                background={'linear-gradient(to right, #00A9E0, #6DD3EF)'}
+                mr={4}
+              >
+                <Text fontWeight="500" fontSize="lg" color="white">4</Text>
+              </Box>
+              <Heading as="h3" size="md" fontWeight="500">Enhanced Due Diligence (High-Risk Categories)</Heading>
+            </Stack>
+            <VStack align="start" pl={14} spacing={3}>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Politically Exposed Persons (PEP) screening</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Sanctions list verification (OFAC, UN, EU, etc.)</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Additional documentation for high-risk jurisdictions</Text>
+              </HStack>
+            </VStack>
+
+            {/* Section 5: Corporate Entity Verification */}
+            <Stack direction="row" align="center">
+              <Box
+                w={10}
+                h={10}
+                align="center"
+                justify="center"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                rounded="md"
+                background={'linear-gradient(to right, #00A9E0, #6DD3EF)'}
+                mr={4}
+              >
+                <Text fontWeight="500" fontSize="lg" color="white">5</Text>
+              </Box>
+              <Heading as="h3" size="md" fontWeight="500">Corporate Entity Verification (For Institutional Investors)</Heading>
+            </Stack>
+            <VStack align="start" pl={14} spacing={3}>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Articles of incorporation or formation documents</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Board resolutions authorizing investment</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Beneficial ownership disclosure (25% threshold)</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Corporate structure chart</Text>
+              </HStack>
+            </VStack>
+
+            {/* Section 6: Ongoing Monitoring */}
+            <Stack direction="row" align="center">
+              <Box
+                w={10}
+                h={10}
+                align="center"
+                justify="center"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                rounded="md"
+                background={'linear-gradient(to right, #00A9E0, #6DD3EF)'}
+                mr={4}
+              >
+                <Text fontWeight="500" fontSize="lg" color="white">6</Text>
+              </Box>
+              <Heading as="h3" size="md" fontWeight="500">Ongoing Monitoring Requirements</Heading>
+            </Stack>
+            <VStack align="start" pl={14} spacing={3}>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Annual KYC refresh and document updates</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Transaction monitoring and suspicious activity reporting</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Periodic re-screening against sanctions lists</Text>
+              </HStack>
+            </VStack>
+
+            {/* Section 7: Prohibited Activities & Red Flags */}
+            <Stack direction="row" align="center">
+              <Box
+                w={10}
+                h={10}
+                align="center"
+                justify="center"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                rounded="md"
+                background={'linear-gradient(to right, #00A9E0, #6DD3EF)'}
+                mr={4}
+              >
+                <Text fontWeight="500" fontSize="lg" color="white">7</Text>
+              </Box>
+              <Heading as="h3" size="md" fontWeight="500">Prohibited Activities & Red Flags</Heading>
+            </Stack>
+            <VStack align="start" pl={14} spacing={3}>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Cash transactions above $10,000</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Funds from sanctioned countries or entities</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Structuring transactions to avoid reporting requirements</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                    <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Inconsistent or suspicious source of funds explanations</Text>
+              </HStack>
+            </VStack>
+
+            {/* Section 8: Documentation Timeline & Process */}
+            <Stack direction="row" align="center">
+              <Box
+                w={10}
+                h={10}
+                align="center"
+                justify="center"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                rounded="md"
+                background={'linear-gradient(to right, #00A9E0, #6DD3EF)'}
+                mr={4}
+              >
+                <Text fontWeight="500" fontSize="lg" color="white">8</Text>
+              </Box>
+              <Heading as="h3" size="md" fontWeight="500">Documentation Timeline & Process</Heading>
+            </Stack>
+            <VStack align="start" pl={14} spacing={3}>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Initial KYC completion required before fund admission</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Standard processing time: 5-10 business days</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Enhanced due diligence may require additional 10-15 business days</Text>
+              </HStack>
+              <HStack align="center">
+                <Box w={6} display="flex" justifyContent="center">
+                  <Icon as={FiCheck} color="green.500" boxSize={4} />
+                </Box>
+                <Text>Incomplete documentation will delay the onboarding process</Text>
+              </HStack>
+            </VStack>
+          </VStack>
+        </Box>
+
+        {/* Important Notice */}
+        <Box 
+          borderWidth="1px" 
+          borderRadius="lg" 
+          overflow="hidden"
+          borderColor={borderColor}
+          bg="gray.50"
+          p={6}
+        >
+          <VStack spacing={4} align="stretch">
+            <Heading as="h3" size="md" fontWeight="500">Important Notice</Heading>
+            <Text>
+              All documentation must be provided in English or accompanied by certified translations. Digital copies are acceptable for initial review, but original or 
+              certified copies may be required for final verification. Hushh Technology LLC reserves the right to request additional documentation as deemed necessary 
+              for compliance purposes.
+            </Text>
+          </VStack>
+        </Box>
+
+        {/* Data Protection & Privacy */}
+        <Box 
+          borderWidth="1px" 
+          borderRadius="lg" 
+          overflow="hidden"
+          borderColor={borderColor}
+          bg="blue.50"
+          p={6}
+        >
+          <VStack spacing={4} align="stretch">
+            <Heading as="h3" size="md" fontWeight="500">Data Protection & Privacy</Heading>
+            <Text>
+              All personal and financial information provided during the KYC process is handled in strict accordance with applicable privacy laws and regulations. Your 
+              data is encrypted, secured, stored, and will only be shared with authorized third parties as required by law and/or compliance verification purposes.
+            </Text>
+          </VStack>
+        </Box>
+
+        
+      </VStack>
+    </Container>
   )
 }
 

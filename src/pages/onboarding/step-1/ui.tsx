@@ -61,7 +61,7 @@ export default function OnboardingStep1() {
   } = useStep1Logic();
 
   return (
-    <div className="bg-[#faf9f6] text-[#151513] min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
@@ -74,7 +74,7 @@ export default function OnboardingStep1() {
           </div>
           <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-fr-rust transition-all duration-500"
+              className="h-full bg-hushh-blue transition-all duration-500"
               style={{ width: `${PROGRESS_PCT}%` }}
             />
           </div>
@@ -86,11 +86,11 @@ export default function OnboardingStep1() {
             Institutional Series
           </h3>
           <h1
-            className="text-[2.75rem] leading-[1.1] text-[#151513] tracking-tight"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}
+            className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             Hushh Fund A <br />
-            <span className="text-gray-400 italic font-medium">
+            <span className="text-gray-400 italic font-light">
               Multi-Strategy Alpha
             </span>
           </h1>
@@ -109,8 +109,9 @@ export default function OnboardingStep1() {
                 {/* Left: icon + name + tier */}
                 <div className="flex items-start gap-4">
                   <div
-                    className={`w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center shrink-0 ${isActive ? "bg-gray-100" : "bg-gray-50"
-                      }`}
+                    className={`w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center shrink-0 ${
+                      isActive ? "bg-gray-100" : "bg-gray-50"
+                    }`}
                   >
                     <span
                       className="material-symbols-outlined text-gray-600 text-xl"
@@ -125,7 +126,7 @@ export default function OnboardingStep1() {
                         {sc.name}
                       </h2>
                       {sc.id === "class_a" && (
-                        <span className="px-2 py-0.5 bg-fr-rust/10 text-fr-rust text-[10px] font-semibold rounded-full">
+                        <span className="px-2 py-0.5 bg-hushh-blue/10 text-hushh-blue text-[10px] font-semibold rounded-full">
                           Recommended
                         </span>
                       )}
@@ -140,8 +141,9 @@ export default function OnboardingStep1() {
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-right mb-1">
                     <span
-                      className={`text-sm font-sans ${isActive ? "text-black font-bold" : "text-gray-700 font-semibold"
-                        }`}
+                      className={`text-sm font-sans ${
+                        isActive ? "text-black font-bold" : "text-gray-700 font-semibold"
+                      }`}
                     >
                       {sc.displayPrice}
                     </span>{" "}
@@ -150,10 +152,11 @@ export default function OnboardingStep1() {
                     </span>
                   </div>
                   <div
-                    className={`flex items-center gap-3 rounded-full px-2 py-1 ${isActive
-                      ? "bg-gray-100"
-                      : "opacity-50 group-hover:opacity-100 transition-opacity"
-                      }`}
+                    className={`flex items-center gap-3 rounded-full px-2 py-1 ${
+                      isActive
+                        ? "bg-gray-100"
+                        : "opacity-50 group-hover:opacity-100 transition-opacity"
+                    }`}
                   >
                     <button
                       onClick={() => handleUnitChange(sc.id, -1)}
@@ -165,8 +168,9 @@ export default function OnboardingStep1() {
                       </span>
                     </button>
                     <span
-                      className={`font-mono text-sm w-4 text-center font-semibold ${isActive ? "text-black" : "text-gray-500"
-                        }`}
+                      className={`font-mono text-sm w-4 text-center font-semibold ${
+                        isActive ? "text-black" : "text-gray-500"
+                      }`}
                     >
                       {count}
                     </span>
@@ -190,14 +194,14 @@ export default function OnboardingStep1() {
         <section className="mb-32">
           <div className="flex items-center justify-between mb-8">
             <h3
-              className="text-xl text-[#151513] font-medium"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
+              className="text-xl text-black font-normal font-serif"
+              style={{ fontFamily: "'Playfair Display', serif" }}
             >
               Recurring Investment
             </h3>
             <div className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
               <input
-                className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-fr-rust transition-all duration-300"
+                    className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-hushh-blue transition-all duration-300"
                 id="recurring-toggle"
                 type="checkbox"
                 defaultChecked
@@ -237,10 +241,11 @@ export default function OnboardingStep1() {
                     <button
                       key={opt.value}
                       onClick={() => setFrequency(opt.value)}
-                      className={`flex-shrink-0 px-4 py-2.5 text-xs font-medium transition whitespace-nowrap border rounded-full ${isSelected
-                        ? "bg-fr-rust text-white border-fr-rust shadow-md"
-                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                        }`}
+                      className={`flex-shrink-0 px-4 py-2.5 text-xs font-medium transition whitespace-nowrap border rounded-full ${
+                        isSelected
+                          ? "bg-hushh-blue text-white border-hushh-blue shadow-md"
+                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                      }`}
                     >
                       {opt.label.toLowerCase()}
                     </button>
@@ -276,10 +281,11 @@ export default function OnboardingStep1() {
                     <button
                       key={opt.value}
                       onClick={() => setInvestmentDay(opt.value)}
-                      className={`flex-shrink-0 px-4 py-2.5 text-xs font-medium transition whitespace-nowrap border rounded-full ${isSelected
-                        ? "bg-fr-rust text-white border-fr-rust shadow-md"
-                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                        }`}
+                      className={`flex-shrink-0 px-4 py-2.5 text-xs font-medium transition whitespace-nowrap border rounded-full ${
+                        isSelected
+                          ? "bg-hushh-blue text-white border-hushh-blue shadow-md"
+                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                      }`}
                     >
                       {opt.label}
                     </button>
@@ -315,10 +321,11 @@ export default function OnboardingStep1() {
                     <button
                       key={amt}
                       onClick={() => handleAmountClick(amt)}
-                      className={`flex-shrink-0 px-5 py-2.5 text-xs font-mono font-medium transition whitespace-nowrap border rounded-full ${isSelected
-                        ? "bg-fr-rust text-white border-fr-rust shadow-md"
-                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                        }`}
+                      className={`flex-shrink-0 px-5 py-2.5 text-xs font-mono font-medium transition whitespace-nowrap border rounded-full ${
+                        isSelected
+                          ? "bg-hushh-blue text-white border-hushh-blue shadow-md"
+                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                      }`}
                     >
                       {formatCurrency(amt)}
                     </button>
@@ -337,7 +344,7 @@ export default function OnboardingStep1() {
                     value={customAmount}
                     onChange={handleCustomAmountChange}
                     placeholder="Custom amount"
-                    className="w-full pl-7 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono text-gray-900 placeholder:text-gray-400 outline-none focus:ring-1 focus:ring-fr-rust focus:border-fr-rust transition"
+                    className="w-full pl-7 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono text-gray-900 placeholder:text-gray-400 outline-none focus:ring-1 focus:ring-hushh-blue focus:border-hushh-blue transition"
                   />
                 </div>
                 {customAmountError && (
@@ -377,7 +384,7 @@ export default function OnboardingStep1() {
         <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[12px] text-fr-rust">
+              <span className="material-symbols-outlined text-[12px] text-hushh-blue">
                 lock
               </span>
               <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">

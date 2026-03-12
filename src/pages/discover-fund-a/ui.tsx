@@ -14,6 +14,7 @@ import HushhTechCta, {
   HushhTechCtaVariant,
 } from "../../components/hushh-tech-cta/HushhTechCta";
 import HushhTechFooter, {
+  HushhFooterTab,
 } from "../../components/hushh-tech-footer/HushhTechFooter";
 
 /* ── settings-style row (same as profile page) ── */
@@ -32,7 +33,7 @@ const FieldRow = ({
 
 /* ── section label (same as profile page) ── */
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-medium mt-10 mb-2">
+  <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-medium mt-10 mb-2">
     {children}
   </p>
 );
@@ -42,21 +43,21 @@ const FeatureCard = ({
   icon,
   title,
   description,
-  iconColor = "text-fr-navy",
+  iconColor = "text-gray-700",
 }: {
   icon: string;
   title: string;
   description: string;
   iconColor?: string;
 }) => (
-  <div className="flex items-start gap-4 border border-gray-200 rounded-2xl p-5 hover:border-fr-rust/30 hover:bg-white transition-all bg-white shadow-sm">
-    <div className="w-11 h-11 rounded-full border border-gray-100 flex items-center justify-center shrink-0 bg-fr-cream">
+  <div className="flex items-start gap-4 border border-gray-200 rounded-2xl p-5 hover:border-gray-300 hover:bg-gray-50/50 transition-all">
+    <div className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center shrink-0 bg-white">
       <span className={`material-symbols-outlined ${iconColor} !text-[1.15rem]`}>
         {icon}
       </span>
     </div>
     <div className="flex-1 min-w-0">
-      <h3 className="text-[13px] font-semibold text-fr-navy leading-snug mb-1">
+      <h3 className="text-[13px] font-semibold text-black leading-snug mb-1">
         {title}
       </h3>
       <p className="text-[11px] text-gray-400 font-light leading-relaxed">
@@ -74,10 +75,10 @@ const PHILOSOPHY_ICONS: Record<string, string> = {
   "Concentrated Conviction": "target",
 };
 const PHILOSOPHY_COLORS: Record<string, string> = {
-  "Options Intelligence": "text-fr-rust",
-  "AI-Enhanced Research": "text-fr-rust",
+  "Options Intelligence": "text-hushh-blue",
+  "AI-Enhanced Research": "text-hushh-blue",
   "Risk-First Architecture": "text-ios-green",
-  "Concentrated Conviction": "text-fr-navy",
+  "Concentrated Conviction": "text-ios-dark",
 };
 
 const EDGE_ICONS: Record<string, string> = {
@@ -87,8 +88,8 @@ const EDGE_ICONS: Record<string, string> = {
   "Downside Protection": "security",
 };
 const EDGE_COLORS: Record<string, string> = {
-  "Volatility Harvesting": "text-fr-rust",
-  "Asymmetric Returns": "text-fr-rust",
+  "Volatility Harvesting": "text-hushh-blue",
+  "Asymmetric Returns": "text-hushh-blue",
   "Income Generation": "text-ios-green",
   "Downside Protection": "text-ios-green",
 };
@@ -99,7 +100,7 @@ const ASSET_ICONS: Record<string, string> = {
   "Cash & Equivalents": "savings",
 };
 const ASSET_COLORS: Record<string, string> = {
-  "U.S. Large-Cap Equities": "text-fr-rust",
+  "U.S. Large-Cap Equities": "text-hushh-blue",
   "Strategic Options Overlay": "text-ios-yellow",
   "Cash & Equivalents": "text-ios-green",
 };
@@ -114,7 +115,7 @@ const RISK_COLORS: Record<string, string> = {
   "Position Limits": "text-ios-yellow",
   "Hedging Framework": "text-ios-green",
   "Drawdown Protocols": "text-ios-red",
-  "Liquidity Management": "text-fr-rust",
+  "Liquidity Management": "text-hushh-blue",
 };
 
 const FundA = () => {
@@ -151,7 +152,7 @@ const FundA = () => {
   } = useDiscoverFundALogic();
 
   return (
-    <div className="bg-fr-cream text-fr-navy min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white font-sans">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader
         onBackClick={() => navigate("/")}
@@ -159,47 +160,49 @@ const FundA = () => {
       />
 
       {/* ═══ Main ═══ */}
-      <main className="px-6 md:px-10 flex-grow max-w-md md:max-w-3xl lg:max-w-5xl mx-auto w-full pb-32">
+      <main className="px-6 flex-grow max-w-md mx-auto w-full pb-32">
         {/* ── Hero ── */}
         <section className="pt-6 pb-8">
           {/* pill badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-fr-rust/20 rounded-full mb-6">
-            <span className="w-1.5 h-1.5 bg-fr-rust rounded-full" />
-            <span className="text-[10px] tracking-[0.15em] uppercase font-medium text-fr-rust">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-hushh-blue/20 rounded-full mb-6">
+            <span className="w-1.5 h-1.5 bg-hushh-blue rounded-full" />
+            <span className="text-[10px] tracking-[0.15em] uppercase font-medium text-hushh-blue">
               Flagship Fund
             </span>
           </div>
 
           <h1
-            className="text-[2.75rem] md:text-[3.5rem] lg:text-[4rem] leading-[1.1] text-fr-navy tracking-tight font-display"
+            className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             {heroTitle} <br />
             <span className="text-gray-400 italic font-light">{heroSubtitle}</span>
           </h1>
 
-          <p className="text-[13px] md:text-sm text-gray-500 font-light mt-4 leading-relaxed max-w-xs md:max-w-md">
+          <p className="text-[13px] text-gray-400 font-light mt-4 leading-relaxed max-w-xs">
             {heroDescription}
           </p>
         </section>
 
         {/* ── Target IRR (premium black card — like step-1 share class) ── */}
         <section className="mb-8">
-          <div className="bg-fr-navy rounded-2xl p-6 text-center relative overflow-hidden shadow-xl">
+          <div className="bg-ios-dark rounded-2xl p-6 text-center relative overflow-hidden">
             {/* subtle glow */}
-            <div className="absolute -top-8 -right-8 w-32 h-32 bg-fr-rust/15 rounded-full blur-2xl" />
+            <div className="absolute -top-8 -right-8 w-32 h-32 bg-hushh-blue/15 rounded-full blur-2xl" />
             <div className="relative z-10">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-3 font-medium">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-3 font-medium">
                 {targetIRRLabel}
               </p>
               <p
-                className="text-[48px] leading-none font-medium text-fr-rust mb-2 font-display"
+                className="text-[48px] leading-none font-medium text-ios-green mb-2"
+                style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 {targetIRRValue}
               </p>
               <p className="text-[13px] text-gray-400 mb-4">
                 {targetIRRPeriod}
               </p>
-              <p className="text-[9px] text-gray-500 italic max-w-[220px] mx-auto leading-relaxed">
+              <p className="text-[9px] text-gray-600 italic max-w-[220px] mx-auto leading-relaxed">
                 {targetIRRDisclaimer}
               </p>
             </div>
@@ -208,12 +211,12 @@ const FundA = () => {
 
         {/* ── Investment Philosophy ── */}
         <SectionLabel>{philosophySectionTitle}</SectionLabel>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+        <div className="space-y-3 mb-2">
           {philosophyCards.map((card) => (
             <FeatureCard
               key={card.title}
               icon={PHILOSOPHY_ICONS[card.title] || "lightbulb"}
-              iconColor={PHILOSOPHY_COLORS[card.title] || "text-fr-rust"}
+              iconColor={PHILOSOPHY_COLORS[card.title] || "text-hushh-blue"}
               title={card.title}
               description={card.description}
             />
@@ -227,18 +230,18 @@ const FundA = () => {
             href={sellTheWallHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-fr-rust underline decoration-fr-rust/30 hover:decoration-fr-rust transition-colors"
+            className="text-hushh-blue underline decoration-hushh-blue/30 hover:decoration-hushh-blue transition-colors"
           >
             Sell the Wall
           </a>{" "}
           Framework
         </SectionLabel>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+        <div className="space-y-3 mb-2">
           {edgeCards.map((card) => (
             <FeatureCard
               key={card.title}
               icon={EDGE_ICONS[card.title] || "auto_awesome"}
-              iconColor={EDGE_COLORS[card.title] || "text-fr-rust"}
+              iconColor={EDGE_COLORS[card.title] || "text-hushh-blue"}
               title={card.title}
               description={card.description}
             />
@@ -250,12 +253,12 @@ const FundA = () => {
         <p className="text-[11px] text-gray-400 font-light leading-relaxed mb-4">
           {assetFocusDescription}
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
+        <div className="space-y-3 mb-2">
           {assetPillars.map((pillar) => (
             <FeatureCard
               key={pillar.title}
               icon={ASSET_ICONS[pillar.title] || "category"}
-              iconColor={ASSET_COLORS[pillar.title] || "text-fr-rust"}
+              iconColor={ASSET_COLORS[pillar.title] || "text-hushh-blue"}
               title={pillar.title}
               description={pillar.description}
             />
@@ -272,20 +275,21 @@ const FundA = () => {
             row.isTotalRow ? (
               <div
                 key={row.label}
-                className="flex items-center justify-between bg-fr-navy text-white rounded-2xl px-6 py-4 mt-3 shadow-lg"
+                className="flex items-center justify-between bg-ios-dark text-white rounded-2xl px-6 py-4 mt-3"
               >
                 <span className="text-sm font-semibold">
                   {row.label}
                 </span>
                 <span
-                  className="text-xl font-medium text-fr-rust font-display"
+                  className="text-xl font-medium text-ios-green"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
                 >
                   {row.value}
                 </span>
               </div>
             ) : (
               <FieldRow key={row.label} label={row.label}>
-                <span className="text-sm font-semibold text-fr-navy">
+                <span className="text-sm font-semibold text-black">
                   {row.value}
                 </span>
               </FieldRow>
@@ -295,7 +299,7 @@ const FundA = () => {
 
         {/* ── Risk Management ── */}
         <SectionLabel>{riskSectionTitle}</SectionLabel>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+        <div className="space-y-3 mb-2">
           {riskCards.map((card) => (
             <FeatureCard
               key={card.title}
@@ -317,7 +321,7 @@ const FundA = () => {
         <div className="mb-4">
           {keyTerms.slice(0, 2).map((term) => (
             <FieldRow key={term.title} label={term.title}>
-              <span className="text-[12px] font-medium text-fr-navy max-w-[180px] text-right leading-snug">
+              <span className="text-[12px] font-medium text-black max-w-[180px] text-right leading-snug">
                 {term.content}
               </span>
             </FieldRow>
@@ -326,49 +330,49 @@ const FundA = () => {
 
         {/* Share Classes (compact cards) */}
         <SectionLabel>Share Classes</SectionLabel>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+        <div className="space-y-3 mb-4">
           {shareClasses.map((sc) => (
             <div
               key={sc.shareClass}
-              className="border border-gray-200 rounded-2xl p-5 hover:border-fr-rust transition-colors bg-white shadow-sm"
+              className="border border-gray-200 rounded-2xl p-5 hover:border-gray-300 transition-colors"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-fr-navy flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-full bg-ios-dark flex items-center justify-center">
                     <span className="material-symbols-outlined text-white !text-[0.9rem]">
                       account_balance_wallet
                     </span>
                   </div>
-                  <span className="text-[13px] font-semibold text-fr-navy">
+                  <span className="text-[13px] font-semibold text-black">
                     {sc.shareClass}
                   </span>
                 </div>
-                <span className="text-[11px] font-medium text-fr-rust bg-fr-rust/10 px-2.5 py-1 rounded-full">
+                <span className="text-[11px] font-medium text-hushh-blue bg-hushh-blue/10 px-2.5 py-1 rounded-full">
                   Min {sc.minInvestment}
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center">
-                  <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-0.5 font-medium">
+                  <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-0.5">
                     Mgmt
                   </p>
-                  <p className="text-[12px] font-semibold text-fr-navy">
+                  <p className="text-[12px] font-semibold text-black">
                     {sc.managementFee}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-0.5 font-medium">
+                  <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-0.5">
                     Perf
                   </p>
-                  <p className="text-[12px] font-semibold text-fr-navy">
+                  <p className="text-[12px] font-semibold text-black">
                     {sc.performanceFee}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-0.5 font-medium">
+                  <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-0.5">
                     Hurdle
                   </p>
-                  <p className="text-[12px] font-semibold text-fr-navy">
+                  <p className="text-[12px] font-semibold text-black">
                     {sc.hurdleRate}
                   </p>
                 </div>
@@ -381,7 +385,7 @@ const FundA = () => {
         <div className="mb-6">
           {keyTerms.slice(2).map((term) => (
             <FieldRow key={term.title} label={term.title}>
-              <span className="text-[12px] font-medium text-fr-navy max-w-[180px] text-right leading-snug">
+              <span className="text-[12px] font-medium text-black max-w-[180px] text-right leading-snug">
                 {term.content}
               </span>
             </FieldRow>
@@ -391,15 +395,16 @@ const FundA = () => {
         {/* ── Join / CTA ── */}
         <section className="border-t border-gray-200 pt-8 mb-8">
           <h2
-            className="text-[22px] md:text-[28px] text-fr-navy tracking-tight mb-2 font-display"
+            className="text-[22px] font-medium text-black tracking-tight mb-2"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             {joinSectionTitle}
           </h2>
-          <p className="text-[13px] md:text-sm text-gray-500 font-medium leading-relaxed mb-8 max-w-xs md:max-w-lg">
+          <p className="text-[13px] text-gray-400 font-light leading-relaxed mb-8 max-w-xs">
             {joinSectionDescription}
           </p>
 
-          <div className="flex flex-col md:flex-row gap-3 md:w-fit">
+          <div className="space-y-3">
             <HushhTechCta
               variant={HushhTechCtaVariant.BLACK}
               onClick={handleCompleteProfile}
@@ -420,7 +425,8 @@ const FundA = () => {
 
         {/* ── Disclaimer ── */}
         <p
-          className="text-[9px] md:text-[10px] text-gray-400 text-center leading-relaxed italic max-w-xs md:max-w-md mx-auto mb-4 font-body"
+          className="text-[9px] text-gray-400 text-center leading-relaxed italic max-w-xs mx-auto mb-4"
+          style={{ fontFamily: "'Playfair Display', serif" }}
         >
           Investing involves risk, including possible loss of principal. Past
           performance does not guarantee future results. Hushh Technologies is an
@@ -430,6 +436,13 @@ const FundA = () => {
 
       {/* ═══ Footer Nav ═══ */}
       <HushhTechFooter
+        activeTab={HushhFooterTab.FUND_A}
+        onTabChange={(tab) => {
+          if (tab === HushhFooterTab.HOME) navigate("/");
+          if (tab === HushhFooterTab.FUND_A) navigate("/discover-fund-a");
+          if (tab === HushhFooterTab.COMMUNITY) navigate("/community");
+          if (tab === HushhFooterTab.PROFILE) navigate("/profile");
+        }}
       />
     </div>
   );

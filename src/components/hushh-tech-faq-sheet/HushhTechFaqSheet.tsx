@@ -1,7 +1,7 @@
 /**
  * HushhTechFaqSheet — Bottom sheet with accordion FAQs.
  * Follows the unified design language: Playfair Display headings,
- * tracking-[0.2em] section headers, fr-rust accents, ios-green badges.
+ * tracking-[0.2em] section headers, hushh-blue accents, ios-green badges.
  */
 import React, { useState, useEffect, useCallback } from "react";
 
@@ -136,15 +136,17 @@ const HushhTechFaqSheet: React.FC<HushhTechFaqSheetProps> = ({
     <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true">
       {/* Backdrop */}
       <div
-        className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${isVisible ? "opacity-100" : "opacity-0"
-          }`}
+        className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${
+          isVisible ? "opacity-100" : "opacity-0"
+        }`}
         onClick={handleBackdropClick}
       />
 
       {/* Sheet */}
       <div
-        className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-h-[85vh] flex flex-col transition-transform duration-300 ease-out ${isVisible ? "translate-y-0" : "translate-y-full"
-          }`}
+        className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-h-[85vh] flex flex-col transition-transform duration-300 ease-out ${
+          isVisible ? "translate-y-0" : "translate-y-full"
+        }`}
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
@@ -208,8 +210,9 @@ const HushhTechFaqSheet: React.FC<HushhTechFaqSheetProps> = ({
                           {item.q}
                         </span>
                         <span
-                          className={`material-symbols-outlined text-gray-400 text-lg transition-transform duration-200 ${isExpanded ? "rotate-180" : ""
-                            }`}
+                          className={`material-symbols-outlined text-gray-400 text-lg transition-transform duration-200 ${
+                            isExpanded ? "rotate-180" : ""
+                          }`}
                           style={{ fontVariationSettings: "'wght' 300" }}
                         >
                           expand_more
@@ -218,8 +221,9 @@ const HushhTechFaqSheet: React.FC<HushhTechFaqSheetProps> = ({
 
                       {/* Answer — animated */}
                       <div
-                        className={`overflow-hidden transition-all duration-200 ease-out ${isExpanded ? "max-h-60 opacity-100" : "max-h-0 opacity-0"
-                          }`}
+                        className={`overflow-hidden transition-all duration-200 ease-out ${
+                          isExpanded ? "max-h-60 opacity-100" : "max-h-0 opacity-0"
+                        }`}
                       >
                         <p className="px-4 pb-4 pl-[60px] text-sm text-gray-500 font-light leading-relaxed">
                           {item.a}
@@ -236,7 +240,7 @@ const HushhTechFaqSheet: React.FC<HushhTechFaqSheetProps> = ({
           <div className="mt-8 mb-4 flex flex-col items-center text-center gap-2">
             <div className="flex items-center gap-1.5">
               <span
-                className="material-symbols-outlined text-fr-rust text-sm"
+                className="material-symbols-outlined text-hushh-blue text-sm"
                 style={{ fontVariationSettings: "'wght' 400" }}
               >
                 support_agent
@@ -247,7 +251,7 @@ const HushhTechFaqSheet: React.FC<HushhTechFaqSheetProps> = ({
             </div>
             <a
               href="mailto:support@hushh.ai"
-              className="text-xs font-semibold text-fr-rust hover:underline"
+              className="text-xs font-semibold text-hushh-blue hover:underline"
             >
               support@hushh.ai
             </a>

@@ -2,7 +2,7 @@ import { useState, useEffect, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
-import OnboardingShell from '../../components/OnboardingShell';
+import { useFooterVisibility } from '../../utils/useFooterVisibility';
 
 type RecurringFrequency = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';
 
@@ -98,7 +98,7 @@ const SHARE_CLASSES: ShareClassInfo[] = [
     name: 'Class A',
     unitPrice: 25000000,
     tier: 'platinum',
-    borderGradient: 'bg-gradient-to-b from-[#8C8479] via-[#C4BFB5] to-[#8C8479]',
+    borderGradient: 'bg-gradient-to-b from-gray-300 via-gray-100 to-gray-300',
     badge: 'ULTRA',
   },
   {
@@ -106,7 +106,7 @@ const SHARE_CLASSES: ShareClassInfo[] = [
     name: 'Class B',
     unitPrice: 5000000,
     tier: 'gold',
-    borderGradient: 'bg-gradient-to-b from-[#AA4528] via-[#8C3720] to-[#AA4528]',
+    borderGradient: 'bg-gradient-to-b from-yellow-400 via-yellow-200 to-yellow-500',
     badge: 'PREMIUM',
   },
   {
@@ -114,7 +114,7 @@ const SHARE_CLASSES: ShareClassInfo[] = [
     name: 'Class C',
     unitPrice: 1000000,
     tier: 'standard',
-    borderGradient: 'bg-[#151513]',
+    borderGradient: 'bg-[#2b8cee]',
   },
 ];
 
@@ -154,6 +154,7 @@ const parseFormattedNumber = (value: string): number => {
 
 function OnboardingStep11() {
   const navigate = useNavigate();
+  const isFooterVisible = useFooterVisibility();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shareUnits, setShareUnits] = useState<{
@@ -194,7 +195,7 @@ function OnboardingStep11() {
   const modalTotalInvestment = calculateTotal(localShareUnits);
 
   // Check if modal has changes
-  const hasModalChanges =
+  const hasModalChanges = 
     localShareUnits.class_a_units !== shareUnits.class_a_units ||
     localShareUnits.class_b_units !== shareUnits.class_b_units ||
     localShareUnits.class_c_units !== shareUnits.class_c_units;
@@ -202,6 +203,12 @@ function OnboardingStep11() {
   /* ─── Enable page-level scrolling ─── */
   useEffect(() => {
     window.scrollTo(0, 0);
+    document.documentElement.classList.add('onboarding-page-scroll');
+    document.body.classList.add('onboarding-page-scroll');
+    return () => {
+      document.documentElement.classList.remove('onboarding-page-scroll');
+      document.body.classList.remove('onboarding-page-scroll');
+    };
   }, []);
 
   useEffect(() => {
@@ -298,9 +305,9 @@ function OnboardingStep11() {
   // Save modal changes to Supabase
   const handleSaveChanges = async () => {
     if (!hasModalChanges) return;
-
+    
     setSavingModal(true);
-
+    
     if (!config.supabaseClient) {
       setSavingModal(false);
       return;
@@ -323,7 +330,7 @@ function OnboardingStep11() {
       setShareUnits({ ...localShareUnits });
       setIsModalOpen(false);
     }
-
+    
     setSavingModal(false);
   };
 
@@ -494,402 +501,466 @@ function OnboardingStep11() {
   const PROG_PCT = Math.round((DISPLAY_STEP / PROG_TOTAL) * 100);
 
   return (
-    <OnboardingShell
-      step={DISPLAY_STEP}
-      totalSteps={PROG_TOTAL}
-      onBack={handleBack}
-      onClose={() => navigate('/dashboard')}
-      continueLabel={loading ? 'Saving…' : 'Continue'}
-      onContinue={handleContinue}
-      continueDisabled={!isFormValid || loading}
-      continueLoading={loading}
+    <div
+      className="bg-white min-h-[100dvh]"
+      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}
     >
-      <div className="mb-8">
-        <h1
-          className="text-[2.2rem] md:text-[2.6rem] font-medium leading-tight text-[#151513] mb-3"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
-        >
-          Investment Summary
-        </h1>
-        <p className="text-[15px] text-[#8C8479] leading-relaxed">
-          Review your selected share class units and total initial investment.
-        </p>
-      </div>
+      {/* ═══ iOS Navigation Bar ═══ */}
+      <nav
+        className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#C6C6C8]/30 flex items-end justify-between px-4 pb-2"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 12px) + 4px)', minHeight: '48px' }}
+      >
+        <button onClick={handleBack} className="text-[#007AFF] flex items-center -ml-2 active:opacity-50 transition-opacity" aria-label="Go back">
+          <span className="material-symbols-outlined text-3xl -mr-1" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>chevron_left</span>
+          <span className="text-[17px] leading-none pb-[2px]">Back</span>
+        </button>
+        <span className="font-semibold text-[17px] text-black">Setup</span>
+        <button onClick={handleSkip} className="text-[17px] text-[#007AFF] font-normal active:opacity-50 transition-opacity">Skip</button>
+      </nav>
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-md text-red-700 text-sm">
-          {error}
-        </div>
-      )}
+      <main className="max-w-lg mx-auto w-full px-4 pt-4 pb-48">
+        {/* ─── Title ─── */}
+        <h1 className="text-[34px] leading-[41px] font-bold text-black tracking-tight mb-4">Investment Summary</h1>
 
-      {/* Share Class Cards */}
-      <div className="mb-8">
-        <div className="flex justify-between items-end mb-4">
-          <h2 className="text-[14px] font-bold text-[#151513] uppercase tracking-[0.05em]">Share Class Units</h2>
-          <button
-            onClick={handleOpenModal}
-            className="text-[13px] font-semibold text-[#AA4528] hover:text-[#8C3720] transition-colors flex items-center gap-1.5"
-          >
-            <EditIcon />
-            Edit
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          {SHARE_CLASSES.map((shareClass) => {
-            const units = getUnits(shareClass.id);
-            const subtotal = units * shareClass.unitPrice;
-            const hasUnits = units > 0;
-
-            return (
-              <div
-                key={shareClass.id}
-                className={`flex flex-col rounded-md border p-5 relative overflow-hidden transition-colors ${hasUnits
-                  ? 'bg-white border-[#EEE9E0]'
-                  : 'bg-[#FDF9F7]/30 border-[#EEE9E0] opacity-60'
-                  }`}
-              >
-                {/* Colored left border */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${hasUnits ? shareClass.borderGradient : 'bg-[#E5E0D8]'
-                  }`} />
-
-                <div className="pl-3">
-                  {/* Header row */}
-                  <div className="flex justify-between items-center mb-1">
-                    <h3 className={`text-[17px] font-bold ${hasUnits ? 'text-[#151513]' : 'text-[#8C8479]'}`}>
-                      {shareClass.name}
-                    </h3>
-                    <span className={`px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-sm border ${hasUnits
-                      ? 'bg-[#FDF9F7] text-[#AA4528] border-[#AA4528]/20'
-                      : 'bg-[#F2F0EB] text-[#8C8479] border-[#EEE9E0]'
-                      }`}>
-                      {hasUnits ? 'active' : 'disabled'}
-                    </span>
-                  </div>
-
-                  {/* Price and units row */}
-                  <div className={`flex justify-between items-center text-[14px] ${hasUnits ? 'text-[#5C564D]' : 'text-[#8C8479]'}`}>
-                    <span>{formatCurrency(shareClass.unitPrice)} / unit</span>
-                    <span className="font-medium">{units} units</span>
-                  </div>
-
-                  {/* Subtotal */}
-                  {hasUnits && (
-                    <div className="pt-3 border-t border-[#F2F0EB] mt-3">
-                      <p className="text-[#151513] font-semibold text-[15px] flex justify-between">
-                        <span>Subtotal</span>
-                        <span>{formatCurrency(subtotal)}</span>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Total Investment Card */}
-      <div className="mb-8 p-6 bg-[#F7F5F0] rounded-md border border-[#EEE9E0] text-center flex flex-col items-center relative overflow-hidden">
-        <span className="text-[12px] font-bold uppercase tracking-[0.1em] text-[#8C8479] mb-2">
-          Total Initial Investment
-        </span>
-        <span className="text-4xl md:text-5xl font-medium text-[#151513] mb-3" style={{ fontFamily: 'var(--font-display)' }}>
-          {hasAnyUnits ? formatFullCurrency(totalInvestment) : '$0'}
-        </span>
-        <div className="h-[2px] w-12 bg-[#AA4528] mb-3" />
-        {hasAnyUnits ? (
-          <span className="text-[14px] font-medium text-[#5C564D]">
-            {getUnitsSummary()}
-          </span>
-        ) : (
-          <span className="text-[14px] text-[#8C8479]">
-            Select units to continue.
-          </span>
-        )}
-      </div>
-
-      {/* Info Notice */}
-      <div className="mb-8 p-4 bg-[#FDF9F7] border border-[#AA4528]/20 rounded-md flex gap-3 items-start">
-        <span className="text-[#AA4528] shrink-0 mt-0.5">
-          <InfoIcon />
-        </span>
-        <p className="text-[14px] text-[#5C564D] leading-relaxed">
-          We are currently accepting investments of $1 million or greater for Hushh Fund A.
-        </p>
-      </div>
-
-      {/* Recurring Investment */}
-      <div className="mb-8">
-        <h2 className="text-[14px] font-bold text-[#151513] uppercase tracking-[0.05em] mb-1">Recurring Investment</h2>
-        <p className="text-[13px] text-[#8C8479] mb-4">
-          Optional. Review now and edit only if needed.
-        </p>
-
-        {/* Collapsed summary + edit */}
-        <div className="bg-white rounded-md border border-[#EEE9E0] p-4 flex items-center justify-between gap-3 mb-4">
-          <div className="min-w-0">
-            <p className="text-[15px] font-semibold text-[#151513] truncate">{recurringSummaryTitle}</p>
-            <p className="text-[13px] text-[#8C8479] mt-0.5">{recurringSummarySubtitle}</p>
+        {/* ─── Progress Bar ─── */}
+        <div className="space-y-2 mb-8">
+          <div className="flex justify-between items-end text-[13px] font-medium text-[#8E8E93] uppercase tracking-wide">
+            <span>Onboarding Progress</span>
+            <span>Step {DISPLAY_STEP}/{PROG_TOTAL}</span>
           </div>
-          <button
-            onClick={() => setShowRecurringEditor((prev) => !prev)}
-            className="shrink-0 rounded bg-[#F7F5F0] hover:bg-[#EEE9E0] border border-[#EEE9E0] px-3.5 py-1.5 text-[13px] font-semibold text-[#5C564D] transition-colors"
-          >
-            {showRecurringEditor ? 'Hide' : 'Edit'}
-          </button>
+          <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-[#007AFF] rounded-full transition-all duration-500" style={{ width: `${PROG_PCT}%` }} />
+          </div>
+          <p className="text-[13px] text-[#8E8E93]">{PROG_PCT}% complete</p>
         </div>
 
-        {showRecurringEditor && (
-          <div className="border border-[#EEE9E0] rounded-md p-5 bg-[#FDFBF9] space-y-6">
-            {/* Frequency Section */}
-            <div>
-              <h3 className="text-[14px] font-bold text-[#151513] mb-3">Frequency</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                {[
-                  { value: 'once_a_month', label: 'Once a month' },
-                  { value: 'twice_a_month', label: 'Twice a month' },
-                  { value: 'weekly', label: 'Weekly' },
-                  { value: 'every_other_week', label: 'Every other week' },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setFrequency(option.value as RecurringFrequency)}
-                    className={`flex h-12 items-center justify-center rounded-md text-[14px] font-semibold transition-all ${frequency === option.value
-                      ? 'bg-[#AA4528] text-white border-transparent'
-                      : 'bg-white border border-[#EEE9E0] text-[#5C564D] hover:bg-[#F7F5F0]'
-                      }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-semibold text-[#8C8479] uppercase tracking-wider">
-                  Investment day
-                </label>
-                <div className="relative">
-                  <select
-                    value={investmentDay}
-                    onChange={(e) => setInvestmentDay(e.target.value)}
-                    className="w-full h-12 rounded-md border border-[#EEE9E0] bg-white text-[#151513] px-4 text-[15px] font-medium focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20 outline-none appearance-none cursor-pointer"
-                  >
-                    <option value="1st">1st</option>
-                    <option value="2nd">2nd</option>
-                    <option value="5th">5th</option>
-                    <option value="10th">10th</option>
-                    <option value="15th">15th</option>
-                    <option value="20th">20th</option>
-                    <option value="25th">25th</option>
-                    <option value="Last">Last day of month</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#8C8479]">
-                    <ChevronDownIcon />
-                  </div>
-                </div>
-              </div>
+          {/* Error Message */}
+          {error && (
+            <div className="mx-5 mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+              {error}
             </div>
+          )}
 
-            {/* Recurring Amount */}
-            <div className="pt-6 border-t border-[#EEE9E0]">
-              <h3 className="text-[14px] font-bold text-[#151513] mb-3">Recurring Amount</h3>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                {[500000, 750000, 1000000, 1500000].map((amount) => (
-                  <button
-                    key={amount}
-                    onClick={() => handleAmountClick(amount)}
-                    className={`relative flex items-center justify-center h-14 rounded-md transition-all ${selectedAmount === amount
-                      ? 'border-2 border-[#AA4528] bg-[#FDF9F7] text-[#AA4528]'
-                      : 'border border-[#EEE9E0] bg-white hover:border-[#AA4528]/50 hover:bg-[#F7F5F0] text-[#151513]'
-                      }`}
-                  >
-                    <span className="text-[15px] font-bold">
-                      ${amount.toLocaleString()}
-                    </span>
-                    {selectedAmount === amount && (
-                      <div className="absolute top-1.5 right-1.5 text-[#AA4528]">
-                        <CheckIcon />
+          {/* Section Title */}
+          <div className="px-5 mb-3">
+            <h2 className="text-lg font-bold text-slate-900">Share Class Units</h2>
+          </div>
+
+          {/* Share Class Cards */}
+          <div className="flex flex-col gap-4 px-5">
+            {SHARE_CLASSES.map((shareClass) => {
+              const units = getUnits(shareClass.id);
+              const subtotal = units * shareClass.unitPrice;
+              const hasUnits = units > 0;
+
+              return (
+                <div
+                  key={shareClass.id}
+                  className={`flex flex-col rounded-xl border p-4 shadow-sm relative overflow-hidden ${
+                    hasUnits 
+                      ? 'bg-white border-slate-200' 
+                      : 'bg-slate-50 border-slate-200 opacity-70'
+                  }`}
+                >
+                  {/* Colored left border - always show for active, or gray for inactive */}
+                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                    hasUnits ? shareClass.borderGradient : 'bg-slate-200'
+                  }`} />
+                  
+                  <div className="pl-3">
+                    {/* Header row */}
+                    <div className="flex justify-between items-center">
+                      <h3 className={`text-lg font-bold ${hasUnits ? 'text-slate-900' : 'text-slate-400'}`}>
+                        {shareClass.name}
+                      </h3>
+                      <span className={`px-2 py-1 text-xs font-bold rounded border ${
+                        hasUnits 
+                          ? 'bg-green-50 text-green-700 border-green-100' 
+                          : 'bg-slate-100 text-slate-400 border-slate-200'
+                      }`}>
+                        {hasUnits ? 'active' : 'disabled'}
+                      </span>
+                    </div>
+                    
+                    {/* Price and units row */}
+                    <div className={`flex justify-between items-center text-sm mt-2 ${hasUnits ? 'text-slate-500' : 'text-slate-400'}`}>
+                      <span>{formatCurrency(shareClass.unitPrice)}/unit</span>
+                      <span>units {units}</span>
+                    </div>
+                    
+                    {/* Subtotal (only if has units) */}
+                    {hasUnits && (
+                      <div className="pt-2 border-t border-slate-100 mt-2">
+                        <p className="text-slate-900 font-bold">
+                          Subtotal: {formatCurrency(subtotal)}
+                        </p>
                       </div>
                     )}
-                  </button>
-                ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Edit link - now opens modal */}
+            <div className="mt-2">
+              <button
+                onClick={handleOpenModal}
+                className="inline-flex items-center gap-2 text-[#2b8cee] hover:text-blue-600 transition-colors font-bold text-sm"
+              >
+                <EditIcon />
+                <span>Edit share class selection</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Total Investment Card */}
+          <div className="px-5 mt-8 mb-6">
+            <div className="relative bg-[#2b8cee]/5 rounded-xl p-6 border-2 border-[#2b8cee]/20 flex flex-col items-center justify-center gap-2 text-center">
+              {/* Wallet icon in corner */}
+              <div className="absolute top-3 right-3">
+                <WalletIcon />
+              </div>
+              
+              <span className="text-sm font-semibold uppercase tracking-widest text-slate-500">
+                Total Investment
+              </span>
+              <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                {hasAnyUnits ? formatFullCurrency(totalInvestment) : '$0'}
+              </span>
+              
+              {/* Blue divider */}
+              <div className="h-1 w-16 bg-[#2b8cee] rounded-full mt-2 mb-2" />
+              
+              {hasAnyUnits && (
+                <span className="text-sm font-medium text-slate-500">
+                  {getUnitsSummary()}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Info Card */}
+          <div className="px-5 mb-8">
+            <div className="bg-slate-50 rounded-lg p-4 flex gap-3 items-start border border-slate-100">
+              <span className="text-slate-500 shrink-0 mt-0.5">
+                <InfoIcon />
+              </span>
+              <p className="text-sm text-slate-500 leading-normal">
+                We are currently accepting investments of $1 million or greater for Hushh Fund A.
+              </p>
+            </div>
+          </div>
+
+          {/* Recurring Investment */}
+          <div className="px-5 mb-3">
+            <h2 className="text-lg font-bold text-slate-900">Recurring Investment</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Optional. Review now and edit only if needed.
+            </p>
+          </div>
+
+          {/* Collapsed summary + edit */}
+          <div className="mx-5 mb-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-900 truncate">{recurringSummaryTitle}</p>
+                  <p className="text-xs text-slate-500 mt-1">{recurringSummarySubtitle}</p>
+                </div>
+                <button
+                  onClick={() => setShowRecurringEditor((prev) => !prev)}
+                  className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  {showRecurringEditor ? 'Hide' : 'Edit'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {showRecurringEditor && (
+            <>
+              {/* Frequency Section */}
+              <div className="mx-5 mb-6">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                  <h3 className="text-base font-bold text-slate-900 mb-4">Frequency</h3>
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    {[
+                      { value: 'once_a_month', label: 'Once a month' },
+                      { value: 'twice_a_month', label: 'Twice a month' },
+                      { value: 'weekly', label: 'Weekly' },
+                      { value: 'every_other_week', label: 'Every other week' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setFrequency(option.value as RecurringFrequency)}
+                        className={`flex h-11 items-center justify-center rounded-xl text-xs font-semibold transition-all ${
+                          frequency === option.value
+                            ? 'bg-[#2b8cee] text-white shadow-sm ring-2 ring-[#2b8cee] ring-offset-1'
+                            : 'bg-white border border-slate-200 text-slate-900 hover:bg-slate-50'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="relative">
+                    <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-slate-500">
+                      Investment day
+                    </label>
+                    <select
+                      value={investmentDay}
+                      onChange={(e) => setInvestmentDay(e.target.value)}
+                      className="w-full h-11 rounded-xl border border-slate-300 bg-white text-slate-900 px-3 text-sm font-medium focus:border-[#2b8cee] focus:ring-1 focus:ring-[#2b8cee] outline-none appearance-none"
+                    >
+                      <option value="1st">1st</option>
+                      <option value="2nd">2nd</option>
+                      <option value="5th">5th</option>
+                      <option value="10th">10th</option>
+                      <option value="15th">15th</option>
+                      <option value="20th">20th</option>
+                      <option value="25th">25th</option>
+                      <option value="Last">Last day of month</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                      <ChevronDownIcon />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="relative">
-                  <span className={`absolute inset-y-0 left-0 pl-4 flex items-center font-medium text-[16px] ${customAmountError ? 'text-red-400' : 'text-[#8C8479]'
-                    }`}>
-                    $
-                  </span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={customAmount}
-                    onChange={handleCustomAmountChange}
-                    placeholder="Other Amount"
-                    className={`w-full h-14 rounded-md border bg-white text-[#151513] pl-8 pr-4 text-[16px] font-bold outline-none transition-all placeholder:text-[#C4BFB5] ${customAmountError
-                      ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                      : 'border-[#EEE9E0] focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20'
-                      }`}
-                  />
-                </div>
+              {/* Recurring Amount Section */}
+              <div className="mx-5 mb-8">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                  <h3 className="text-base font-bold text-slate-900 mb-4">Recurring Amount</h3>
 
-                {customAmountError && (
-                  <p className="text-red-500 text-[12px] font-medium">{customAmountError}</p>
-                )}
-                {!customAmountError && customAmount && (
-                  <p className="text-[#2D7A41] text-[12px] font-medium">
-                    Amount: ${parseFormattedNumber(customAmount).toLocaleString()}
-                  </p>
-                )}
-                {!customAmount && selectedAmount === null && (
-                  <p className="text-[#8C8479] text-[12px]">
-                    Leave empty if you want to set recurring later.
-                  </p>
-                )}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {[500000, 750000, 1000000, 1500000].map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => handleAmountClick(amount)}
+                        className={`relative flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
+                          selectedAmount === amount
+                            ? 'border-2 border-[#2b8cee] bg-[#2b8cee]/5'
+                            : 'border border-slate-200 bg-white hover:border-[#2b8cee]/50 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className={`text-sm font-bold ${
+                          selectedAmount === amount ? 'text-[#2b8cee]' : 'text-slate-900'
+                        }`}>
+                          ${amount.toLocaleString()}
+                        </span>
+                        {selectedAmount === amount && (
+                          <div className="absolute -top-2 -right-2 bg-[#2b8cee] text-white rounded-full p-0.5">
+                            <CheckIcon />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <span className={`absolute inset-y-0 left-0 pl-3 flex items-center font-medium text-lg ${
+                        customAmountError ? 'text-red-400' : 'text-slate-400'
+                      }`}>
+                        $
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={customAmount}
+                        onChange={handleCustomAmountChange}
+                        placeholder="Other Amount"
+                        className={`w-full h-12 rounded-xl border bg-white text-slate-900 pl-8 pr-3 text-lg font-bold outline-none transition-all placeholder:text-slate-300 ${
+                          customAmountError
+                            ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                            : 'border-slate-300 focus:border-[#2b8cee] focus:ring-1 focus:ring-[#2b8cee]'
+                        }`}
+                      />
+                    </div>
+
+                    {customAmountError && (
+                      <p className="text-red-500 text-xs font-medium px-1">{customAmountError}</p>
+                    )}
+                    {!customAmountError && customAmount && (
+                      <p className="text-green-600 text-xs font-medium px-1">
+                        Amount: ${parseFormattedNumber(customAmount).toLocaleString()}
+                      </p>
+                    )}
+                    {!customAmount && selectedAmount === null && (
+                      <p className="text-slate-400 text-xs px-1">
+                        Leave empty if you want to set recurring later.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+        </main>
+
+        {/* ═══ iOS Fixed Footer ═══ */}
+        {!isFooterVisible && (
+          <div
+            className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-[#C6C6C8]/30 px-4 pt-3 z-50"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
+            data-onboarding-footer
+          >
+            <div className="max-w-lg mx-auto flex flex-col gap-3">
+              {/* Total row */}
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-bold text-[#8E8E93] uppercase tracking-wider">Total Investment</span>
+                <span className="text-[20px] font-bold text-black tracking-tight">{formatCurrency(totalInvestment)}</span>
+              </div>
+              {/* Buttons */}
+              <div className="flex gap-4 h-12">
+                <button onClick={handleBack} className="flex-1 bg-gray-200 text-black font-semibold text-[17px] rounded-xl active:bg-gray-300 transition-colors">Back</button>
+                <button
+                  onClick={handleContinue}
+                  disabled={!isFormValid || loading}
+                  data-onboarding-cta
+                  className={`flex-[2] rounded-xl font-semibold text-[17px] flex items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20 ${
+                    isFormValid && !loading ? 'bg-[#007AFF] text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {loading ? 'Saving...' : 'Continue'}
+                  {!loading && <span className="material-symbols-outlined text-xl">arrow_forward</span>}
+                </button>
               </div>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Bottom CTA */}
-      <div className="mt-8 pt-6 border-t border-[#F2F0EB] flex gap-3">
-        <button
-          onClick={handleSkip}
-          className="flex-1 py-3.5 rounded-md text-[14px] font-semibold text-[#8C8479] bg-[#F2F0EB] hover:bg-[#EEE9E0] transition-colors"
-        >
-          Skip
-        </button>
-        <button
-          onClick={handleContinue}
-          disabled={!isFormValid || loading}
-          className={`flex-[2] py-3.5 rounded-md text-[14px] font-semibold transition-all ${isFormValid && !loading
-            ? 'bg-[#AA4528] text-white hover:bg-[#8C3720] active:scale-[0.99]'
-            : 'bg-[#EEE9E0] text-[#C4BFB5] cursor-not-allowed'
-            }`}
-        >
-          {loading ? 'Saving…' : 'Continue'}
-        </button>
-      </div>
-
-      {/* Edit Share Class Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#151513]/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div
-            className="relative w-full max-w-[480px] bg-[#F7F5F0] rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
-          >
-            {/* Modal Header */}
-            <div className="flex flex-col bg-white border-b border-[#EEE9E0] px-6 py-5 sticky top-0 z-10 shrink-0">
-              <div className="flex justify-between items-center mb-1">
-                <h3 className="text-[22px] font-medium text-[#151513]" style={{ fontFamily: 'var(--font-display)' }}>Edit Units</h3>
-                <button onClick={handleCloseModal} className="text-[#8C8479] hover:text-[#151513] transition-colors">
-                  <CloseIcon />
+        {/* Edit Share Class Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/50">
+            <div 
+              className="relative w-full max-w-[500px] bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-hidden flex flex-col"
+              style={{ fontFamily: "'Manrope', sans-serif" }}
+            >
+              {/* iOS Modal Header — Cancel | Title | Done */}
+              <header className="flex items-center justify-between px-4 h-[56px] border-b border-[#C6C6C8]/30 bg-white sticky top-0 z-10">
+                <button onClick={handleCloseModal} className="text-[#007AFF] text-[17px] font-normal active:opacity-50 transition-opacity">Cancel</button>
+                <h2 className="text-[17px] font-semibold text-black absolute left-1/2 -translate-x-1/2">Edit Units</h2>
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={!hasModalChanges || savingModal}
+                  className={`text-[17px] font-semibold active:opacity-50 transition-opacity ${hasModalChanges ? 'text-[#007AFF]' : 'text-[#8E8E93]'}`}
+                >
+                  {savingModal ? '...' : 'Done'}
                 </button>
-              </div>
-              <p className="text-[14px] text-[#8C8479]">Adjust your allocation across our funds.</p>
-            </div>
+              </header>
 
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 pb-8">
-              <div className="flex flex-col gap-5">
-                {SHARE_CLASSES.map((shareClass) => {
-                  const units = getModalUnits(shareClass.id);
+              {/* Modal Content */}
+              <div className="flex-1 overflow-y-auto px-5 py-4 pb-48">
+                {/* Share Class Cards */}
+                <div className="flex flex-col gap-4">
+                  {SHARE_CLASSES.map((shareClass) => {
+                    const units = getModalUnits(shareClass.id);
 
-                  return (
-                    <div
-                      key={shareClass.id}
-                      className="flex flex-col rounded-md border border-[#EEE9E0] p-5 relative overflow-hidden bg-white"
-                    >
-                      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${shareClass.borderGradient}`} />
-
-                      <div className="pl-3">
-                        <div className="flex justify-between items-center mb-1">
-                          <h4 className="text-[17px] font-bold text-[#151513]">
-                            {shareClass.name}
-                          </h4>
-                          {shareClass.badge && (
-                            <span className={`px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded border ${shareClass.tier === 'platinum'
-                              ? 'bg-[#F2F0EB] text-[#5C564D] border-[#E5E0D8]'
-                              : 'bg-[#FDF9F7] text-[#AA4528] border-[#AA4528]/20'
+                    return (
+                      <div
+                        key={shareClass.id}
+                        className="flex flex-col rounded-xl border border-slate-200 p-4 shadow-sm relative overflow-hidden bg-white"
+                      >
+                        {/* Colored left border */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${shareClass.borderGradient}`} />
+                        
+                        <div className="pl-3">
+                          {/* Header row with name and badge */}
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-slate-900">
+                              {shareClass.name}
+                            </h3>
+                            {shareClass.badge && (
+                              <span className={`px-2 py-1 text-[10px] font-bold rounded ${
+                                shareClass.tier === 'platinum' 
+                                  ? 'bg-gradient-to-r from-gray-200 to-gray-100 text-gray-600 border border-gray-200' 
+                                  : 'bg-gradient-to-r from-yellow-100 to-yellow-50 text-yellow-700 border border-yellow-200'
                               }`}>
-                              {shareClass.badge}
-                            </span>
-                          )}
-                        </div>
-
-                        <p className="text-[14px] text-[#8C8479] mb-4 border-b border-[#F2F0EB] pb-3">
-                          {formatCurrency(shareClass.unitPrice)} / unit
-                        </p>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-[14px] font-semibold text-[#5C564D]">Allocation</span>
-                          <div className="flex items-center gap-4">
-                            <button
-                              onClick={() => handleDecrement(shareClass.id)}
-                              disabled={units === 0}
-                              className={`flex items-center justify-center w-8 h-8 rounded border transition-colors ${units === 0
-                                ? 'border-[#EEE9E0] text-[#E5E0D8] bg-[#F2F0EB] cursor-not-allowed'
-                                : 'border-[#C4BFB5] text-[#5C564D] hover:bg-[#F2F0EB] hover:border-[#8C8479]'
+                                {shareClass.badge}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Price per unit */}
+                          <p className="text-sm text-slate-500 mt-1">
+                            {formatCurrency(shareClass.unitPrice)}/unit
+                          </p>
+                          
+                          {/* Unit controls */}
+                          <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+                            <span className="text-sm font-medium text-slate-500">Allocation</span>
+                            <div className="flex items-center gap-3">
+                              {/* Decrement button */}
+                              <button
+                                onClick={() => handleDecrement(shareClass.id)}
+                                disabled={units === 0}
+                                className={`flex items-center justify-center w-9 h-9 rounded-full border transition-all ${
+                                  units === 0 
+                                    ? 'border-slate-200 text-slate-300 cursor-not-allowed' 
+                                    : 'border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-slate-400 active:scale-95'
                                 }`}
-                            >
-                              <RemoveIcon />
-                            </button>
-
-                            <span className="text-[18px] font-bold text-[#151513] min-w-[32px] text-center">
-                              {units}
-                            </span>
-
-                            <button
-                              onClick={() => handleIncrement(shareClass.id)}
-                              className="flex items-center justify-center w-8 h-8 rounded border border-[#AA4528] text-[#AA4528] hover:bg-[#FDF9F7] transition-colors"
-                            >
-                              <AddIcon />
-                            </button>
+                                aria-label="Decrease units"
+                              >
+                                <RemoveIcon />
+                              </button>
+                              
+                              {/* Unit count */}
+                              <span className="text-xl font-bold text-slate-900 min-w-[40px] text-center">
+                                {units}
+                              </span>
+                              
+                              {/* Increment button */}
+                              <button
+                                onClick={() => handleIncrement(shareClass.id)}
+                                className="flex items-center justify-center w-9 h-9 rounded-full border border-[#2b8cee] text-[#2b8cee] hover:bg-blue-50 active:scale-95 transition-all"
+                                aria-label="Increase units"
+                              >
+                                <AddIcon />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+
+                {/* Total Investment Card */}
+                <div className="mt-6">
+                  <div className="bg-[#2b8cee]/5 rounded-xl p-5 border-2 border-[#2b8cee]/20 flex flex-col items-center justify-center gap-1 text-center">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+                      Total Investment
+                    </span>
+                    <span className="text-2xl font-extrabold text-slate-900">
+                      {formatFullCurrency(modalTotalInvestment)}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {/* Modal Total */}
-              <div className="mt-8 bg-white rounded-md border border-[#EEE9E0] p-5 text-center flex flex-col border-t-4 border-t-[#AA4528]">
-                <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#8C8479] mb-1">
-                  New Total Selection
-                </span>
-                <span className="text-[28px] font-medium text-[#151513]" style={{ fontFamily: 'var(--font-display)' }}>
-                  {formatFullCurrency(modalTotalInvestment)}
-                </span>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="bg-white border-t border-[#EEE9E0] p-6 shrink-0 flex gap-3">
-              <button
-                onClick={handleCloseModal}
-                className="w-1/3 py-3 rounded-md text-[14px] font-semibold text-[#5C564D] bg-[#F2F0EB] hover:bg-[#EEE9E0] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveChanges}
-                disabled={!hasModalChanges || savingModal}
-                className={`flex-1 py-3 rounded-md text-[14px] font-semibold transition-colors ${hasModalChanges && !savingModal
-                  ? 'bg-[#151513] text-white hover:bg-[#2A2A2A]'
-                  : 'bg-[#EEE9E0] text-[#C4BFB5] cursor-not-allowed'
-                  }`}
-              >
-                {savingModal ? 'Saving…' : 'Update Selection'}
-              </button>
             </div>
           </div>
-        </div>
-      )}
-    </OnboardingShell>
+        )}
+
+      {/* Animation keyframes */}
+      <style>{`
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
+    </div>
   );
 }
 

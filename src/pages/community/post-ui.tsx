@@ -4,24 +4,28 @@
  * Matches Home + Fund A design language.
  * Logic stays in post-logic.ts — zero data here.
  */
+import { useNavigate } from "react-router-dom";
 import { useCommunityPostLogic } from "./post-logic";
 import HushhTechBackHeader from "../../components/hushh-tech-back-header/HushhTechBackHeader";
 import HushhTechCta, {
   HushhTechCtaVariant,
 } from "../../components/hushh-tech-cta/HushhTechCta";
 import HushhTechFooter, {
+  HushhFooterTab,
 } from "../../components/hushh-tech-footer/HushhTechFooter";
 
-
+/* ── Playfair heading style ── */
+const playfair = { fontFamily: "'Playfair Display', serif" };
 
 export default function CommunityPostPage() {
+  const navigate = useNavigate();
   const { post, loading, handleBack } = useCommunityPostLogic();
 
   /* loading state */
   if (loading) {
     return (
-      <div className="bg-fr-cream min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-gray-200 border-t-fr-rust rounded-full animate-spin" />
+      <div className="bg-white min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gray-200 border-t-hushh-blue rounded-full animate-spin" />
       </div>
     );
   }
@@ -33,7 +37,7 @@ export default function CommunityPostPage() {
   /* ── PDF Post ── */
   if (post.pdfUrl) {
     return (
-      <div className="bg-fr-cream text-fr-navy min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white font-sans">
+      <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
         {/* Header */}
         <HushhTechBackHeader
           onBackClick={handleBack}
@@ -53,15 +57,16 @@ export default function CommunityPostPage() {
         <main className="md:hidden px-6 flex-grow max-w-md mx-auto w-full pb-32">
           <section className="pt-8">
             {/* PDF icon */}
-            <div className="w-16 h-16 rounded-2xl bg-fr-rust/5 border border-fr-rust/20 flex items-center justify-center mb-8">
-              <span className="material-symbols-outlined text-fr-rust !text-[1.8rem]">
+            <div className="w-16 h-16 rounded-2xl bg-hushh-blue/5 border border-hushh-blue/20 flex items-center justify-center mb-8">
+              <span className="material-symbols-outlined text-hushh-blue !text-[1.8rem]">
                 description
               </span>
             </div>
 
             {/* title */}
             <h1
-              className="text-[2rem] leading-[1.2] font-normal text-fr-navy tracking-tight font-display mb-3"
+              className="text-[2rem] leading-[1.2] font-normal text-black tracking-tight font-serif mb-3"
+              style={playfair}
             >
               {post.title}
             </h1>
@@ -95,6 +100,13 @@ export default function CommunityPostPage() {
 
         {/* Footer Nav */}
         <HushhTechFooter
+          activeTab={HushhFooterTab.COMMUNITY}
+          onTabChange={(tab) => {
+            if (tab === HushhFooterTab.HOME) navigate("/");
+            if (tab === HushhFooterTab.FUND_A) navigate("/discover-fund-a");
+            if (tab === HushhFooterTab.COMMUNITY) navigate("/community");
+            if (tab === HushhFooterTab.PROFILE) navigate("/profile");
+          }}
         />
       </div>
     );
@@ -102,7 +114,7 @@ export default function CommunityPostPage() {
 
   /* ── Regular Post (React component) ── */
   return (
-    <div className="bg-fr-cream text-fr-navy min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white font-sans">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* Header */}
       <HushhTechBackHeader
         onBackClick={handleBack}
@@ -116,6 +128,13 @@ export default function CommunityPostPage() {
 
       {/* Footer Nav */}
       <HushhTechFooter
+        activeTab={HushhFooterTab.COMMUNITY}
+        onTabChange={(tab) => {
+          if (tab === HushhFooterTab.HOME) navigate("/");
+          if (tab === HushhFooterTab.FUND_A) navigate("/discover-fund-a");
+          if (tab === HushhFooterTab.COMMUNITY) navigate("/community");
+          if (tab === HushhFooterTab.PROFILE) navigate("/profile");
+        }}
       />
     </div>
   );

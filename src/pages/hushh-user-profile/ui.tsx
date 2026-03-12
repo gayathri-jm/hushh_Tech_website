@@ -11,7 +11,7 @@ import { FaApple } from "react-icons/fa";
 import { SiGooglepay } from "react-icons/si";
 import HushhTechBackHeader from "../../components/hushh-tech-back-header/HushhTechBackHeader";
 import HushhTechCta, { HushhTechCtaVariant } from "../../components/hushh-tech-cta/HushhTechCta";
-import HushhTechFooter from "../../components/hushh-tech-footer/HushhTechFooter";
+import HushhTechFooter, { HushhFooterTab } from "../../components/hushh-tech-footer/HushhTechFooter";
 import NWSScoreBadge from "../../components/profile/NWSScoreBadge";
 
 /* ── Playfair heading style ── */
@@ -45,16 +45,16 @@ const HushhUserProfilePage: React.FC = () => {
   const firstName = form.name?.split(" ")[0] || "Investor";
 
   return (
-    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white">
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightType="hamburger" />
 
       <main className="px-6 flex-grow max-w-md mx-auto w-full pb-48">
         {/* ── Hero ── */}
         <section className="py-8">
-          <div className="inline-block px-3 py-1 mb-4 border border-fr-rust/20 rounded-full bg-fr-rust/5">
-            <span className="text-[10px] tracking-widest uppercase font-medium text-fr-rust flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-fr-rust rounded-full" />
+          <div className="inline-block px-3 py-1 mb-4 border border-hushh-blue/20 rounded-full bg-hushh-blue/5">
+            <span className="text-[10px] tracking-widest uppercase font-medium text-hushh-blue flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-hushh-blue rounded-full" />
               Premium Member
             </span>
           </div>
@@ -76,7 +76,7 @@ const HushhUserProfilePage: React.FC = () => {
             className="text-lg italic text-gray-400 font-serif"
             style={playfair}
           >
-            Net Worth Score
+            NWS
           </span>
           {nwsResult ? (
             <NWSScoreBadge result={nwsResult} loading={nwsLoading} size="sm" />
@@ -92,30 +92,32 @@ const HushhUserProfilePage: React.FC = () => {
 
         {/* ── Processing Banner ── */}
         {isProcessing && (
-          <section className="mb-6 border border-fr-rust/20 rounded-2xl p-4 bg-fr-rust/5 animate-pulse-slow">
+          <section className="mb-6 border border-hushh-blue/20 rounded-2xl p-4 bg-hushh-blue/5 animate-pulse-slow">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-medium">
                 Building Profile · {loadingSeconds}s
               </span>
-              <span className="w-2 h-2 bg-fr-rust rounded-full animate-ping" />
+              <span className="w-2 h-2 bg-hushh-blue rounded-full animate-ping" />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-500">Investor Profile</span>
-                <span className={`text-[10px] uppercase tracking-widest font-medium ${investorStatus === 'running' ? 'text-gray-400' :
-                    investorStatus === 'done' ? 'text-ios-green' : 'text-red-500'
-                  }`}>
+                <span className={`text-[10px] uppercase tracking-widest font-medium ${
+                  investorStatus === 'running' ? 'text-gray-400' :
+                  investorStatus === 'done' ? 'text-ios-green' : 'text-red-500'
+                }`}>
                   {investorStatus === 'running' ? 'Analyzing...' :
-                    investorStatus === 'done' ? 'Ready ✓' : investorStatus === 'error' ? 'Failed' : '—'}
+                   investorStatus === 'done' ? 'Ready ✓' : investorStatus === 'error' ? 'Failed' : '—'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-500">Shadow Profile</span>
-                <span className={`text-[10px] uppercase tracking-widest font-medium ${shadowStatus === 'running' ? 'text-gray-400' :
-                    shadowStatus === 'done' ? 'text-ios-green' : 'text-red-500'
-                  }`}>
+                <span className={`text-[10px] uppercase tracking-widest font-medium ${
+                  shadowStatus === 'running' ? 'text-gray-400' :
+                  shadowStatus === 'done' ? 'text-ios-green' : 'text-red-500'
+                }`}>
                   {shadowStatus === 'running' ? 'Analyzing...' :
-                    shadowStatus === 'done' ? 'Ready ✓' : shadowStatus === 'error' ? 'Failed' : '—'}
+                   shadowStatus === 'done' ? 'Ready ✓' : shadowStatus === 'error' ? 'Failed' : '—'}
                 </span>
               </div>
             </div>
@@ -138,10 +140,10 @@ const HushhUserProfilePage: React.FC = () => {
             {loading
               ? `Generating... ${loadingSeconds}s`
               : investorProfile
-                ? "Update Profile"
-                : hasOnboardingData
-                  ? "Enhance with AI"
-                  : "Generate Investor Profile"}
+              ? "Update Profile"
+              : hasOnboardingData
+              ? "Enhance with AI"
+              : "Generate Investor Profile"}
             <span className="material-symbols-outlined text-lg">auto_awesome</span>
           </HushhTechCta>
         </section>
@@ -266,17 +268,17 @@ const HushhUserProfilePage: React.FC = () => {
         <section className="mb-12 border-t border-gray-200 pt-8">
           <div className="flex items-center justify-between py-3 mb-6">
             <span className="text-sm text-gray-500 font-light">Profile Link</span>
-            <button type="button" onClick={onCopy} className="flex items-center gap-2 text-fr-rust cursor-pointer">
+            <button type="button" onClick={onCopy} className="flex items-center gap-2 text-hushh-blue cursor-pointer">
               <span className="text-xs font-medium truncate max-w-[160px]">{profileUrl || "hushhtech.com/investor/..."}</span>
               {hasCopied ? <Check className="w-4 h-4 text-ios-green" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <button type="button" onClick={handleAppleWalletPass} disabled={isApplePassLoading} className="border border-gray-200 rounded-2xl py-3 px-4 flex items-center justify-center gap-2 hover:border-fr-rust/30 transition-colors disabled:opacity-50">
+            <button type="button" onClick={handleAppleWalletPass} disabled={isApplePassLoading} className="border border-gray-200 rounded-2xl py-3 px-4 flex items-center justify-center gap-2 hover:border-hushh-blue/30 transition-colors disabled:opacity-50">
               <FaApple className="text-lg" />
               <span className="text-xs font-medium">{isApplePassLoading ? "Loading..." : "Apple Wallet"}</span>
             </button>
-            <button type="button" onClick={handleGoogleWalletPass} disabled={isGooglePassLoading} className="border border-gray-200 rounded-2xl py-3 px-4 flex items-center justify-center gap-2 hover:border-fr-rust/30 transition-colors disabled:opacity-50">
+            <button type="button" onClick={handleGoogleWalletPass} disabled={isGooglePassLoading} className="border border-gray-200 rounded-2xl py-3 px-4 flex items-center justify-center gap-2 hover:border-hushh-blue/30 transition-colors disabled:opacity-50">
               <SiGooglepay className="text-lg" />
               <span className="text-xs font-medium">{isGooglePassLoading ? "Loading..." : "Google Wallet"}</span>
             </button>
@@ -296,6 +298,13 @@ const HushhUserProfilePage: React.FC = () => {
 
       {/* ═══ Footer Nav ═══ */}
       <HushhTechFooter
+        activeTab={HushhFooterTab.PROFILE}
+        onTabChange={(tab) => {
+          if (tab === HushhFooterTab.HOME) navigate("/");
+          if (tab === HushhFooterTab.FUND_A) navigate("/discover-fund-a");
+          if (tab === HushhFooterTab.COMMUNITY) navigate("/community");
+          if (tab === HushhFooterTab.PROFILE) navigate("/profile");
+        }}
       />
     </div>
   );

@@ -19,12 +19,12 @@ function VerifyIdentityPage() {
 
   if (loading) {
     return (
-      <div className="bg-[#faf9f6] min-h-screen flex flex-col antialiased selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+      <div className="bg-white min-h-screen flex flex-col antialiased selection:bg-hushh-blue selection:text-white">
         <HushhTechBackHeader onBackClick={goBack} rightLabel="FAQs" />
         <div className="flex-1 flex items-center justify-center px-6">
           <div className="text-center">
-            <div className="w-14 h-14 mx-auto mb-6 rounded-full border-4 border-gray-200 border-t-fr-rust animate-spin" />
-            <p className="text-sm text-gray-500 font-medium">Loading...</p>
+            <div className="w-14 h-14 mx-auto mb-6 rounded-full border-4 border-gray-200 border-t-hushh-blue animate-spin" />
+            <p className="text-sm text-gray-500 font-light">Loading...</p>
           </div>
         </div>
       </div>
@@ -61,19 +61,19 @@ function VerifyIdentityPage() {
   ];
 
   return (
-    <div className="bg-[#faf9f6] text-[#151513] min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       <HushhTechBackHeader onBackClick={goBack} rightLabel="FAQs" />
 
       <main className="px-6 flex-grow max-w-md mx-auto w-full pb-16">
         {/* Title */}
         <section className="py-8">
           <h3 className="text-[10px] tracking-[0.2em] text-gray-400 uppercase mb-4 font-medium">Identity</h3>
-          <h1 className="text-[2.75rem] leading-[1.1] text-[#151513] tracking-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}>
+          <h1 className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif" style={{ fontFamily: "'Playfair Display', serif" }}>
             Verify Your
             <br />
-            <span className="text-gray-400 italic font-medium">Identity</span>
+            <span className="text-gray-400 italic font-light">Identity</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-medium">
+          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-light">
             Complete a quick verification to secure your account and unlock all features.
           </p>
         </section>
@@ -134,7 +134,7 @@ function VerifyIdentityPage() {
           </div>
           <div>
             <span className="text-xs font-semibold text-gray-900 block">Secure & Private</span>
-            <p className="text-xs text-gray-500 leading-relaxed font-medium mt-0.5">
+            <p className="text-xs text-gray-500 leading-relaxed font-light mt-0.5">
               Your documents are encrypted and processed securely. We never store raw document images.
             </p>
           </div>
@@ -152,9 +152,9 @@ function VerifyIdentityPage() {
 
         {/* Time estimate + trust */}
         <section className="flex flex-col items-center text-center gap-1 pb-8">
-          <span className="text-[10px] text-gray-500 font-medium">Usually takes 2-3 minutes to complete</span>
+          <span className="text-[10px] text-gray-500 font-light">Usually takes 2-3 minutes to complete</span>
           <div className="flex items-center gap-1 mt-2">
-            <span className="material-symbols-outlined text-[12px] text-fr-rust">lock</span>
+            <span className="material-symbols-outlined text-[12px] text-hushh-blue">lock</span>
             <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">Stripe Identity</span>
           </div>
         </section>

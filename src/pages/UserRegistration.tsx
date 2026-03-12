@@ -30,7 +30,7 @@ export default function UserRegistration() {
   const [error, setError] = useState<string | null>(null);
   const [api, contextHolder] = notification.useNotification();
   const [userEmail, setUserEmail] = useState("");
-
+  
   // Form fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -51,7 +51,7 @@ export default function UserRegistration() {
           navigate("/login");
           return;
         }
-
+        
         const { data: { user } } = await resources.config.supabaseClient.auth.getUser();
         if (user?.email) {
           setUserEmail(user.email);
@@ -119,12 +119,12 @@ export default function UserRegistration() {
         // Explicitly disable proxy
         proxy: false,
       });
-
+      
       console.log("=== API Response Debug Info ===");
       console.log("Response Status:", response.status);
       console.log("Response Headers:", response.headers);
       console.log("Response Data:", response.data);
-
+      
       // Extract and store user profile data from response
       if (response.data && response.data.user) {
         const userProfile = {
@@ -142,15 +142,15 @@ export default function UserRegistration() {
           accountCreation: response.data.user.accountCreation,
           onboard_status: response.data.user.onboard_status
         };
-
+        
         // Store user profile data in localStorage
         localStorage.setItem('hushhUserProfile', JSON.stringify(userProfile));
-
+        
         console.log("User profile stored:", userProfile);
       }
 
       openNotification("Your profile has been created successfully!", "Success", 3);
-
+      
       // Redirect to profile page after successful registration
       setTimeout(() => {
         navigate("/your-profile");
@@ -158,29 +158,30 @@ export default function UserRegistration() {
     } catch (err: any) {
       console.error("=== API Error Debug Info ===");
 
-
+      
       // More detailed error handling
       let errorMessage = "An unexpected error occurred. Please try again later.";
-
+      
       if (err.response) {
         // Server responded with error status
         console.error("Error response status:", err.response.status);
         console.error("Error response headers:", err.response.headers);
         console.error("Error response data:", err.response.data);
         console.error("Actual request URL:", err.response.config?.url);
-
-        errorMessage = `Registration failed (${err.response.status}): ${err.response.data?.message ||
-          err.response.data?.error ||
+        
+        errorMessage = `Registration failed (${err.response.status}): ${
+          err.response.data?.message || 
+          err.response.data?.error || 
           err.response.statusText ||
           'Server error'
-          }`;
+        }`;
       } else if (err.request) {
         // Request was made but no response
         console.error("No response received:", err.request);
         console.error("Request URL that was attempted:", err.config?.url);
         console.error("Request method:", err.config?.method);
         console.error("Request headers:", err.config?.headers);
-
+        
         if (err.code === 'ECONNABORTED') {
           errorMessage = "Request timeout. Please check your internet connection and try again.";
         } else if (err.code === 'ERR_NETWORK') {
@@ -195,7 +196,7 @@ export default function UserRegistration() {
         console.error("Request setup error:", err.message);
         errorMessage = `Request error: ${err.message}`;
       }
-
+      
       console.error("Final error message:", errorMessage);
       setError(errorMessage);
     } finally {
@@ -204,12 +205,12 @@ export default function UserRegistration() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#faf9f6]" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       {contextHolder}
       <div className="container max-w-lg mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex flex-col items-center justify-center mt-10 mb-10">
-          <h1 className="text-3xl text-[#151513] text-center" style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}>
+          <h1 className="text-3xl font-bold text-gray-800 text-center">
             Complete Your Profile
           </h1>
           <p className="text-gray-600 mt-2 text-center">
@@ -219,7 +220,7 @@ export default function UserRegistration() {
 
         {/* Registration Form */}
         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
-
+          
           {error && (
             <div className="mb-6 p-4 rounded-md bg-red-50 border border-red-100 text-red-700">
               <div className="flex items-center gap-2 mb-1">
@@ -391,7 +392,7 @@ export default function UserRegistration() {
 
             <button
               type="submit"
-              className="w-full py-3 px-4 border border-transparent rounded-md text-base font-semibold text-white bg-[#AA4528] hover:bg-[#8C3720] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#AA4528] transition-colors disabled:opacity-70"
+              className="w-full py-3 px-4 border border-transparent rounded-md text-base font-medium text-white bg-cyan-400 hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-400 transition-colors disabled:opacity-70"
               disabled={isLoading}
             >
               {isLoading ? "Submitting..." : "Complete Registration"}

@@ -2,9 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../resources/config/config';
 import { upsertOnboardingData } from '../../services/onboarding/upsertOnboardingData';
-import OnboardingShell from '../../components/OnboardingShell';
+import { useFooterVisibility } from '../../utils/useFooterVisibility';
+import { OnboardingStepProgress } from '../../components/onboarding/OnboardingStepProgress';
 
 type RecurringFrequency = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';
+
+// Back arrow icon
+const BackIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 12H5M12 19l-7-7 7-7" />
+  </svg>
+);
 
 // Edit icon
 const EditIcon = () => (
@@ -28,6 +36,14 @@ const CheckIcon = () => (
   </svg>
 );
 
+// Arrow forward icon
+const ArrowForwardIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12" />
+    <polyline points="12,5 19,12 12,19" />
+  </svg>
+);
+
 // Share class configurations
 interface ShareClassInfo {
   id: string;
@@ -41,19 +57,19 @@ const SHARE_CLASSES: ShareClassInfo[] = [
     id: 'class_a',
     name: 'Class A',
     unitPrice: 25000000,
-    color: '#E5E0D8',
+    color: '#E5E4E2', // Platinum (gray)
   },
   {
     id: 'class_b',
     name: 'Class B',
     unitPrice: 5000000,
-    color: '#AA4528',
+    color: '#D4AF37', // Gold (yellow)
   },
   {
     id: 'class_c',
     name: 'Class C',
     unitPrice: 1000000,
-    color: '#151513',
+    color: '#2b8cee', // Primary blue
   },
 ];
 
@@ -88,6 +104,7 @@ const parseFormattedNumber = (value: string): number => {
 
 function OnboardingStep12() {
   const navigate = useNavigate();
+  const isFooterVisible = useFooterVisibility();
   const [frequency, setFrequency] = useState<RecurringFrequency>('once_a_month');
   const [investmentDay, setInvestmentDay] = useState('1st');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(750000);
@@ -95,7 +112,7 @@ function OnboardingStep12() {
   const [customAmountError, setCustomAmountError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  
   // Share class units state
   const [shareUnits, setShareUnits] = useState<{
     class_a_units: number;
@@ -157,7 +174,7 @@ function OnboardingStep12() {
           class_b_units: data.class_b_units || 0,
           class_c_units: data.class_c_units || 0,
         });
-
+        
         if (data.recurring_frequency) {
           const freqMap: Record<string, RecurringFrequency> = {
             // Current DB values (match onboarding_data_recurring_frequency_check)
@@ -221,19 +238,19 @@ function OnboardingStep12() {
   const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedAmount(null);
     setError(null);
-
+    
     // Extract only digits
     const rawValue = e.target.value.replace(/[^\d]/g, '');
-
+    
     // Limit input to prevent extremely long numbers (max 12 digits = $999,999,999,999)
     if (rawValue.length > 12) {
       return;
     }
-
+    
     // Format with commas for display
     const formattedValue = formatNumberWithCommas(rawValue);
     setCustomAmount(formattedValue);
-
+    
     // Validate
     const numericValue = parseFormattedNumber(formattedValue);
     const validationError = validateAmount(numericValue);
@@ -244,7 +261,7 @@ function OnboardingStep12() {
     if (selectedAmount) return selectedAmount;
     return parseFormattedNumber(customAmount);
   };
-
+  
   // Check if form is valid for submission
   const isFormValid = () => {
     const finalAmount = getFinalAmount();
@@ -282,18 +299,18 @@ function OnboardingStep12() {
     }
 
     const finalAmount = getFinalAmount();
-
+    
     const convertDayToInt = (day: string | number): number => {
       if (typeof day === 'number') return day;
       if (day === 'Last') return 31;
       return parseInt(day.replace(/\D/g, ''));
     };
-
+    
     const convertFrequencyToDb = (freq: RecurringFrequency): string => {
       // DB constraint expects these exact values.
       return freq;
     };
-
+    
     const updateData: Record<string, unknown> = {
       user_id: user.id,
       current_step: 12,
@@ -321,29 +338,29 @@ function OnboardingStep12() {
 
   const handleContinue = () => {
     const finalAmount = getFinalAmount();
-
+    
     // Check if there's already a validation error
     if (customAmountError) {
       setError(customAmountError);
       return;
     }
-
+    
     // Validate amount
     if (finalAmount === 0) {
       setError('Please select or enter an amount');
       return;
     }
-
+    
     if (finalAmount < MIN_AMOUNT) {
       setError(`Minimum amount is $${MIN_AMOUNT.toLocaleString()}`);
       return;
     }
-
+    
     if (finalAmount > MAX_AMOUNT) {
       setError(`Maximum amount is $${(MAX_AMOUNT / 1000000).toFixed(0)}M`);
       return;
     }
-
+    
     completeOnboarding(false);
   };
 
@@ -355,228 +372,297 @@ function OnboardingStep12() {
     navigate('/onboarding/step-11');
   };
 
-  const DISPLAY_STEP = 12;
-  const PROG_TOTAL = 15;
-
   return (
-    <OnboardingShell
-      step={DISPLAY_STEP}
-      totalSteps={PROG_TOTAL}
-      onBack={handleBack}
-      onClose={() => navigate('/dashboard')}
-      continueLabel={loading ? 'Saving…' : 'Continue'}
-      onContinue={handleContinue}
-      continueDisabled={!isFormValid() || loading}
-      continueLoading={loading}
+    <div 
+      className="bg-slate-50 min-h-screen"
+      style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      {/* Title */}
-      <div className="mb-8">
-        <h1
-          className="text-[2.2rem] md:text-[2.6rem] font-medium leading-tight text-[#151513] mb-3"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
-        >
-          Make a recurring investment
-        </h1>
-        <p className="text-[15px] text-[#8C8479] leading-relaxed">
-          Grow your wealth with periodic contributions.
-        </p>
-      </div>
+      <div className="onboarding-shell relative flex min-h-screen w-full flex-col bg-white max-w-[500px] mx-auto shadow-xl overflow-hidden border-x border-slate-100">
+        
+        {/* Sticky Header */}
+        <header className="flex items-center px-4 pt-4 pb-2 bg-white sticky top-0 z-10">
+          <button 
+            onClick={handleBack}
+            aria-label="Go back"
+            className="flex size-10 shrink-0 items-center justify-center text-slate-900 rounded-full hover:bg-slate-50 transition-colors"
+          >
+            <BackIcon />
+          </button>
+        </header>
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-md text-red-700 text-sm">
-          {error}
-        </div>
-      )}
+        <OnboardingStepProgress currentStep={12} />
 
-      {/* Investment Allocation Progress Summary */}
-      {hasAnyUnits && (
-        <div className="mb-8 p-6 bg-[#F7F5F0] rounded-md border border-[#EEE9E0] relative overflow-hidden">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[12px] font-bold uppercase tracking-[0.1em] text-[#8C8479]">
-              Your Investment Allocation
-            </h2>
-            <button
-              onClick={() => navigate('/onboarding/step-10')}
-              className="text-[#AA4528] text-[13px] font-semibold hover:text-[#8C3720] transition-colors flex items-center gap-1.5"
-            >
-              <EditIcon />
-              Edit
-            </button>
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto pb-48 sm:pb-64">
+          {/* Header Section - 22px title, 14px subtitle, center aligned */}
+          <div className="px-5 pt-2 pb-6 flex flex-col items-center text-center">
+            <h1 className="text-slate-900 text-[22px] font-extrabold leading-tight tracking-tight mb-2">
+              Make a recurring investment
+            </h1>
+            <p className="text-slate-500 text-sm font-bold">
+              Grow your wealth with periodic contributions.
+            </p>
           </div>
 
-          <div className="mb-5">
-            <span className="text-3xl font-medium text-[#151513]" style={{ fontFamily: 'var(--font-display)' }}>
-              {formatCurrency(totalInvestment)}
-            </span>
-          </div>
+          {/* Error Message */}
+          {error && (
+            <div className="mx-5 mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+              {error}
+            </div>
+          )}
 
-          <div className="flex h-1.5 w-full rounded-sm overflow-hidden mb-5">
-            {percentages.a > 0 && (
-              <div className="h-full bg-[#E5E0D8]" style={{ width: `${percentages.a}%` }} />
-            )}
-            {percentages.b > 0 && (
-              <div className="h-full bg-[#AA4528]" style={{ width: `${percentages.b}%` }} />
-            )}
-            {percentages.c > 0 && (
-              <div className="h-full bg-[#151513]" style={{ width: `${percentages.c}%` }} />
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-2.5">
-            {SHARE_CLASSES.map((shareClass) => {
-              const units = getUnits(shareClass.id);
-              if (units === 0) return null;
-
-              return (
-                <div
-                  key={shareClass.id}
-                  className="inline-flex items-center gap-2"
-                >
-                  <span
-                    className="size-2.5 rounded-sm"
-                    style={{ backgroundColor: shareClass.color }}
-                  />
-                  <span className="text-[13px] font-semibold text-[#5C564D]">
-                    {shareClass.name} — {units}
+          {/* Investment Allocation Card */}
+          {hasAnyUnits && (
+            <div className="mx-5 mb-6">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    YOUR INVESTMENT ALLOCATION
+                  </h2>
+                  <button 
+                    onClick={() => navigate('/onboarding/step-3')}
+                    className="text-[#2b8cee] text-sm font-semibold hover:text-blue-600 transition-colors flex items-center gap-1"
+                  >
+                    <EditIcon />
+                    Edit allocation
+                  </button>
+                </div>
+                
+                {/* Total Amount */}
+                <div className="mb-4">
+                  <span className="text-3xl font-bold text-slate-900">
+                    {formatCurrency(totalInvestment)}
                   </span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
-      {/* Editor Main Wrap */}
-      <div className="border border-[#EEE9E0] rounded-md p-5 sm:p-6 bg-white space-y-8">
+                {/* Progress Bar */}
+                <div className="flex h-3 w-full rounded-full overflow-hidden mb-4">
+                  {percentages.a > 0 && (
+                    <div 
+                      className="h-full" 
+                      style={{ width: `${percentages.a}%`, backgroundColor: '#E5E4E2' }}
+                    />
+                  )}
+                  {percentages.b > 0 && (
+                    <div 
+                      className="h-full" 
+                      style={{ width: `${percentages.b}%`, backgroundColor: '#D4AF37' }}
+                    />
+                  )}
+                  {percentages.c > 0 && (
+                    <div 
+                      className="h-full" 
+                      style={{ width: `${percentages.c}%`, backgroundColor: '#2b8cee' }}
+                    />
+                  )}
+                </div>
 
-        {/* Frequency Section */}
-        <div>
-          <h3 className="text-[15px] font-bold text-[#151513] mb-4">Frequency</h3>
+                {/* Class Pills */}
+                <div className="flex flex-wrap gap-2">
+                  {SHARE_CLASSES.map((shareClass) => {
+                    const units = getUnits(shareClass.id);
+                    if (units === 0) return null;
+                    
+                    return (
+                      <div
+                        key={shareClass.id}
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 py-1.5 px-3"
+                      >
+                        <span 
+                          className="size-2.5 rounded-full"
+                          style={{ backgroundColor: shareClass.color }}
+                        />
+                        <span className="text-xs font-semibold text-slate-900">
+                          {shareClass.name} —{units}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-            {[
-              { value: 'once_a_month', label: 'Once a month' },
-              { value: 'twice_a_month', label: 'Twice a month' },
-              { value: 'weekly', label: 'Weekly' },
-              { value: 'every_other_week', label: 'Every other week' },
-            ].map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setFrequency(option.value as RecurringFrequency)}
-                className={`flex h-12 items-center justify-center rounded-md text-[14px] font-semibold transition-all ${frequency === option.value
-                  ? 'bg-[#AA4528] text-white border-transparent'
-                  : 'bg-white border border-[#EEE9E0] text-[#5C564D] hover:bg-[#F7F5F0]'
-                  }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+          {/* Frequency Section */}
+          <div className="mx-5 mb-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <h2 className="text-lg font-bold text-slate-900 mb-4">Frequency</h2>
+              
+              {/* 2x2 Grid Buttons */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {[
+                  { value: 'once_a_month', label: 'Once a month' },
+                  { value: 'twice_a_month', label: 'Twice a month' },
+                  { value: 'weekly', label: 'Weekly' },
+                  { value: 'every_other_week', label: 'Every other week' },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setFrequency(option.value as RecurringFrequency)}
+                    className={`flex h-12 items-center justify-center rounded-xl text-sm font-semibold transition-all ${
+                      frequency === option.value
+                        ? 'bg-[#2b8cee] text-white shadow-sm ring-2 ring-[#2b8cee] ring-offset-1'
+                        : 'bg-white border border-slate-200 text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-[12px] font-semibold text-[#8C8479] uppercase tracking-wider">
-              Investment days
-            </label>
-            <div className="relative">
-              <select
-                value={investmentDay}
-                onChange={(e) => setInvestmentDay(e.target.value)}
-                className="w-full h-12 rounded-md border border-[#EEE9E0] bg-white text-[#151513] px-4 text-[15px] font-medium focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20 outline-none appearance-none cursor-pointer"
-              >
-                <option value="1st">1st</option>
-                <option value="2nd">2nd</option>
-                <option value="5th">5th</option>
-                <option value="10th">10th</option>
-                <option value="15th">15th</option>
-                <option value="20th">20th</option>
-                <option value="25th">25th</option>
-                <option value="Last">Last day of month</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#8C8479]">
-                <ChevronDownIcon />
+              {/* Investment Days Dropdown */}
+              <div className="relative mt-4">
+                <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-slate-500">
+                  Investment days
+                </label>
+                <select
+                  value={investmentDay}
+                  onChange={(e) => setInvestmentDay(e.target.value)}
+                  className="w-full h-12 rounded-xl border border-slate-300 bg-white text-slate-900 px-3 text-base font-medium focus:border-[#2b8cee] focus:ring-1 focus:ring-[#2b8cee] outline-none appearance-none cursor-pointer transition-shadow"
+                >
+                  <option value="1st">1st</option>
+                  <option value="2nd">2nd</option>
+                  <option value="5th">5th</option>
+                  <option value="10th">10th</option>
+                  <option value="15th">15th</option>
+                  <option value="20th">20th</option>
+                  <option value="25th">25th</option>
+                  <option value="Last">Last day of month</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <ChevronDownIcon />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Recurring Amount Section */}
-        <div className="pt-6 border-t border-[#EEE9E0]">
-          <h3 className="text-[15px] font-bold text-[#151513] mb-4">Recurring Amount</h3>
+          {/* Recurring Amount Section */}
+          <div className="mx-5 mb-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <h2 className="text-lg font-bold text-slate-900 mb-4">Recurring Amount</h2>
+              
+              {/* Amount Grid */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {[500000, 750000, 1000000, 1500000].map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => handleAmountClick(amount)}
+                    className={`relative flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
+                      selectedAmount === amount
+                        ? 'border-2 border-[#2b8cee] bg-[#2b8cee]/5'
+                        : 'border border-slate-200 bg-white hover:border-[#2b8cee]/50 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className={`text-base font-bold ${
+                      selectedAmount === amount ? 'text-[#2b8cee]' : 'text-slate-900'
+                    }`}>
+                      ${amount.toLocaleString()}
+                    </span>
+                    {selectedAmount === amount && (
+                      <div className="absolute -top-2 -right-2 bg-[#2b8cee] text-white rounded-full p-0.5">
+                        <CheckIcon />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            {[500000, 750000, 1000000, 1500000].map((amount) => (
-              <button
-                key={amount}
-                onClick={() => handleAmountClick(amount)}
-                className={`relative flex items-center justify-center h-14 rounded-md transition-all ${selectedAmount === amount
-                  ? 'border-2 border-[#AA4528] bg-[#FDF9F7] text-[#AA4528]'
-                  : 'border border-[#EEE9E0] bg-white hover:border-[#AA4528]/50 hover:bg-[#F7F5F0] text-[#151513]'
-                  }`}
-              >
-                <span className="text-[15px] font-bold">
-                  ${amount.toLocaleString()}
-                </span>
-                {selectedAmount === amount && (
-                  <div className="absolute top-1.5 right-1.5 text-[#AA4528]">
-                    <CheckIcon />
-                  </div>
+              {/* Custom Amount Input */}
+              <div className="space-y-2">
+                <div className="relative">
+                  <span className={`absolute inset-y-0 left-0 pl-3 flex items-center font-medium text-lg ${
+                    customAmountError ? 'text-red-400' : 'text-slate-400'
+                  }`}>
+                    $
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={customAmount}
+                    onChange={handleCustomAmountChange}
+                    placeholder="Other Amount"
+                    className={`w-full h-12 rounded-xl border bg-white text-slate-900 pl-8 pr-3 text-lg font-bold outline-none transition-all placeholder:text-slate-300 ${
+                      customAmountError 
+                        ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
+                        : 'border-slate-300 focus:border-[#2b8cee] focus:ring-1 focus:ring-[#2b8cee]'
+                    }`}
+                  />
+                </div>
+                
+                {/* Validation Error Message */}
+                {customAmountError && (
+                  <p className="text-red-500 text-xs font-medium flex items-center gap-1 px-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {customAmountError}
+                  </p>
                 )}
-              </button>
-            ))}
-          </div>
-
-          <div className="space-y-2">
-            <div className="relative">
-              <span className={`absolute inset-y-0 left-0 pl-4 flex items-center font-medium text-[16px] ${customAmountError ? 'text-red-400' : 'text-[#8C8479]'
-                }`}>
-                $
-              </span>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={customAmount}
-                onChange={handleCustomAmountChange}
-                placeholder="Other Amount"
-                className={`w-full h-14 rounded-md border bg-white text-[#151513] pl-8 pr-4 text-[16px] font-bold outline-none transition-all placeholder:text-[#C4BFB5] ${customAmountError
-                  ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                  : 'border-[#EEE9E0] focus:border-[#AA4528] focus:ring-1 focus:ring-[#AA4528]/20'
-                  }`}
-              />
+                
+                {/* Helper text */}
+                {!customAmountError && customAmount && (
+                  <p className="text-green-600 text-xs font-medium flex items-center gap-1 px-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20,6 9,17 4,12" />
+                    </svg>
+                    Amount: ${parseFormattedNumber(customAmount).toLocaleString()}
+                  </p>
+                )}
+                
+                {/* Min/Max hint */}
+                {!customAmount && !selectedAmount && (
+                  <p className="text-slate-400 text-xs px-1">
+                    Min: $100 &bull; Max: $100M
+                  </p>
+                )}
+              </div>
             </div>
-
-            {customAmountError && (
-              <p className="text-red-500 text-[12px] font-medium">{customAmountError}</p>
-            )}
-
-            {!customAmountError && customAmount && (
-              <p className="text-[#2D7A41] text-[12px] font-medium">
-                Amount: ${parseFormattedNumber(customAmount).toLocaleString()}
-              </p>
-            )}
-
-            {!customAmount && !selectedAmount && (
-              <p className="text-[#8C8479] text-[12px]">
-                Min: $100 &bull; Max: $100M
-              </p>
-            )}
           </div>
-        </div>
+        </main>
 
+        {/* Fixed Footer - matching Step3 pattern */}
+        {!isFooterVisible && (
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto border-t border-slate-100 bg-white/90 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
+            data-onboarding-footer
+          >
+            <div className="flex flex-col gap-3 sm:gap-4">
+              {/* Continue Button */}
+              <button
+                onClick={handleContinue}
+                disabled={loading || !isFormValid()}
+                className={`w-full h-11 sm:h-12 bg-[#2b8cee] hover:bg-[#2070c0] text-white font-semibold text-sm sm:text-base px-6 rounded-full shadow-md shadow-[#2b8cee]/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${
+                  loading || !isFormValid() ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {loading ? 'Saving...' : 'Continue'}
+                {!loading && <ArrowForwardIcon />}
+              </button>
+
+              {/* Skip Button */}
+              <button
+                onClick={handleSkip}
+                disabled={loading}
+                className="w-full text-center text-slate-500 hover:text-slate-900 text-sm font-semibold py-2 transition-colors"
+              >
+                I'll do this later
+              </button>
+
+              {/* Back Button */}
+              <button
+                onClick={handleBack}
+                disabled={loading}
+                className="w-full text-center text-slate-400 hover:text-slate-900 text-sm font-semibold py-2 transition-colors"
+              >
+                Back
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Bottom Skip Section (Before shell CTA) */}
-      <div className="mt-8 pt-6 border-t border-[#F2F0EB]">
-        <button
-          onClick={handleSkip}
-          disabled={loading}
-          className="w-full py-3.5 rounded-md text-[14px] font-semibold text-[#8C8479] bg-[#F2F0EB] hover:bg-[#EEE9E0] transition-colors"
-        >
-          I'll do this later
-        </button>
-      </div>
-
-    </OnboardingShell>
+    </div>
   );
 }
 

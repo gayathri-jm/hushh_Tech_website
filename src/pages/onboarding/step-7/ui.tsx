@@ -31,7 +31,7 @@ export default function OnboardingStep7() {
   } = useStep7Logic();
 
   return (
-    <div className="bg-[#faf9f6] text-[#151513] min-h-screen antialiased flex flex-col selection:bg-fr-rust selection:text-white" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
       {/* ═══ Header ═══ */}
       <HushhTechBackHeader onBackClick={handleBack} rightLabel="FAQs" />
 
@@ -46,7 +46,7 @@ export default function OnboardingStep7() {
           </div>
           <div className="h-0.5 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-fr-rust transition-all duration-500"
+              className="h-full bg-hushh-blue transition-all duration-500"
               style={{ width: `${PROGRESS_PCT}%` }}
             />
           </div>
@@ -58,16 +58,16 @@ export default function OnboardingStep7() {
             Identity Verification
           </h3>
           <h1
-            className="text-[2.75rem] leading-[1.1] text-[#151513] tracking-tight"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}
+            className="text-[2.75rem] leading-[1.1] font-normal text-black tracking-tight font-serif"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             Enter Your Full
             <br />
-            <span className="text-gray-400 italic font-medium">
+            <span className="text-gray-400 italic font-light">
               Legal Name
             </span>
           </h1>
-          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-medium">
+          <p className="text-sm text-gray-500 mt-4 leading-relaxed font-light">
             We are required to collect this info for verification purposes.
           </p>
         </section>
@@ -170,7 +170,7 @@ export default function OnboardingStep7() {
         )}
 
         {/* Helper text */}
-        <p className="text-[11px] text-gray-400 text-center font-medium mb-8">
+        <p className="text-[11px] text-gray-400 text-center font-light mb-8">
           Make sure this matches your government ID.
         </p>
 
@@ -195,7 +195,7 @@ export default function OnboardingStep7() {
         {/* ── Trust Badges ── */}
         <section className="flex flex-col items-center justify-center text-center gap-2 pb-8">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px] text-fr-rust">
+            <span className="material-symbols-outlined text-[12px] text-hushh-blue">
               lock
             </span>
             <span className="text-[10px] text-gray-500 tracking-wide uppercase font-medium">

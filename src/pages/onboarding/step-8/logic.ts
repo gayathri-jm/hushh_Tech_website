@@ -117,7 +117,6 @@ export function useStep8Logic() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      /* ── Path A: Full address was previously saved (return visit) ── */
       if (saved?.address_line_1) {
         setAddressLine1(saved.address_line_1);
         setAddressLine2(saved.address_line_2 || '');
@@ -127,84 +126,11 @@ export function useStep8Logic() {
         return;
       }
 
-      /* ── Path B: First visit — collect best data from ALL sources ── */
-      /* Priority: saved (Step 4) → Plaid identity → GPS detection */
-      let bestCity: string | undefined = saved?.city; /* Step 4 may have saved city from Plaid */
-      let bestCountryCode: string | undefined;
-      let bestStateCode: string | undefined;
-      let bestStateName: string | undefined;
-      let localAddr1 = '';
-      let localZip = '';
+      await detectAndApply(user.id);
 
-      /* Source 1: residence_country from Step 4 */
       if (saved?.residence_country) {
-        bestCountryCode = locationService.mapCountryToIsoCode(saved.residence_country);
-      }
-
-      /* Source 2: Plaid identity address */
-      try {
-        const { data: finData } = await config.supabaseClient
-          .from('user_financial_data')
-          .select('identity_data')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (finData?.identity_data) {
-          const accounts = finData.identity_data.accounts || [];
-          const owners = accounts[0]?.owners || [];
-          const owner = owners[0];
-          if (owner?.addresses?.length) {
-            const primaryAddr = owner.addresses.find((a: any) => a.primary) || owner.addresses[0];
-            const addr = primaryAddr?.data || {};
-            if (addr.city && !bestCity) bestCity = addr.city;
-            if (addr.street) { setAddressLine1(addr.street); localAddr1 = addr.street; }
-            if (addr.postal_code) { setZipCode(addr.postal_code); localZip = addr.postal_code; }
-            console.log('[Step8] Plaid address:', { city: addr.city, street: addr.street, zip: addr.postal_code });
-          }
-        }
-      } catch (err) {
-        console.warn('[Step8] Plaid identity fetch failed:', err);
-      }
-
-      /* Source 3: GPS detection — fills address lines, zip, country/state/city */
-      setIsDetecting(true);
-      setDetectionStatus('Detecting your location...');
-      try {
-        const result = await locationService.detectLocation();
-        if (result.data) {
-          /* Fill address fields from GPS only if not already set */
-          if (result.data.postalCode && !localZip) {
-            setZipCode(result.data.postalCode);
-          }
-          if (result.data.formattedAddress) {
-            const parsed = locationService.parseFormattedAddress(result.data.formattedAddress, result.data);
-            if (parsed.line1 && !localAddr1) setAddressLine1(parsed.line1);
-            if (parsed.line2) setAddressLine2(parsed.line2);
-          }
-
-          /* GPS country/state are reliable for dropdowns */
-          if (result.data.countryCode) bestCountryCode = result.data.countryCode;
-          if (result.data.stateCode) bestStateCode = result.data.stateCode;
-          if (result.data.state) bestStateName = result.data.state;
-
-          /* GPS city: only use if we don't have a better source */
-          if (!bestCity && result.data.city) bestCity = result.data.city;
-
-          locationService.saveLocationToOnboarding(user.id, result.data).catch(() => {});
-
-          setDetectionStatus(result.data.city || result.data.country || 'Location detected');
-          setTimeout(() => setDetectionStatus(null), 2500);
-        }
-      } catch {
-        setDetectionStatus(null);
-      } finally {
-        setIsDetecting(false);
-      }
-
-      /* 4. Apply ALL collected data in ONE single call — no race conditions */
-      console.log('[Step8] Final sources → city:', bestCity, 'country:', bestCountryCode, 'state:', bestStateCode || bestStateName);
-      if (bestCountryCode || bestStateCode || bestCity) {
-        dropdowns.applyDetectedLocation(bestCountryCode, bestStateCode, bestStateName, bestCity);
+        const code = locationService.mapCountryToIsoCode(saved.residence_country);
+        dropdowns.applyDetectedLocation(code);
       }
     };
     init();
