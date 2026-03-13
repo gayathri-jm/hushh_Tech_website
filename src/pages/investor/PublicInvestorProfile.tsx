@@ -12,6 +12,9 @@ import { FaApple, FaWhatsapp, FaLinkedin } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { SiGooglepay } from "react-icons/si";
 import { HiMail } from "react-icons/hi";
+import HushhTechBackHeader from "../../components/hushh-tech-back-header/HushhTechBackHeader";
+import { PrimaryCtaButton } from "../../components/PrimaryCtaButton";
+import { useFooterVisibility } from "../../utils/useFooterVisibility";
 import { InvestorChatWidget } from "../../components/InvestorChatWidget";
 import { fetchPublicInvestorProfileBySlug } from "../../services/investorProfile";
 import { maskProfileData, maskOnboardingField } from "../../utils/maskSensitiveData";
@@ -31,6 +34,9 @@ const PublicInvestorProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
   const contentRef = React.useRef<HTMLDivElement>(null);
+
+  // Hide global footer on this page (uses its own bottom nav)
+  useFooterVisibility();
 
   // Handle tab change - state change only, scroll handled by useEffect
   const handleTabChange = (tab: TabType) => {
@@ -256,10 +262,16 @@ const PublicInvestorProfilePage: React.FC = () => {
         className="bg-white min-h-screen"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
+        {/* Hushh Design System Header */}
+        <HushhTechBackHeader
+          onBackClick={handleBack}
+          rightType="hamburger"
+        />
+
         <div className="max-w-md mx-auto min-h-screen flex flex-col relative pb-24">
 
           {/* Main Content Area */}
-          <div className="flex-1 px-4 py-4 space-y-6">
+          <div className="flex-1 px-5 pt-2 pb-28 space-y-6">
             
             {/* HOME TAB CONTENT */}
             {activeTab === 'home' && (
@@ -649,12 +661,12 @@ const PublicInvestorProfilePage: React.FC = () => {
                     <p className="text-sm text-[#6B7280] mb-4">
                       Create your AI-powered investor profile in minutes
                     </p>
-                    <button
+                    <PrimaryCtaButton
+                      w="full"
                       onClick={() => navigate("/investor-profile")}
-                      className="w-full bg-[#2B8CEE] hover:bg-blue-600 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md shadow-blue-500/20 active:scale-[0.98] transition-all duration-200"
                     >
                       Create Your Hushh ID →
-                    </button>
+                    </PrimaryCtaButton>
                   </div>
                 </section>
               </>

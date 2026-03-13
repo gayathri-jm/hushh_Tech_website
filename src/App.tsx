@@ -109,6 +109,7 @@ const ContentWrapper = ({ children }: { children: ReactNode }) => {
   const isHushhUserProfile = location.pathname.startsWith('/hushh-user-profile');
   const isSignNda = location.pathname.startsWith('/sign-nda');
   const isInvestorProfile = location.pathname.startsWith('/investor-profile');
+  const isPublicInvestorProfile = location.pathname.startsWith('/investor/');
   const isDiscoverFundA = location.pathname === '/discover-fund-a';
   const isCommunity = location.pathname.startsWith('/community');
   const isDeleteAccount = location.pathname === '/delete-account';
@@ -117,7 +118,7 @@ const ContentWrapper = ({ children }: { children: ReactNode }) => {
   const isProfile = location.pathname === '/profile';
 
   return (
-    <div className={`${isHomePage || isAuthCallback || isUserRegistration || isOnboarding || isKycFlow || isKycDemo || isA2APlayground || isInvestorGuide || isHushhAI || isHushhAgent || isHushhAgents || isKai || isStudio || isHushhUserProfile || isSignNda || isInvestorProfile || isDiscoverFundA || isCommunity || isDeleteAccount || isLogin || isSignup || isProfile ? '' : 'mt-20'}`}>
+    <div className={`${isHomePage || isAuthCallback || isUserRegistration || isOnboarding || isKycFlow || isKycDemo || isA2APlayground || isInvestorGuide || isHushhAI || isHushhAgent || isHushhAgents || isKai || isStudio || isHushhUserProfile || isSignNda || isInvestorProfile || isPublicInvestorProfile || isDiscoverFundA || isCommunity || isDeleteAccount || isLogin || isSignup || isProfile ? '' : 'mt-20'}`}>
       {children}
     </div>
   );
@@ -146,7 +147,8 @@ const useLayoutVisibility = () => {
   const isKycFlow = location.pathname.startsWith('/kyc-flow');
   const isKycDemo = location.pathname.startsWith('/kyc-demo');
   const isA2APlayground = location.pathname.startsWith('/a2a-playground');
-  const hideOld = isHushhAI || isHushhAgent || isHushhAgents || isKai || isStudio || isHomePage || isOnboarding || isProfile || isFundA || isCommunity || isDeleteAccount || isLogin || isSignup || isSignNda || isHushhUserProfile || isKycFlow || isKycDemo || isA2APlayground;
+  const isPublicInvestorProfile = location.pathname.startsWith('/investor/');
+  const hideOld = isHushhAI || isHushhAgent || isHushhAgents || isKai || isStudio || isHomePage || isOnboarding || isProfile || isFundA || isCommunity || isDeleteAccount || isLogin || isSignup || isSignNda || isHushhUserProfile || isKycFlow || isKycDemo || isA2APlayground || isPublicInvestorProfile;
   return {
     showNavbar: !hideOld,
     showFooter: !hideOld,
