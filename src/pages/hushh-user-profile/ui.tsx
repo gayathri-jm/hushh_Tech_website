@@ -5,8 +5,8 @@
  * Logic stays in logic.ts.
  */
 import React from "react";
-import { useHushhUserProfileLogic } from "./logic";
-import { Copy, Check } from "lucide-react";
+import { useHushhUserProfileLogic, FIELD_LABELS, VALUE_LABELS } from "./logic";
+import { Copy, Check, ChevronDown, ChevronUp, Target, Clock, Gauge, Droplets, Briefcase, Layers, Zap, Activity, TrendingUp, Search, Heart, Globe, Users } from "lucide-react";
 import { FaApple } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import HushhTechBackHeader from "../../components/hushh-tech-back-header/HushhTechBackHeader";
@@ -40,7 +40,35 @@ const HushhUserProfilePage: React.FC = () => {
     hasCopied, onCopy, profileUrl, navigate,
     handleChange, handleSubmit, handleBack, handleSave,
     handleAppleWalletPass, handleGoogleWalletPass, COUNTRIES,
+    editingField, setEditingField, FIELD_OPTIONS, MULTI_SELECT_FIELDS,
+    handleUpdateAIField, handleMultiSelectToggle, getConfidenceLabel, getConfidenceBadgeClass,
+    shadowProfile, shadowConfidenceLabel, shadowLifestyleTags, shadowBrandTags, shadowKnownForTags,
   } = useHushhUserProfileLogic();
+
+  // Expanded state for AI profile field rationales
+  const [expandedFields, setExpandedFields] = React.useState<Set<string>>(new Set());
+  const toggleFieldExpand = (fieldName: string) => {
+    setExpandedFields(prev => {
+      const next = new Set(prev);
+      next.has(fieldName) ? next.delete(fieldName) : next.add(fieldName);
+      return next;
+    });
+  };
+
+  // Field icon mapping
+  const getFieldIcon = (fieldName: string) => {
+    switch (fieldName) {
+      case "primary_goal": return <Target className="w-4 h-4 text-hushh-blue" />;
+      case "investment_horizon_years": return <Clock className="w-4 h-4 text-hushh-blue" />;
+      case "risk_tolerance": return <Gauge className="w-4 h-4 text-hushh-blue" />;
+      case "liquidity_need": return <Droplets className="w-4 h-4 text-hushh-blue" />;
+      case "experience_level": return <Briefcase className="w-4 h-4 text-hushh-blue" />;
+      case "asset_class_preference": return <Layers className="w-4 h-4 text-hushh-blue" />;
+      case "typical_ticket_size": return <Zap className="w-4 h-4 text-hushh-blue" />;
+      case "engagement_style": return <Activity className="w-4 h-4 text-hushh-blue" />;
+      default: return <TrendingUp className="w-4 h-4 text-hushh-blue" />;
+    }
+  };
 
   const firstName = form.name?.split(" ")[0] || "Investor";
 
@@ -147,6 +175,173 @@ const HushhUserProfilePage: React.FC = () => {
             <span className="material-symbols-outlined text-lg">auto_awesome</span>
           </HushhTechCta>
         </section>
+
+        {/* ── AI-Generated Investment Profile ── */}
+        {investorProfile && Object.keys(investorProfile).length > 0 && (
+          <section className="mb-12">
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl font-medium text-black tracking-tight font-serif" style={playfair}>
+                  Investment{" "}
+                  <span className="text-gray-400 italic font-light">Profile.</span>
+                </h2>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-hushh-blue/20 bg-hushh-blue/5">
+                  <span className="w-1.5 h-1.5 bg-hushh-blue rounded-full" />
+                  <span className="text-[10px] tracking-[0.14em] uppercase text-hushh-blue font-medium">AI Analyzed</span>
+                </span>
+              </div>
+              <p className="text-gray-500 text-xs leading-relaxed">
+                AI-detected preferences based on your profile data.
+              </p>
+            </div>
+
+            <div className="py-1">
+              <SectionLabel>AI Preferences</SectionLabel>
+              {Object.entries(investorProfile).map(([fieldName, fieldData]: [string, any]) => {
+                if (!fieldData || typeof fieldData !== 'object') return null;
+                const label = FIELD_LABELS[fieldName as keyof typeof FIELD_LABELS] || fieldName;
+                const valueText = Array.isArray(fieldData.value)
+                  ? fieldData.value.map((v: string) => VALUE_LABELS[v as keyof typeof VALUE_LABELS] || v).join(", ")
+                  : VALUE_LABELS[fieldData.value as keyof typeof VALUE_LABELS] || fieldData.value;
+                const confidence = fieldData.confidence || 0;
+                const confLabel = getConfidenceLabel(confidence);
+                const isEditing = editingField === fieldName;
+                const options = FIELD_OPTIONS[fieldName];
+                const isMulti = MULTI_SELECT_FIELDS.includes(fieldName);
+
+                return (
+                  <div key={fieldName}>
+                    <FieldRow label={label}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-black truncate max-w-[140px]">{valueText || "—"}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${getConfidenceBadgeClass(confidence)}`}>
+                          {confLabel}
+                        </span>
+                      </div>
+                    </FieldRow>
+                    {/* Inline edit when tapped */}
+                    {isEditing && options && (
+                      <div className="px-1 pb-4 pt-1" onClick={(e) => e.stopPropagation()}>
+                        {isMulti ? (
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            {options.map((opt) => {
+                              const currentVals = Array.isArray(fieldData.value) ? fieldData.value : [];
+                              const isSelected = currentVals.includes(opt.value);
+                              return (
+                                <button
+                                  key={opt.value}
+                                  onClick={() => handleMultiSelectToggle(fieldName, opt.value)}
+                                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                    isSelected ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200'
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="relative mb-2">
+                            <select
+                              value={fieldData.value || ""}
+                              onChange={(e) => handleUpdateAIField(fieldName, e.target.value)}
+                              className="appearance-none w-full bg-transparent border-none focus:ring-0 p-0 pr-6 text-sm font-medium text-black text-right cursor-pointer"
+                            >
+                              {options.map((opt) => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                            <span className="material-symbols-outlined text-gray-300 text-lg absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
+                          </div>
+                        )}
+                        <button onClick={() => setEditingField(null)} className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">Done</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ── Deep Profile Intelligence ── */}
+        {shadowProfile && (
+          <section className="mb-12">
+            <div className="mb-8">
+              <h2 className="text-2xl font-medium text-black tracking-tight mb-2 font-serif" style={playfair}>
+                Deep{" "}
+                <span className="text-gray-400 italic font-light">Intelligence.</span>
+              </h2>
+              <p className="text-gray-500 text-xs leading-relaxed">
+                Insights gathered by our Shadow Investigator AI.
+              </p>
+            </div>
+
+            <div className="py-1">
+              <SectionLabel>Identity</SectionLabel>
+              {shadowProfile.occupation && (
+                <FieldRow label="Occupation">
+                  <span className="text-sm font-medium text-black">{shadowProfile.occupation}</span>
+                </FieldRow>
+              )}
+              {shadowProfile.nationality && (
+                <FieldRow label="Nationality">
+                  <span className="text-sm font-medium text-black">{shadowProfile.nationality}</span>
+                </FieldRow>
+              )}
+              {shadowProfile.netWorthScore > 0 && (
+                <FieldRow label="Wealth Score">
+                  <span className="text-sm font-medium text-black">{shadowProfile.netWorthScore}/100</span>
+                </FieldRow>
+              )}
+            </div>
+
+            {/* Lifestyle */}
+            {shadowLifestyleTags.length > 0 && (
+              <div className="py-4">
+                <SectionLabel>Lifestyle</SectionLabel>
+                <div className="flex flex-wrap gap-2">
+                  {shadowLifestyleTags.map((tag, i) => (
+                    <span key={i} className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-700 bg-gray-50">{tag}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Brands */}
+            {shadowBrandTags.length > 0 && (
+              <div className="py-4">
+                <SectionLabel>Brands</SectionLabel>
+                <div className="flex flex-wrap gap-2">
+                  {shadowBrandTags.map((brand, i) => (
+                    <span key={i} className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-700 bg-gray-50">{brand}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Known For */}
+            {shadowKnownForTags.length > 0 && (
+              <div className="py-4">
+                <SectionLabel>Known For</SectionLabel>
+                {shadowKnownForTags.map((item, i) => (
+                  <FieldRow key={i} label={`#${i + 1}`}>
+                    <span className="text-sm font-medium text-black">{item}</span>
+                  </FieldRow>
+                ))}
+              </div>
+            )}
+
+            {/* Confidence */}
+            <div className="border-t border-gray-100 mt-2 pt-4 flex items-center justify-between">
+              <span className="text-sm text-gray-500 font-light">AI Confidence</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-200 bg-gray-50">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                <span className="text-[10px] tracking-[0.14em] uppercase text-gray-500 font-medium">{shadowConfidenceLabel}</span>
+              </span>
+            </div>
+          </section>
+        )}
 
         {/* ── Your Hushh Profile ── */}
         <section className="mb-12">
