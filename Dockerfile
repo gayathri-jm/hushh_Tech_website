@@ -21,8 +21,8 @@ COPY public/ public/
 COPY files/ files/
 COPY custom.d.ts ./
 
-# Build the Vite app
-RUN npm run build
+# Build the Vite app (skip tests — test files excluded by .dockerignore)
+RUN npx vite build
 
 # --- Stage 2: Runtime ---
 FROM node:20-alpine
