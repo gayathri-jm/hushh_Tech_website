@@ -15,7 +15,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
 # Copy source files needed for Vite build
-COPY index.html vite.config.ts tsconfig.json tsconfig.app.json tailwind.config.js postcss.config.js ./
+COPY index.html vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.json tailwind.config.js postcss.config.js ./
 COPY src/ src/
 COPY public/ public/
 COPY files/ files/
