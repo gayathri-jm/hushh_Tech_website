@@ -524,10 +524,10 @@ const SignNDAPage: React.FC = () => {
             Step 3 · Digital Signature
           </h3>
 
-          {/* Name input */}
+          {/* Name input — prominent editable field */}
           <div className="border border-gray-200 mb-2">
-            <div className="flex items-center px-4 py-4 border-b border-gray-100">
-              <label className="text-sm font-semibold text-gray-900 shrink-0 mr-4">
+            <div className="px-4 py-4 border-b border-gray-100">
+              <label className="text-sm font-semibold text-gray-900 block mb-2">
                 Full Legal Name
               </label>
               <input
@@ -537,9 +537,19 @@ const SignNDAPage: React.FC = () => {
                   setSignerName(e.target.value);
                   if (nameError) setNameError('');
                 }}
-                placeholder="required"
-                className="flex-1 text-right text-sm font-medium text-black placeholder:text-gray-400 bg-transparent outline-none"
+                placeholder="e.g., John Smith"
+                className={`w-full px-3 py-2.5 text-sm font-medium text-black rounded-lg border outline-none transition-colors ${
+                  signerName.trim()
+                    ? 'border-green-300 bg-green-50/30 focus:border-black focus:ring-1 focus:ring-black'
+                    : 'border-gray-300 bg-gray-50 focus:border-black focus:ring-1 focus:ring-black placeholder:text-gray-400'
+                }`}
+                aria-label="Enter your full legal name"
               />
+              {!signerName.trim() && !nameError && (
+                <p className="text-[11px] text-gray-400 mt-1.5">
+                  Type your full legal name as it appears on your ID
+                </p>
+              )}
             </div>
             {nameError && (
               <p className="px-4 py-2 text-xs text-red-600 font-medium">{nameError}</p>
