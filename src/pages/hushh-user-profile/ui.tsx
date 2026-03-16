@@ -1,12 +1,12 @@
 /**
- * HushhUserProfile — Revamped
- * Apple iOS colors, Playfair Display headings, proper English capitalization.
- * Matches Home + Fund A + Community + Profile design language.
+ * HushhUserProfile — Revamped UI
+ * Clear separation: "Enhance with AI" (BLACK) vs "Save Changes" (WHITE)
+ * Edit indicators on all editable fields.
  * Logic stays in logic.ts.
  */
 import React from "react";
 import { useHushhUserProfileLogic, FIELD_LABELS, VALUE_LABELS } from "./logic";
-import { Copy, Check, ChevronDown, ChevronUp, Target, Clock, Gauge, Droplets, Briefcase, Layers, Zap, Activity, TrendingUp, Search, Heart, Globe, Users } from "lucide-react";
+import { Copy, Check, Pencil } from "lucide-react";
 import { FaApple } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import HushhTechBackHeader from "../../components/hushh-tech-back-header/HushhTechBackHeader";
@@ -17,11 +17,15 @@ import NWSScoreBadge from "../../components/profile/NWSScoreBadge";
 /* ── Playfair heading style ── */
 const playfair = { fontFamily: "'Playfair Display', serif" };
 
-/* ── Tiny reusable row (settings-style) ── */
+/* ── Tiny reusable row (settings-style) with edit indicator ── */
 const FieldRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="group flex items-center justify-between gap-4 border-b border-gray-100 py-4 hover:bg-gray-50/50 transition-colors">
     <span className="text-sm text-gray-500 font-light shrink-0">{label}</span>
-    <div className="flex items-center gap-2 text-right min-w-0 flex-1 justify-end">{children}</div>
+    <div className="flex items-center gap-2 text-right min-w-0 flex-1 justify-end">
+      {children}
+      {/* Subtle edit pencil — visible on hover */}
+      <Pencil className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+    </div>
   </div>
 );
 
@@ -38,37 +42,13 @@ const HushhUserProfilePage: React.FC = () => {
     form, investorProfile, loading, loadingSeconds, isProcessing, investorStatus, shadowStatus,
     hasOnboardingData, isApplePassLoading, isGooglePassLoading, nwsResult, nwsLoading,
     hasCopied, onCopy, profileUrl, navigate,
-    handleChange, handleSubmit, handleBack, handleSave,
+    handleChange, handleBack, handleSave,
+    isDirty, isSaving, handleSaveChanges,
     handleAppleWalletPass, handleGoogleWalletPass, COUNTRIES,
     editingField, setEditingField, FIELD_OPTIONS, MULTI_SELECT_FIELDS,
     handleUpdateAIField, handleMultiSelectToggle, getConfidenceLabel, getConfidenceBadgeClass,
     shadowProfile, shadowConfidenceLabel, shadowLifestyleTags, shadowBrandTags, shadowKnownForTags,
   } = useHushhUserProfileLogic();
-
-  // Expanded state for AI profile field rationales
-  const [expandedFields, setExpandedFields] = React.useState<Set<string>>(new Set());
-  const toggleFieldExpand = (fieldName: string) => {
-    setExpandedFields(prev => {
-      const next = new Set(prev);
-      next.has(fieldName) ? next.delete(fieldName) : next.add(fieldName);
-      return next;
-    });
-  };
-
-  // Field icon mapping
-  const getFieldIcon = (fieldName: string) => {
-    switch (fieldName) {
-      case "primary_goal": return <Target className="w-4 h-4 text-hushh-blue" />;
-      case "investment_horizon_years": return <Clock className="w-4 h-4 text-hushh-blue" />;
-      case "risk_tolerance": return <Gauge className="w-4 h-4 text-hushh-blue" />;
-      case "liquidity_need": return <Droplets className="w-4 h-4 text-hushh-blue" />;
-      case "experience_level": return <Briefcase className="w-4 h-4 text-hushh-blue" />;
-      case "asset_class_preference": return <Layers className="w-4 h-4 text-hushh-blue" />;
-      case "typical_ticket_size": return <Zap className="w-4 h-4 text-hushh-blue" />;
-      case "engagement_style": return <Activity className="w-4 h-4 text-hushh-blue" />;
-      default: return <TrendingUp className="w-4 h-4 text-hushh-blue" />;
-    }
-  };
 
   const firstName = form.name?.split(" ")[0] || "Investor";
 
@@ -168,7 +148,7 @@ const HushhUserProfilePage: React.FC = () => {
             {loading
               ? `Generating... ${loadingSeconds}s`
               : investorProfile
-              ? "Update Profile"
+              ? "Re-enhance with AI"
               : hasOnboardingData
               ? "Enhance with AI"
               : "Generate Investor Profile"}
@@ -191,7 +171,7 @@ const HushhUserProfilePage: React.FC = () => {
                 </span>
               </div>
               <p className="text-gray-500 text-xs leading-relaxed">
-                AI-detected preferences based on your profile data.
+                AI-detected preferences based on your profile data. Tap any field to adjust.
               </p>
             </div>
 
@@ -211,14 +191,25 @@ const HushhUserProfilePage: React.FC = () => {
 
                 return (
                   <div key={fieldName}>
-                    <FieldRow label={label}>
+                    <div
+                      className="group flex items-center justify-between gap-4 border-b border-gray-100 py-4 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                      onClick={() => options && setEditingField(isEditing ? null : fieldName)}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Edit ${label}`}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && options) setEditingField(isEditing ? null : fieldName); }}
+                    >
+                      <span className="text-sm text-gray-500 font-light shrink-0">{label}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-black truncate max-w-[140px]">{valueText || "—"}</span>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${getConfidenceBadgeClass(confidence)}`}>
                           {confLabel}
                         </span>
+                        {options && (
+                          <Pencil className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                        )}
                       </div>
-                    </FieldRow>
+                    </div>
                     {/* Inline edit when tapped */}
                     {isEditing && options && (
                       <div className="px-1 pb-4 pt-1" onClick={(e) => e.stopPropagation()}>
@@ -343,8 +334,8 @@ const HushhUserProfilePage: React.FC = () => {
           </section>
         )}
 
-        {/* ── Your Hushh Profile ── */}
-        <section className="mb-12">
+        {/* ── Your Hushh Profile (editable section) ── */}
+        <section className="mb-6">
           <div className="mb-8">
             <h2
               className="text-2xl font-medium text-black tracking-tight mb-2 font-serif"
@@ -354,8 +345,13 @@ const HushhUserProfilePage: React.FC = () => {
               <span className="text-gray-400 italic font-light">Profile.</span>
             </h2>
             <p className="text-gray-500 text-xs leading-relaxed">
-              Review and update your details to keep your investor profile complete.
+              Tap any field to edit your details. Changes are saved separately from AI analysis.
             </p>
+            {/* Edit hint banner */}
+            <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 border border-gray-100">
+              <Pencil className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <span className="text-[11px] text-gray-400">Tap any field to edit · click "Save Changes" to update</span>
+            </div>
           </div>
 
           {/* Personal Information */}
@@ -457,6 +453,19 @@ const HushhUserProfilePage: React.FC = () => {
               <input type="text" value={form.zipCode} onChange={(e) => handleChange("zipCode", e.target.value)} className={inlineInput} placeholder="560001" />
             </FieldRow>
           </div>
+
+          {/* Save Changes button — right after editable fields, WHITE variant */}
+          <div className="mt-6">
+            <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={handleSaveChanges} disabled={!isDirty || isSaving}>
+              {isSaving ? (
+                <>Saving... <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span></>
+              ) : isDirty ? (
+                <>Save Changes <span className="material-symbols-outlined text-lg">save</span></>
+              ) : (
+                <>Profile Saved <Check className="w-4 h-4 text-gray-400" /></>
+              )}
+            </HushhTechCta>
+          </div>
         </section>
 
         {/* ── Profile Link + Wallet ── */}
@@ -480,11 +489,8 @@ const HushhUserProfilePage: React.FC = () => {
           </div>
         </section>
 
-        {/* ── CTAs ── */}
-        <section className="pb-12 space-y-3">
-          <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={handleSave} disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
-          </HushhTechCta>
+        {/* ── Bottom CTA ── */}
+        <section className="pb-12">
           <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={() => navigate("/")}>
             Go to Home
           </HushhTechCta>
