@@ -14,6 +14,14 @@ const splitSegments = (formattedAddress) =>
     .map((segment) => cleanString(segment))
     .filter(Boolean);
 
+const normalizeSpacing = (value) =>
+  cleanString(value)
+    .replace(/[.,()/]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const POSTAL_CODE_PATTERN = /^(?=.*\d)[A-Z0-9-]{2,10}(?: [A-Z0-9-]{2,10})?$/i;
+
 const matchesSegment = (segment, candidates) => {
   const normalizedSegment = normalizeComparable(segment);
   if (!normalizedSegment) return false;
@@ -41,37 +49,50 @@ const isStatePostalSegment = (segment, { state, stateCode, zipCode }) => {
 
   working = stripCandidate(working, state);
   working = stripCandidate(working, stateCode);
-  working = working.replace(/[.,()/\-]/g, ' ').replace(/\s+/g, ' ').trim();
+  working = normalizeSpacing(working.replace(/-/g, ' '));
 
-  return working.length === 0;
+  return working.length === 0 || POSTAL_CODE_PATTERN.test(working);
 };
 
-const SECONDARY_DETAIL_PATTERN = /^(apt|apartment|suite|ste|unit|flat|floor|fl|room|rm|#)\b/i;
+const buildCityStateLine2 = (city, state) =>
+  [cleanString(city), cleanString(state)].filter(Boolean).join(', ');
 
-const splitStreetSegments = (segments) => {
-  if (segments.length === 0) {
-    return { addressLine1: '', addressLine2: '' };
+const inferPostalCodeFromSegment = (segment, { state, stateCode }) => {
+  const normalized = normalizeSpacing(
+    stripCandidate(stripCandidate(segment, state), stateCode)
+  );
+  if (!normalized) return '';
+
+  const parts = normalized.split(' ').filter(Boolean);
+  const last = parts[parts.length - 1] || '';
+  const previous = parts[parts.length - 2] || '';
+  const lastTwo = previous ? `${previous} ${last}` : '';
+
+  if (previous && /\d/.test(previous) && POSTAL_CODE_PATTERN.test(lastTwo)) {
+    return lastTwo;
   }
 
-  const lastSegment = segments[segments.length - 1];
-  if (segments.length > 1 && SECONDARY_DETAIL_PATTERN.test(lastSegment)) {
-    return {
-      addressLine1: segments.slice(0, -1).join(', '),
-      addressLine2: lastSegment,
-    };
+  return POSTAL_CODE_PATTERN.test(last) ? last : '';
+};
+
+const inferStateFromSegment = (segment, { zipCode, stateCode }) => {
+  let working = cleanString(segment);
+  if (!working) return cleanString(stateCode);
+
+  const resolvedZipCode = cleanString(zipCode) || inferPostalCodeFromSegment(segment, { state: '', stateCode });
+  if (resolvedZipCode) {
+    working = working.replace(new RegExp(`\\b${escapeRegExp(resolvedZipCode)}\\b`, 'gi'), ' ');
   }
 
-  return {
-    addressLine1: segments.join(', '),
-    addressLine2: '',
-  };
+  working = normalizeSpacing(stripCandidate(working, stateCode));
+  return working || cleanString(stateCode);
 };
 
 export function normalizeDetectedAddress(locationData, countryNameOverride = '') {
-  const city = cleanString(locationData?.city);
-  const state = cleanString(locationData?.state);
+  const gpsCity = cleanString(locationData?.city);
+  const gpsState = cleanString(locationData?.state);
   const stateCode = cleanString(locationData?.stateCode);
-  const zipCode = cleanString(locationData?.postalCode);
+  const gpsZipCode = cleanString(locationData?.postalCode);
   const country = cleanString(countryNameOverride) || cleanString(locationData?.country);
   const formattedAddress = cleanString(locationData?.formattedAddress);
 
@@ -81,6 +102,11 @@ export function normalizeDetectedAddress(locationData, countryNameOverride = '')
     segments.pop();
   }
 
+  const statePostalSegment = segments[segments.length - 1] || '';
+  const zipCode = gpsZipCode || inferPostalCodeFromSegment(statePostalSegment, { state: gpsState, stateCode });
+  const state = gpsState || inferStateFromSegment(statePostalSegment, { zipCode, stateCode });
+  const city = gpsCity || (segments.length > 1 ? segments[segments.length - 2] : '');
+
   if (segments.length && isStatePostalSegment(segments[segments.length - 1], { state, stateCode, zipCode })) {
     segments.pop();
   }
@@ -89,7 +115,8 @@ export function normalizeDetectedAddress(locationData, countryNameOverride = '')
     segments.pop();
   }
 
-  const { addressLine1, addressLine2 } = splitStreetSegments(segments);
+  const addressLine1 = segments.join(', ');
+  const addressLine2 = buildCityStateLine2(city, state);
 
   return {
     addressLine1,
@@ -103,7 +130,7 @@ export function normalizeDetectedAddress(locationData, countryNameOverride = '')
 }
 
 export function looksLikeAutoFilledCityStateLine2(line2, city, state) {
-  const expected = [cleanString(city), cleanString(state)].filter(Boolean).join(', ');
+  const expected = buildCityStateLine2(city, state);
   if (!expected) return false;
 
   return normalizeComparable(line2) === normalizeComparable(expected);
@@ -159,10 +186,13 @@ export function buildOnboardingAddressRepairPatch(row) {
     patch.address_line_1 = normalized.addressLine1;
   }
 
-  if (looksLikeAutoFilledCityStateLine2(currentLine2, gpsCity, gpsState)) {
-    patch.address_line_2 = normalized.addressLine2 || null;
-  } else if (!currentLine2 && normalized.addressLine2) {
+  if (!currentLine2 && normalized.addressLine2) {
     patch.address_line_2 = normalized.addressLine2;
+  } else if (
+    looksLikeAutoFilledCityStateLine2(currentLine2, normalized.city, normalized.state) &&
+    normalizeComparable(currentLine2) !== normalizeComparable(normalized.addressLine2)
+  ) {
+    patch.address_line_2 = normalized.addressLine2 || null;
   }
 
   if (!cleanString(row.city) && normalized.city) {

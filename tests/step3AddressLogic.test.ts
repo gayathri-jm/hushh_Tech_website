@@ -42,6 +42,20 @@ const gpsAddress = {
   longitude: 73.7537,
 } satisfies LocationData;
 
+const seattleGpsAddress = {
+  country: 'United States',
+  countryCode: 'US',
+  state: 'Washington',
+  stateCode: 'WA',
+  city: 'Seattle',
+  postalCode: '98109',
+  phoneDialCode: '+1',
+  timezone: 'America/Los_Angeles',
+  formattedAddress: '500 Terry Ave N, Seattle, Washington 98109, United States',
+  latitude: 47.6221,
+  longitude: -122.3378,
+} satisfies LocationData;
+
 describe('step 3 address logic', () => {
   it('auto-fills the full normalized address instead of collapsing line 1 to the first token', () => {
     const patch = buildStep3AutofillPatch({
@@ -54,12 +68,31 @@ describe('step 3 address logic', () => {
       citizenshipCountry: 'India',
       residenceCountry: 'India',
       addressLine1: '1, Tower-3, Godrej Hillside, Mahalunge',
+      addressLine2: 'Pune, Maharashtra',
       zipCode: '411045',
       city: 'Pune',
       state: 'Maharashtra',
       addressCountry: 'India',
     });
-    expect(patch.addressLine2).toBeUndefined();
+  });
+
+  it('derives address line 2 from the detected GPS city/state for other locations too', () => {
+    const patch = buildStep3AutofillPatch({
+      current: emptyFormState,
+      manual: noManualOverrides,
+      locationData: seattleGpsAddress,
+    });
+
+    expect(patch).toMatchObject({
+      citizenshipCountry: 'United States',
+      residenceCountry: 'United States',
+      addressLine1: '500 Terry Ave N',
+      addressLine2: 'Seattle, Washington',
+      zipCode: '98109',
+      city: 'Seattle',
+      state: 'Washington',
+      addressCountry: 'United States',
+    });
   });
 
   it('preserves manual address edits while still updating structured GPS fields', () => {
@@ -97,7 +130,7 @@ describe('step 3 address logic', () => {
       citizenshipCountry: 'India',
       residenceCountry: 'India',
       addressLine1: '1, Tower-3, Godrej Hillside, Mahalunge',
-      addressLine2: '',
+      addressLine2: 'Pune, Maharashtra',
       zipCode: '411045',
       city: 'Pune',
       state: 'Maharashtra',
@@ -110,7 +143,7 @@ describe('step 3 address logic', () => {
       residence_country: 'India',
       current_step: 4,
       address_line_1: '1, Tower-3, Godrej Hillside, Mahalunge',
-      address_line_2: null,
+      address_line_2: 'Pune, Maharashtra',
       city: 'Pune',
       state: 'Maharashtra',
       zip_code: '411045',
