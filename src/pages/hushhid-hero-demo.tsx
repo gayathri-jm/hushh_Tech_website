@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import HushhIDHero from '../components/HushhIDHero';
+import { FINANCIAL_LINK_ROUTE } from '../services/onboarding/flow';
 
 /**
  * Demo page to showcase the Apple-style Hushh ID Hero component
@@ -11,8 +12,7 @@ const HushhIDHeroDemo: React.FC = () => {
 
   const handleCreateClick = () => {
     console.log('Create Hushh ID clicked');
-    // Navigate to investor profile creation or show form
-    navigate('/investor-profile');
+    navigate(FINANCIAL_LINK_ROUTE);
   };
 
   return (

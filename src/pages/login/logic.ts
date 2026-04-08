@@ -16,6 +16,7 @@ import {
 import type { OAuthStartResult } from "../../auth/session";
 import { DEFAULT_AUTH_REDIRECT, sanitizeInternalRedirect } from "../../utils/security";
 import { useAuthSession } from "../../auth/AuthSessionProvider";
+import { normalizeLegacyOnboardingRedirectTarget } from "../../services/onboarding/flow";
 
 /* ─── Types ─── */
 export interface LoginLogic {
@@ -48,16 +49,52 @@ export const useLoginLogic = (): LoginLogic => {
   const shouldRedirectToSupportedHost = !hostResolution.supported;
 
   // Stable redirect path — computed once from URL params
-  const redirectPath = useMemo(() => {
+  const { redirectPath, sanitizedRedirectPath } = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
-    return sanitizeInternalRedirect(params.get("redirect"), DEFAULT_AUTH_REDIRECT);
+    const sanitized = sanitizeInternalRedirect(
+      params.get("redirect"),
+      DEFAULT_AUTH_REDIRECT
+    );
+    return {
+      sanitizedRedirectPath: sanitized,
+      redirectPath: normalizeLegacyOnboardingRedirectTarget(sanitized),
+    };
   }, []);
+
+  useEffect(() => {
+    if (status !== "booting") {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      console.warn("[Login] Auth session is still booting", {
+        pathname: window.location.pathname,
+        search: window.location.search,
+      });
+    }, 1500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [status]);
 
   useEffect(() => {
     if (shouldRedirectToSupportedHost) {
       redirectToUrl(hostResolution.canonicalEntryUrl);
     }
   }, [hostResolution.canonicalEntryUrl, shouldRedirectToSupportedHost]);
+
+  useEffect(() => {
+    if (
+      shouldRedirectToSupportedHost ||
+      redirectPath === sanitizedRedirectPath
+    ) {
+      return;
+    }
+
+    navigate(
+      `${window.location.pathname}?redirect=${encodeURIComponent(redirectPath)}`,
+      { replace: true }
+    );
+  }, [navigate, redirectPath, sanitizedRedirectPath, shouldRedirectToSupportedHost]);
 
   /* Auth session listener — redirect if already logged in */
   useEffect(() => {

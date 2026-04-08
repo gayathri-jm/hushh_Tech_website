@@ -5,6 +5,10 @@ import { CheckCircle, AlertTriangle } from 'lucide-react';
 import config from '../resources/config/config';
 import { DEFAULT_AUTH_REDIRECT, sanitizeInternalRedirect } from '../utils/security';
 import { useAuthSession } from '../auth/AuthSessionProvider';
+import {
+  FINANCIAL_LINK_ROUTE,
+  normalizeLegacyOnboardingRedirectTarget,
+} from '../services/onboarding/flow';
 
 
 const AuthCallback: React.FC = () => {
@@ -17,7 +21,9 @@ const AuthCallback: React.FC = () => {
   // Get custom redirect from URL param (for Hushh AI and other modules)
   const redirectParam = searchParams.get('redirect');
   const customRedirect = redirectParam
-    ? sanitizeInternalRedirect(redirectParam, DEFAULT_AUTH_REDIRECT)
+    ? normalizeLegacyOnboardingRedirectTarget(
+        sanitizeInternalRedirect(redirectParam, DEFAULT_AUTH_REDIRECT)
+      )
     : null;
 
   // Helper to determine final redirect destination
@@ -25,7 +31,7 @@ const AuthCallback: React.FC = () => {
     // If custom redirect is set (e.g., /hushh-ai), use it
     if (customRedirect) return customRedirect;
     // Otherwise, default behavior: onboarding or profile
-    return hasCompletedOnboarding ? '/hushh-user-profile' : '/onboarding/financial-link';
+    return hasCompletedOnboarding ? '/hushh-user-profile' : FINANCIAL_LINK_ROUTE;
   };
 
   const queueWelcomeToast = (userId?: string | null) => {

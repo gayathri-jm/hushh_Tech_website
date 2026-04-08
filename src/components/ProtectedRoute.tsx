@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import config from '../resources/config/config';
-import { getCanonicalOnboardingRoute } from '../services/onboarding/flow';
+import {
+  FINANCIAL_LINK_ROUTE,
+  normalizeFinancialLinkStatus,
+} from '../services/onboarding/flow';
 import { useAuthSession } from '../auth/AuthSessionProvider';
 import { buildLoginRedirectPath } from '../auth/routePolicy';
+import { fetchResolvedOnboardingProgress } from '../services/onboarding/progress';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,9 +21,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   const checkAuthAndOnboarding = async () => {
+    let shouldSettleLoading = true;
     try {
       if (status === 'booting') {
         setIsLoading(true);
+        shouldSettleLoading = false;
         return;
       }
 
@@ -40,18 +46,29 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         return;
       }
 
-      const { data: onboardingData } = await config.supabaseClient
-        .from('onboarding_data')
-        .select('is_completed, current_step')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const onboardingData = await fetchResolvedOnboardingProgress(
+        config.supabaseClient,
+        user.id
+      );
 
       const isOnOnboardingPage = location.pathname.startsWith('/onboarding/');
+      const isOnFinancialLinkPage = location.pathname === FINANCIAL_LINK_ROUTE;
+      const isInvestorProfileAlias = location.pathname === '/investor-profile';
+      const financialLinkStatus = normalizeFinancialLinkStatus(
+        onboardingData?.financial_link_status
+      );
 
       if (!onboardingData || !onboardingData.is_completed) {
-        if (!isOnOnboardingPage) {
-          const step = onboardingData?.current_step || 1;
-          navigate(getCanonicalOnboardingRoute(step), { replace: true });
+        if (
+          !isOnOnboardingPage &&
+          !(isInvestorProfileAlias && financialLinkStatus !== 'pending')
+        ) {
+          navigate(FINANCIAL_LINK_ROUTE, { replace: true });
+          return;
+        }
+
+        if (!isOnFinancialLinkPage && financialLinkStatus === 'pending') {
+          navigate(FINANCIAL_LINK_ROUTE, { replace: true });
           return;
         }
       }
@@ -65,7 +82,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         { replace: true }
       );
     } finally {
-      setIsLoading(false);
+      if (shouldSettleLoading) {
+        setIsLoading(false);
+      }
     }
   };
 

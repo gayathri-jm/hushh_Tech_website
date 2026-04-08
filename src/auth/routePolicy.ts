@@ -1,4 +1,5 @@
 import { DEFAULT_AUTH_REDIRECT, sanitizeInternalRedirect } from "../utils/security";
+import { normalizeLegacyOnboardingRedirectTarget } from "../services/onboarding/flow";
 
 export const GUEST_AUTH_ROUTE_PREFIXES = [
   "/login",
@@ -113,9 +114,8 @@ export function buildLoginRedirectPath(
   hash = "",
   fallback = DEFAULT_AUTH_REDIRECT
 ): string {
-  const redirectTarget = sanitizeInternalRedirect(
-    `${pathname || "/"}${search}${hash}`,
-    fallback
+  const redirectTarget = normalizeLegacyOnboardingRedirectTarget(
+    sanitizeInternalRedirect(`${pathname || "/"}${search}${hash}`, fallback)
   );
 
   return `/login?redirect=${encodeURIComponent(redirectTarget)}`;

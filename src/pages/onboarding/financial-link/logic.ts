@@ -8,7 +8,13 @@ import { useNavigate } from 'react-router-dom';
 import config from '../../../resources/config/config';
 import { usePlaidLinkHook } from '../../../services/plaid/usePlaidLink';
 import { formatCurrency } from '../../../services/plaid/plaidService';
-import type { FinancialVerificationResult } from '../../../types/kyc';
+import { upsertOnboardingData } from '../../../services/onboarding/upsertOnboardingData';
+import {
+  FINANCIAL_LINK_ROUTE,
+  getFinancialLinkContinuationRoute,
+  resolveFinancialLinkStatus,
+} from '../../../services/onboarding/flow';
+import { fetchOnboardingProgress } from '../../../services/onboarding/progress';
 
 export { formatCurrency };
 
@@ -17,6 +23,8 @@ export const useFinancialLinkLogic = () => {
   const [userId, setUserId] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
   const [isReady, setIsReady] = useState(false);
+  const [currentOnboardingStep, setCurrentOnboardingStep] = useState(1);
+  const [resumeRoute, setResumeRoute] = useState<string>(getFinancialLinkContinuationRoute(1));
   const hasInitialized = useRef(false);
 
   /* Scroll to top */
@@ -30,15 +38,51 @@ export const useFinancialLinkLogic = () => {
     const getUser = async () => {
       if (!config.supabaseClient) { navigate('/login'); return; }
       const { data: { user } } = await config.supabaseClient.auth.getUser();
-      if (!user) { navigate('/login'); return; }
+      if (!user) {
+        navigate(`/login?redirect=${encodeURIComponent(FINANCIAL_LINK_ROUTE)}`, {
+          replace: true,
+        });
+        return;
+      }
 
       setUserId(user.id);
       setUserEmail(user.email || undefined);
 
       try {
-        const { error: fetchError } = await config.supabaseClient
+        const onboardingProgress = await fetchOnboardingProgress(
+          config.supabaseClient,
+          user.id
+        );
+        const { data: financialData, error: fetchError } = await config.supabaseClient
           .from('user_financial_data').select('status').eq('user_id', user.id).maybeSingle();
         if (fetchError) console.warn('[FinancialLink] Supabase query error (ignoring):', fetchError.message);
+        const effectiveStatus = resolveFinancialLinkStatus(
+          onboardingProgress?.financial_link_status,
+          financialData?.status
+        );
+
+        if (
+          effectiveStatus === 'completed' &&
+          onboardingProgress?.financial_link_status !== 'completed'
+        ) {
+          void upsertOnboardingData(user.id, { financial_link_status: 'completed' });
+        }
+
+        if (onboardingProgress?.is_completed) {
+          navigate('/hushh-user-profile', { replace: true });
+          return;
+        }
+
+        const nextRoute = getFinancialLinkContinuationRoute(
+          onboardingProgress?.current_step || 1
+        );
+        setCurrentOnboardingStep(onboardingProgress?.current_step || 1);
+        setResumeRoute(nextRoute);
+
+        if (effectiveStatus !== 'pending') {
+          navigate(nextRoute, { replace: true });
+          return;
+        }
       } catch (err) {
         console.warn('[FinancialLink] Error checking financial data (ignoring):', err);
       }
@@ -159,20 +203,13 @@ export const useFinancialLinkLogic = () => {
   }, [plaid, allAccounts, totalBalance, identityInfo, investmentHoldings]);
 
   /* ─── Main button handler — Plaid flow ─── */
-  const handleButtonClick = useCallback(() => {
+  const handleButtonClick = useCallback(async () => {
     if (isDone && canProceed) {
-      const result: FinancialVerificationResult = {
-        verified: true,
-        productsAvailable: plaid.productsAvailable,
-        institutionName: plaid.institution?.name,
-        institutionId: plaid.institution?.id,
-        balanceAvailable: plaid.balanceStatus === 'success',
-        assetsAvailable: plaid.assetsStatus === 'success',
-        investmentsAvailable: plaid.investmentsStatus === 'success',
-        timestamp: new Date().toISOString(),
-      };
-      sessionStorage.setItem('financial_verification_complete', 'true');
-      navigate('/onboarding/step-1', { replace: true });
+      await upsertOnboardingData(userId, {
+        current_step: currentOnboardingStep,
+        financial_link_status: 'completed',
+      });
+      navigate(resumeRoute, { replace: true });
       return;
     }
     if (plaid.step === 'error' || (isDone && !plaid.canProceed)) {
@@ -182,14 +219,17 @@ export const useFinancialLinkLogic = () => {
     if (plaid.isReady) {
       plaid.openPlaidLink();
     }
-  }, [isDone, canProceed, plaid, navigate]);
+  }, [canProceed, currentOnboardingStep, isDone, navigate, plaid, resumeRoute, userId]);
 
   /* Skip — let user proceed without linking bank */
-  const handleSkip = useCallback(() => {
-    sessionStorage.setItem('financial_link_skipped', 'true');
+  const handleSkip = useCallback(async () => {
     console.log('[FinancialLink] User skipped financial verification');
-    navigate('/onboarding/step-1', { replace: true });
-  }, [navigate]);
+    await upsertOnboardingData(userId, {
+      current_step: currentOnboardingStep,
+      financial_link_status: 'skipped',
+    });
+    navigate(resumeRoute, { replace: true });
+  }, [currentOnboardingStep, navigate, resumeRoute, userId]);
 
   return {
     userId,

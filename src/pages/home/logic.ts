@@ -11,14 +11,20 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session } from "@supabase/supabase-js";
 import config from "../../resources/config/config";
-import { getContinueOnboardingCta } from "../../services/onboarding/flow";
+import {
+  FINANCIAL_LINK_ROUTE,
+  getContinueOnboardingCta,
+  hasClearedFinancialLink,
+} from "../../services/onboarding/flow";
 import { useAuthSession } from "../../auth/AuthSessionProvider";
+import { fetchResolvedOnboardingProgress } from "../../services/onboarding/progress";
 
 /* ─── Types ─── */
 export interface OnboardingStatus {
   hasProfile: boolean;
   isCompleted: boolean;
   currentStep: number;
+  financialLinkStatus: "pending" | "completed" | "skipped";
   loading: boolean;
 }
 
@@ -43,6 +49,7 @@ export const useHomeLogic = (): HomeLogic => {
     hasProfile: false,
     isCompleted: false,
     currentStep: 1,
+    financialLinkStatus: "pending",
     loading: true,
   });
 
@@ -62,16 +69,16 @@ export const useHomeLogic = (): HomeLogic => {
             .eq("user_id", session.user.id)
             .maybeSingle();
 
-        const { data: onboarding } = await config.supabaseClient
-          .from("onboarding_data")
-          .select("is_completed, current_step")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
+        const onboarding = await fetchResolvedOnboardingProgress(
+          config.supabaseClient,
+          session.user.id
+        );
 
         setOnboardingStatus({
           hasProfile: !!profile && !profileError,
           isCompleted: onboarding?.is_completed || false,
           currentStep: onboarding?.current_step || 1,
+          financialLinkStatus: onboarding?.financial_link_status || "pending",
           loading: false,
         });
       } catch (error) {
@@ -100,7 +107,7 @@ export const useHomeLogic = (): HomeLogic => {
     if (!session) {
       return {
         text: "Complete Your Hushh Profile",
-        action: () => navigate("/investor-profile"),
+        action: () => navigate(FINANCIAL_LINK_ROUTE),
         loading: false,
       };
     }
@@ -117,7 +124,7 @@ export const useHomeLogic = (): HomeLogic => {
       };
     }
 
-    if (onboardingStatus.currentStep > 1) {
+    if (hasClearedFinancialLink(onboardingStatus.financialLinkStatus)) {
       const cta = getContinueOnboardingCta(onboardingStatus.currentStep);
       return {
         text: cta.text,
@@ -128,7 +135,7 @@ export const useHomeLogic = (): HomeLogic => {
 
     return {
       text: "Complete Your Hushh Profile",
-      action: () => navigate("/onboarding/financial-link"),
+      action: () => navigate(FINANCIAL_LINK_ROUTE),
       loading: false,
     };
   };

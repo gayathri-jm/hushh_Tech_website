@@ -2,6 +2,7 @@ import {
   DEFAULT_AUTH_REDIRECT,
   sanitizeInternalRedirect,
 } from "../utils/security";
+import { normalizeLegacyOnboardingRedirectTarget } from "../services/onboarding/flow";
 
 export const PROD_AUTH_ORIGIN = "https://hushhtech.com";
 export const UAT_AUTH_ORIGIN = "https://uat.hushhtech.com";
@@ -110,7 +111,9 @@ export function buildCanonicalAuthEntryUrl(
   if (redirect) {
     canonicalParams.set(
       "redirect",
-      sanitizeInternalRedirect(redirect, fallback)
+      normalizeLegacyOnboardingRedirectTarget(
+        sanitizeInternalRedirect(redirect, fallback)
+      )
     );
   }
 

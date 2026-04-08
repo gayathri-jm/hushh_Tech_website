@@ -42,6 +42,7 @@ export const ACCOUNT_TYPE_OPTIONS: AccountTypeOption[] = [
 
 // Matches onboarding_data.recurring_frequency DB constraint.
 export type RecurringFrequency = 'once_a_month' | 'twice_a_month' | 'weekly' | 'every_other_week';
+export type FinancialLinkStatus = 'pending' | 'completed' | 'skipped';
 
 // Account tier information for UI display
 export interface AccountTierInfo {
@@ -171,6 +172,7 @@ export interface OnboardingData {
   recurring_frequency?: RecurringFrequency;
   recurring_amount?: number;
   recurring_day_of_month?: number;
+  financial_link_status?: FinancialLinkStatus;
 
   // Step 12: (was Step 14)
   // Step 13: Banking Info (was Step 15)

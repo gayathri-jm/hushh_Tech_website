@@ -15,7 +15,10 @@ import { Box, Text, Flex, Spinner, Image } from "@chakra-ui/react";
 import config from "../resources/config/config";
 import { Session } from "@supabase/supabase-js";
 import HushhLogo from "./images/Hushhogo.png";
-import { getContinueOnboardingCta } from "../services/onboarding/flow";
+import {
+  FINANCIAL_LINK_ROUTE,
+  getContinueOnboardingCta,
+} from "../services/onboarding/flow";
 
 /* ─── iOS Design Tokens ─── */
 const IOS = {
@@ -223,7 +226,7 @@ export default function Hero() {
   /* Dynamic CTA based on auth + onboarding state */
   const getPrimaryCTA = () => {
     if (!session) {
-      return { text: "Complete Your Hushh Profile", action: () => navigate("/investor-profile"), loading: false };
+      return { text: "Complete Your Hushh Profile", action: () => navigate(FINANCIAL_LINK_ROUTE), loading: false };
     }
     if (onboardingStatus.loading) {
       return { text: "Loading...", action: () => {}, loading: true };
@@ -505,7 +508,7 @@ export default function Hero() {
             textAlign="center" cursor="pointer"
             _active={{ bg: "#E5E5EA", transform: "scale(0.96)", opacity: 0.8 }}
             transition="all 0.15s ease-out"
-            onClick={() => navigate("/investor-profile")}
+            onClick={() => navigate(FINANCIAL_LINK_ROUTE)}
           >
             Learn More
           </Box>

@@ -1,4 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("../src/resources/config/config", () => ({
+  default: {
+    SUPABASE_URL: "https://ibsisfnjxeowvdtvgzff.supabase.co",
+  },
+}));
+
 import {
   getNdaGenerationUrl,
   getSupabaseRpcUrl,

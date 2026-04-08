@@ -1,3 +1,7 @@
+export const FINANCIAL_LINK_ROUTE = '/onboarding/financial-link' as const;
+
+export type FinancialLinkStatus = 'pending' | 'completed' | 'skipped';
+
 const TOTAL_VISIBLE_ONBOARDING_STEPS = 11;
 
 const CANONICAL_STEP_ROUTE_BY_DISPLAY_STEP = {
@@ -16,6 +20,10 @@ const CANONICAL_STEP_ROUTE_BY_DISPLAY_STEP = {
 
 export type CanonicalOnboardingRoute =
   (typeof CANONICAL_STEP_ROUTE_BY_DISPLAY_STEP)[keyof typeof CANONICAL_STEP_ROUTE_BY_DISPLAY_STEP];
+
+export type CanonicalIncompleteOnboardingRoute =
+  | typeof FINANCIAL_LINK_ROUTE
+  | CanonicalOnboardingRoute;
 
 export const CANONICAL_ONBOARDING_ROUTES = Object.values(
   CANONICAL_STEP_ROUTE_BY_DISPLAY_STEP
@@ -54,6 +62,68 @@ const RAW_STEP_TO_ROUTE: Record<number, CanonicalOnboardingRoute> = {
 export const getCanonicalOnboardingRoute = (currentStep: number): CanonicalOnboardingRoute => {
   const normalizedStep = Number.isFinite(currentStep) ? Math.trunc(currentStep) : 1;
   return RAW_STEP_TO_ROUTE[normalizedStep] || '/onboarding/step-1';
+};
+
+export const normalizeFinancialLinkStatus = (
+  value: unknown,
+  fallback: FinancialLinkStatus = 'pending'
+): FinancialLinkStatus => {
+  const normalized = String(value ?? '').trim().toLowerCase();
+  if (normalized === 'completed' || normalized === 'skipped') {
+    return normalized;
+  }
+
+  if (normalized === 'pending') {
+    return 'pending';
+  }
+
+  return fallback;
+};
+
+export const resolveFinancialLinkStatus = (
+  onboardingStatus: unknown,
+  financialDataStatus?: unknown
+): FinancialLinkStatus => {
+  const normalizedOnboardingStatus = normalizeFinancialLinkStatus(onboardingStatus);
+  if (normalizedOnboardingStatus !== 'pending') {
+    return normalizedOnboardingStatus;
+  }
+
+  const normalizedFinancialStatus = String(financialDataStatus ?? '')
+    .trim()
+    .toLowerCase();
+
+  if (normalizedFinancialStatus === 'complete' || normalizedFinancialStatus === 'partial') {
+    return 'completed';
+  }
+
+  return 'pending';
+};
+
+export const hasClearedFinancialLink = (value: unknown): boolean =>
+  normalizeFinancialLinkStatus(value) !== 'pending';
+
+export const getCanonicalIncompleteOnboardingRoute = (): typeof FINANCIAL_LINK_ROUTE =>
+  FINANCIAL_LINK_ROUTE;
+
+export const getFinancialLinkContinuationRoute = (
+  currentStep: number
+): CanonicalOnboardingRoute => {
+  const normalizedStep = Number.isFinite(currentStep) ? Math.trunc(currentStep) : 1;
+  return getCanonicalOnboardingRoute(normalizedStep > 1 ? normalizedStep : 1);
+};
+
+export const normalizeLegacyOnboardingRedirectTarget = (target: string): string => {
+  try {
+    const parsed = new URL(target, 'https://hushh.local');
+    if (parsed.pathname.toLowerCase() === '/investor-profile') {
+      return FINANCIAL_LINK_ROUTE;
+    }
+
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return target;
+  }
 };
 
 const normalizeCompatibleOnboardingRoute = (route: string): CanonicalOnboardingRoute => {

@@ -6,7 +6,12 @@ import { useEffect, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import config from '../../../resources/config/config';
 import { upsertOnboardingData } from '../../../services/onboarding/upsertOnboardingData';
-import { TOTAL_VISIBLE_ONBOARDING_STEPS } from '../../../services/onboarding/flow';
+import {
+  FINANCIAL_LINK_ROUTE,
+  TOTAL_VISIBLE_ONBOARDING_STEPS,
+  resolveFinancialLinkStatus,
+} from '../../../services/onboarding/flow';
+import { fetchOnboardingProgress } from '../../../services/onboarding/progress';
 import { useFooterVisibility } from '../../../utils/useFooterVisibility';
 
 /* ─── Types & Constants ─── */
@@ -118,16 +123,20 @@ export const useStep1Logic = (): Step1Logic => {
       if (!user) { navigate('/login'); return; }
       setUserId(user.id);
 
-      const hasSkipped = sessionStorage.getItem('financial_link_skipped') === 'true';
-      const hasCompleted = sessionStorage.getItem('financial_verification_complete') === 'true';
+      const onboardingProgress = await fetchOnboardingProgress(
+        config.supabaseClient,
+        user.id
+      );
+      const { data: financialData, error: finError } = await config.supabaseClient
+        .from('user_financial_data').select('status').eq('user_id', user.id).maybeSingle();
+      if (finError) console.warn('[Step1] Financial data query error:', finError.message);
 
-      if (!hasSkipped && !hasCompleted) {
-        const { data: financialData, error: finError } = await config.supabaseClient
-          .from('user_financial_data').select('status').eq('user_id', user.id).maybeSingle();
-        if (finError) console.warn('[Step1] Financial data query error:', finError.message);
-        if (!financialData || (financialData.status !== 'complete' && financialData.status !== 'partial')) {
-          navigate('/onboarding/financial-link', { replace: true }); return;
-        }
+      const financialLinkStatus = resolveFinancialLinkStatus(
+        onboardingProgress?.financial_link_status,
+        financialData?.status
+      );
+      if (financialLinkStatus === 'pending') {
+        navigate(FINANCIAL_LINK_ROUTE, { replace: true }); return;
       }
 
       const { data: onboardingData } = await config.supabaseClient
@@ -227,8 +236,6 @@ export const useStep1Logic = (): Step1Logic => {
       }
       const { error: saveError } = await upsertOnboardingData(userId, updateData);
       if (saveError) { setError(saveError.message || 'Failed to save'); return; }
-      sessionStorage.removeItem('financial_link_skipped');
-      sessionStorage.removeItem('financial_verification_complete');
       navigate('/onboarding/step-2');
     } catch (err) { console.error('Error:', err); }
     finally { setIsLoading(false); }

@@ -114,6 +114,27 @@ describe("login/signup OAuth UI", () => {
     expect(redirectToUrlMock).not.toHaveBeenCalled();
   });
 
+  it("shows a visible loading state while auth bootstrap is still booting", async () => {
+    authState.status = "booting";
+
+    await act(async () => {
+      root.render(
+        React.createElement(
+          MemoryRouter,
+          null,
+          React.createElement(LoginPage)
+        )
+      );
+    });
+    await flush();
+
+    expect(container.textContent).toContain("Preparing secure sign-in");
+    expect(container.textContent).toContain(
+      "Checking your secure sign-in session before we continue."
+    );
+    expect(container.textContent).not.toContain("Continue with Apple");
+  });
+
   it("redirects unsupported login hosts before rendering sign-in CTAs", async () => {
     resolveOAuthHostMock.mockReturnValue({
       supported: false,

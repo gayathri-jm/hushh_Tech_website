@@ -1,4 +1,7 @@
 import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { FINANCIAL_LINK_ROUTE } from '../../services/onboarding/flow';
 
 export interface ShareClassRow {
   shareClass: string;
@@ -71,9 +74,11 @@ export interface UseDiscoverFundALogicReturn {
 }
 
 export const useDiscoverFundALogic = (): UseDiscoverFundALogicReturn => {
+  const navigate = useNavigate();
+
   const handleCompleteProfile = useCallback(() => {
-    window.location.href = '/investor-profile';
-  }, []);
+    navigate(FINANCIAL_LINK_ROUTE);
+  }, [navigate]);
 
   const philosophyCards: PhilosophyCard[] = [
     {

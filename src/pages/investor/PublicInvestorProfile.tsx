@@ -20,6 +20,7 @@ import { maskProfileData, maskOnboardingField } from "../../utils/maskSensitiveD
 import { InvestorProfile, FIELD_LABELS, VALUE_LABELS, ONBOARDING_FIELD_LABELS } from "../../types/investorProfile";
 import { OnboardingData } from "../../types/onboarding";
 import type { ShadowProfile } from "../../types/shadowProfile";
+import { FINANCIAL_LINK_ROUTE } from "../../services/onboarding/flow";
 
 type TabType = 'home' | 'chat';
 
@@ -196,7 +197,7 @@ const PublicInvestorProfilePage: React.FC = () => {
             <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={() => navigate('/')}>
               Go to Home
             </HushhTechCta>
-            <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={() => navigate('/investor-profile')}>
+            <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={() => navigate(FINANCIAL_LINK_ROUTE)}>
               Create Your Own Profile
             </HushhTechCta>
           </div>
@@ -640,7 +641,7 @@ const PublicInvestorProfilePage: React.FC = () => {
                   <p className="text-xs text-gray-500 font-medium mb-4">
                     Get your AI-powered investor profile in minutes
                   </p>
-                  <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={() => navigate("/investor-profile")}>
+                  <HushhTechCta variant={HushhTechCtaVariant.BLACK} onClick={() => navigate(FINANCIAL_LINK_ROUTE)}>
                     Create Your Hushh ID
                   </HushhTechCta>
                   <HushhTechCta variant={HushhTechCtaVariant.WHITE} onClick={() => navigate("/")}>

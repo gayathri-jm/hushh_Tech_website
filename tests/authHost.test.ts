@@ -44,4 +44,14 @@ describe("auth host policy", () => {
       )
     ).toBe("https://hushhtech.com/signup?redirect=%2Fdelete-account");
   });
+
+  it("normalizes legacy investor-profile redirects onto the financial-link entry", () => {
+    expect(
+      buildCanonicalAuthEntryUrl(
+        "/login",
+        "?redirect=%2Finvestor-profile",
+        "https://hushhtech.com/auth/callback"
+      )
+    ).toBe("https://hushhtech.com/login?redirect=%2Fonboarding%2Ffinancial-link");
+  });
 });

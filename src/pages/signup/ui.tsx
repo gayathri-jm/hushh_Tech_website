@@ -14,6 +14,7 @@ import { FaApple } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import HushhTechHeader from "../../components/hushh-tech-header/HushhTechHeader";
 import HushhTechFooter from "../../components/hushh-tech-footer/HushhTechFooter";
+import AuthBootingScreen from "../../components/auth/AuthBootingScreen";
 
 /* ── Playfair heading style ── */
 const playfair = { fontFamily: "'Playfair Display', serif" };
@@ -28,7 +29,14 @@ export default function SignupPage() {
     handleGoogleSignIn,
   } = useSignupLogic();
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <AuthBootingScreen
+        title="Create Your Account."
+        description="Checking your secure sign-in session before we continue."
+      />
+    );
+  }
 
   return (
     <div className="bg-white text-gray-900 min-h-screen antialiased flex flex-col selection:bg-hushh-blue selection:text-white">
