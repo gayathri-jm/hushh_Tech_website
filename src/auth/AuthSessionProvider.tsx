@@ -18,6 +18,7 @@ import {
   broadcastAuthEvent,
   clearLegacyAuthStorage,
   clearSupabaseSession,
+  getLocalSession,
   getValidatedSession,
   parseAuthBroadcastEvent,
   startUnifiedOAuth,
@@ -168,13 +169,33 @@ export const AuthSessionProvider: React.FC<{
       applySnapshot(nextSnapshot);
     });
 
+    // Soft revalidation for focus/visibility — only reads localStorage,
+    // no server-side getUser() call. This prevents session drops when
+    // switching tabs. Supabase's autoRefreshToken handles token renewal.
+    const handleSoftRevalidation = async () => {
+      const localSnapshot = await getLocalSession(supabase);
+
+      if (localSnapshot.status === "invalidated") {
+        await clearLocalSession(
+          "invalidated",
+          localSnapshot.reason || "invalid_session"
+        );
+        return;
+      }
+
+      // Only update if local session still exists (no-op if anonymous)
+      if (localSnapshot.status === "authenticated") {
+        applySnapshot(localSnapshot);
+      }
+    };
+
     const handleWindowFocus = () => {
-      void revalidateSession();
+      void handleSoftRevalidation();
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        void revalidateSession();
+        void handleSoftRevalidation();
       }
     };
 
@@ -206,7 +227,7 @@ export const AuthSessionProvider: React.FC<{
       window.removeEventListener("storage", handleStorage);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [applySnapshot, clearLocalSession, revalidateSession, supabase]);
+  }, [applySnapshot, clearLocalSession, supabase]);
 
   const startOAuth = useCallback(
     async (provider: OAuthProvider) => startUnifiedOAuth(provider, supabase),

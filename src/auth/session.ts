@@ -249,6 +249,55 @@ export async function validateSessionCandidate(
   }
 }
 
+/**
+ * Soft revalidation — reads session from localStorage only, no network call.
+ * Used for focus/visibility events where we just need to confirm the session
+ * still exists locally. Supabase's autoRefreshToken handles token renewal
+ * automatically in the background.
+ */
+export async function getLocalSession(
+  client: SupabaseClient | undefined = config.supabaseClient
+): Promise<AuthSessionSnapshot> {
+  if (!client) {
+    return { status: "anonymous", session: null, user: null };
+  }
+
+  try {
+    const {
+      data: { session },
+      error,
+    } = await client.auth.getSession();
+
+    if (!session || !session.access_token || !session.user?.id) {
+      return {
+        status: error ? "invalidated" : "anonymous",
+        session: null,
+        user: null,
+        reason: error ? getAuthInvalidationReason(error) : undefined,
+      };
+    }
+
+    // Trust the local session — no server-side getUser() call
+    return {
+      status: "authenticated",
+      session,
+      user: session.user as User,
+    };
+  } catch (error) {
+    console.error("[AuthSession] Failed to read local session:", error);
+    return {
+      status: "invalidated",
+      session: null,
+      user: null,
+      reason: "invalid_session",
+    };
+  }
+}
+
+/**
+ * Full revalidation — reads session from localStorage AND validates with
+ * a server-side getUser() call. Used for initial boot and auth state changes.
+ */
 export async function getValidatedSession(
   client: SupabaseClient | undefined = config.supabaseClient
 ): Promise<AuthSessionSnapshot> {
