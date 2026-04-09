@@ -1,7 +1,5 @@
 import { createHmac } from "crypto";
 
-import { createClient } from "@supabase/supabase-js";
-
 export const DELETE_ACCOUNT_DELETED_SCOPES = [
   "storage.hushh_ai_media",
   "storage.signed_nda_pdfs",
@@ -85,20 +83,6 @@ const isRelationMissingError = (error) => {
 
 const getErrorMessage = (error) => error?.message || error?.code || "Unknown error";
 
-const getHeaderValue = (headers, name) => {
-  if (!headers) return null;
-
-  if (typeof headers.get === "function") {
-    return headers.get(name);
-  }
-
-  const directValue = headers[name];
-  if (typeof directValue === "string") return directValue;
-
-  const loweredValue = headers[name.toLowerCase()];
-  return typeof loweredValue === "string" ? loweredValue : null;
-};
-
 const extractBearerToken = (authHeader) => {
   if (!authHeader) return null;
 
@@ -136,6 +120,208 @@ const buildSignedNdaAssetPathFromUrl = (urlValue) => {
     return null;
   }
 };
+
+const createServiceHeaders = (serviceRoleKey, extraHeaders = {}) => ({
+  apikey: serviceRoleKey,
+  Authorization: `Bearer ${serviceRoleKey}`,
+  ...extraHeaders,
+});
+
+const createUserHeaders = (serviceRoleKey, userJwt, extraHeaders = {}) => ({
+  apikey: serviceRoleKey,
+  Authorization: `Bearer ${userJwt}`,
+  ...extraHeaders,
+});
+
+const formatFilterValue = (value) => {
+  const text = `${value}`;
+  if (/^[A-Za-z0-9._:-]+$/.test(text)) {
+    return text;
+  }
+
+  return `"${text.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+};
+
+const buildRestUrl = (supabaseUrl, path, query = {}) => {
+  const url = new URL(path, supabaseUrl);
+
+  for (const [key, value] of Object.entries(query)) {
+    if (value === null || value === undefined || value === "") continue;
+    url.searchParams.set(key, value);
+  }
+
+  return url.toString();
+};
+
+async function parseSupabaseResponse(response) {
+  const text = await response.text();
+  let payload = null;
+
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = text;
+    }
+  }
+
+  if (response.ok) {
+    return {
+      data: payload,
+      error: null,
+    };
+  }
+
+  const errorBody =
+    payload && typeof payload === "object"
+      ? payload
+      : {
+          message:
+            typeof payload === "string" && payload.length > 0
+              ? payload
+              : response.statusText || "Supabase request failed",
+        };
+
+  return {
+    data: null,
+    error: {
+      status: response.status,
+      code: errorBody.code,
+      message: errorBody.message || errorBody.error || response.statusText,
+      details: errorBody.details,
+      hint: errorBody.hint,
+    },
+  };
+}
+
+function createRestAdminClient(supabaseUrl, serviceRoleKey) {
+  async function requestJson(method, path, { query, body, headers } = {}) {
+    const response = await fetch(buildRestUrl(supabaseUrl, path, query), {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+
+    return parseSupabaseResponse(response);
+  }
+
+  return {
+    auth: {
+      async getUser(jwt) {
+        const { data, error } = await requestJson("GET", "/auth/v1/user", {
+          headers: createUserHeaders(serviceRoleKey, jwt),
+        });
+
+        return {
+          data: { user: data },
+          error,
+        };
+      },
+      admin: {
+        async deleteUser(userId) {
+          return requestJson("DELETE", `/auth/v1/admin/users/${userId}`, {
+            headers: createServiceHeaders(serviceRoleKey),
+          });
+        },
+      },
+    },
+    from(table) {
+      const encodedTable = encodeURIComponent(table);
+
+      return {
+        select(columns) {
+          return {
+            eq(column, value) {
+              return requestJson("GET", `/rest/v1/${encodedTable}`, {
+                query: {
+                  select: columns,
+                  [column]: `eq.${formatFilterValue(value)}`,
+                },
+                headers: createServiceHeaders(serviceRoleKey),
+              });
+            },
+            in(column, values) {
+              return requestJson("GET", `/rest/v1/${encodedTable}`, {
+                query: {
+                  select: columns,
+                  [column]: `in.(${uniqueValues(values).map(formatFilterValue).join(",")})`,
+                },
+                headers: createServiceHeaders(serviceRoleKey),
+              });
+            },
+          };
+        },
+        delete() {
+          return {
+            eq(column, value) {
+              return requestJson("DELETE", `/rest/v1/${encodedTable}`, {
+                query: {
+                  [column]: `eq.${formatFilterValue(value)}`,
+                },
+                headers: createServiceHeaders(serviceRoleKey, {
+                  Prefer: "return=minimal",
+                }),
+              });
+            },
+            in(column, values) {
+              return requestJson("DELETE", `/rest/v1/${encodedTable}`, {
+                query: {
+                  [column]: `in.(${uniqueValues(values).map(formatFilterValue).join(",")})`,
+                },
+                headers: createServiceHeaders(serviceRoleKey, {
+                  Prefer: "return=minimal",
+                }),
+              });
+            },
+          };
+        },
+        upsert(payload, options = {}) {
+          return requestJson("POST", `/rest/v1/${encodedTable}`, {
+            query: {
+              on_conflict: options.onConflict,
+            },
+            body: payload,
+            headers: createServiceHeaders(serviceRoleKey, {
+              "Content-Type": "application/json",
+              Prefer: "resolution=merge-duplicates,return=minimal",
+            }),
+          });
+        },
+      };
+    },
+    storage: {
+      from(bucket) {
+        const encodedBucket = encodeURIComponent(bucket);
+
+        return {
+          list(path = "", options = {}) {
+            return requestJson("POST", `/storage/v1/object/list/${encodedBucket}`, {
+              body: {
+                prefix: path,
+                limit: options.limit,
+                offset: options.offset,
+                sortBy: options.sortBy,
+              },
+              headers: createServiceHeaders(serviceRoleKey, {
+                "Content-Type": "application/json",
+              }),
+            });
+          },
+          remove(paths) {
+            return requestJson("DELETE", `/storage/v1/object/${encodedBucket}`, {
+              body: {
+                prefixes: uniqueValues(paths),
+              },
+              headers: createServiceHeaders(serviceRoleKey, {
+                "Content-Type": "application/json",
+              }),
+            });
+          },
+        };
+      },
+    },
+  };
+}
 
 const mapColumnValues = (rows, column) =>
   uniqueValues(
@@ -557,12 +743,7 @@ export function createDeleteAccountAdminClientFromEnv() {
   }
 
   return {
-    adminClient: createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }),
+    adminClient: createRestAdminClient(supabaseUrl, serviceRoleKey),
     auditSecret: serviceRoleKey,
   };
 }
