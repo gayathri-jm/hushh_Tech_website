@@ -42,6 +42,7 @@ npm run security:audit
 - AI review comments help surface risk, but they do not replace human approval.
 - The first automated review is powered by Qodo PR Agent on Gemini and is expected to comment on risky changes before maintainer review.
 - PR Agent auto-reviews PRs on open, sync, review-requested, and ready-for-review events; maintainers can also trigger follow-up review with a `/review` comment.
+- Re-trigger `/review` after a substantial PR update, after resolving requested changes, or when you want a fresh Gemini pass on the latest diff before maintainer review.
 - First-time or fork contributors may need maintainer approval before code-executing workflows can run.
 
 Example:

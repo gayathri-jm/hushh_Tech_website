@@ -12,8 +12,8 @@ permissions:
   issues: write
 
 env:
-  SHARED_SECRETS_PROJECT: "53407187172"
-  PR_AGENT_GEMINI_SECRET: "GEMINI_API_KEY"
+  PR_AGENT_VERTEX_PROJECT: "hushone-app"
+  PR_AGENT_VERTEX_LOCATION: "us-central1"
 
 jobs:
   pr_agent:
@@ -29,36 +29,27 @@ jobs:
       )
     
     steps:
-      - name: Authenticate to GCP for PR review
-        uses: google-github-actions/auth@v2
-        with:
-          # Prefer replacing this with a dedicated read-only PR-agent accessor later.
-          credentials_json: ${{ secrets.GCP_SA_KEY_UAT }}
-
-      - name: Install gcloud
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Load Gemini API key from Secret Manager
-        id: gemini-key
+      - name: Capture PR agent verification window
+        id: agent-window
         shell: bash
-        run: |
-          set -euo pipefail
-          gemini_api_key="$(gcloud secrets versions access latest --project="$SHARED_SECRETS_PROJECT" --secret="$PR_AGENT_GEMINI_SECRET")"
-          if [ -z "$gemini_api_key" ]; then
-            echo "::error::Secret '$PR_AGENT_GEMINI_SECRET' is empty in project '$SHARED_SECRETS_PROJECT'."
-            exit 1
-          fi
+        run: printf 'started_at=%s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_OUTPUT"
 
-          echo "::add-mask::$gemini_api_key"
-          printf 'gemini_api_key=%s\n' "$gemini_api_key" >> "$GITHUB_OUTPUT"
+      - name: Authenticate to GCP for PR review
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_UAT }}
+          create_credentials_file: true
+          export_environment_variables: true
 
       - name: PR Agent Action
         uses: qodo-ai/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ steps.gemini-key.outputs.gemini_api_key }}
-          config.model: "gemini/gemini-2.5-pro"
-          config.fallback_models: '["gemini/gemini-2.5-pro","gemini/gemini-2.5-flash"]'
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          VERTEXAI_PROJECT: ${{ env.PR_AGENT_VERTEX_PROJECT }}
+          VERTEXAI_LOCATION: ${{ env.PR_AGENT_VERTEX_LOCATION }}
+          config.model: "vertex_ai/gemini-2.5-pro"
+          config.fallback_models: '["vertex_ai/gemini-2.5-flash","gpt-5"]'
           config.max_model_tokens: "128000"
           config.custom_model_max_tokens: "1048576"
           config.ai_timeout: "480"
@@ -66,3 +57,61 @@ jobs:
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
           github_action_config.pr_actions: '["opened","synchronize","reopened","ready_for_review","review_requested"]'
+
+      - name: Verify PR agent produced usable review output
+        if: always()
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_AGENT_STARTED_AT: ${{ steps.agent-window.outputs.started_at }}
+        run: |
+          set -euo pipefail
+
+          pr_number="$(jq -r '.pull_request.number // .issue.number // empty' "$GITHUB_EVENT_PATH")"
+          if [ -z "$pr_number" ]; then
+            echo "::error::Unable to resolve pull request number from event payload."
+            exit 1
+          fi
+
+          issue_comments="$(curl -fsSL \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${pr_number}/comments?per_page=100")"
+
+          reviews="$(curl -fsSL \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/reviews?per_page=100")"
+
+          failure_comment_count="$(echo "$issue_comments" | jq --arg since "$PR_AGENT_STARTED_AT" '
+            [.[] | select(
+              .user.login == "github-actions[bot]" and
+              .created_at >= $since and
+              .body == "Failed to generate code suggestions for PR"
+            )] | length
+          ')"
+
+          if [ "$failure_comment_count" -gt 0 ]; then
+            echo "::error::PR agent failed to generate usable review output."
+            exit 1
+          fi
+
+          issue_comment_count="$(echo "$issue_comments" | jq --arg since "$PR_AGENT_STARTED_AT" '
+            [.[] | select(
+              .user.login == "github-actions[bot]" and
+              .created_at >= $since and
+              (.body | length) > 0
+            )] | length
+          ')"
+
+          review_count="$(echo "$reviews" | jq --arg since "$PR_AGENT_STARTED_AT" '
+            [.[] | select(
+              .user.login == "github-actions[bot]" and
+              (.submitted_at // "") >= $since
+            )] | length
+          ')"
+
+          if [ $((issue_comment_count + review_count)) -eq 0 ]; then
+            echo "::error::PR agent completed without publishing any visible review output."
+            exit 1
+          fi
