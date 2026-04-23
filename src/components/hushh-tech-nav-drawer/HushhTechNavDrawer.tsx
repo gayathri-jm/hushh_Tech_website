@@ -18,17 +18,17 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { icon: "home", label: "Home", path: "/" },
-  { icon: "menu_book", label: "Our Philosophy", path: "/philosophy" },
+  { icon: "menu_book", label: "Our Philosophy", path: "/about/philosophy" },
   { icon: "pie_chart", label: "Fund A", path: "/discover-fund-a" },
   { icon: "groups", label: "Community", path: "/community" },
-  { icon: "verified_user", label: "KYC Studio Alpha", path: "/kyc" },
+ { icon: "verified_user", label: "KYC Studio Alpha", path: "/a2a-playground" },
 ];
 
 const HIGHLIGHT_ITEM: NavItem = {
   icon: "lock",
   label: "Unlock 300K Coins",
   subtitle: "$1 or use coupon code",
-  path: "/unlock-coins",
+  path: "/onboarding/meet-ceo",
   highlight: true,
 };
 
